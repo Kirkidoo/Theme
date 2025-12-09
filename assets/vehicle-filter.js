@@ -23,6 +23,7 @@ class VehicleFilter {
         this.typeSelect.addEventListener('change', () => this.onTypeChange());
         this.yearSelect.addEventListener('change', () => this.onYearChange());
         this.makeSelect.addEventListener('change', () => this.onMakeChange());
+        this.modelSelect.addEventListener('change', () => this.updateState());
         this.submitBtn.addEventListener('click', () => this.onSubmit());
 
         if (this.resetBtn) {
