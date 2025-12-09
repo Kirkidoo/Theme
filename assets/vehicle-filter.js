@@ -104,7 +104,11 @@ class VehicleFilter {
         if (type && year && make) {
             this.setLoading(true);
             const data = await this.fetchFromApi('fitment/getModelOptions', { type, year, make });
-            this.populateSelect(this.modelSelect, data ? data.models : [], 'Select Model');
+            if (data && data.models) {
+                this.processAndPopulateModels(data.models);
+            } else {
+                this.populateSelect(this.modelSelect, [], 'Select Model');
+            }
             this.setLoading(false);
         }
         this.updateState();
@@ -201,7 +205,11 @@ class VehicleFilter {
 
             // 4. Fetch & Set Model
             const modelsData = await this.fetchFromApi('fitment/getModelOptions', { type: v.type, year: v.year, make: v.make });
-            this.populateSelect(this.modelSelect, modelsData ? modelsData.models : [], 'Select Model');
+            if (modelsData && modelsData.models) {
+                this.processAndPopulateModels(modelsData.models);
+            } else {
+                this.populateSelect(this.modelSelect, [], 'Select Model');
+            }
             if (!this.setSelectValue(this.modelSelect, v.model)) { this.setLoading(false); return; }
 
             this.setLoading(false);
@@ -253,6 +261,51 @@ class VehicleFilter {
         const productCards = document.querySelectorAll('.product-grid .grid__item');
         productCards.forEach(card => card.style.display = '');
         localStorage.removeItem(this.STORAGE_KEY);
+    }
+
+    // --- Normalization Logic (Synced with product-finder.js) ---
+    normalizeModelName(model) {
+        if (!model) return null;
+        let s = model.toUpperCase();
+        const noise = /\b(POWER STEERING|AUTOMATIC|AUTO|MANUAL|ABS|EPS|SE|LE|H\.O\.|HO|EFI|4X4|2X4|4WD|2WD|AXI|DCT|LIMITED|LTD|TOURING|XT|DPS|XMR|XXC|XT-P|HUNTER|EDITION|CAMO|SPORT|UTILITY|PLUS|AS|FS|FSI|ASI|IRS|TBX|TRV|VP|FIS|ACT|MRP|ALL|GPA|GPH|GPS|KDH|KDX|KPA|KPH|KPS|AE|ES|SD|ESD|XN|LF|FA\d|FE\d|FM\d|TE\d|TM\d|S|R|RS|RR|XC|SP|L|M|N|F)\b/g;
+        s = s.replace(noise, "");
+        s = s.replace(/KING\s*QUAD/g, "KINGQUAD").replace(/BIG\s*BEAR/g, "BIG BEAR").replace(/SILVER\s*ADO/g, "SILVERADO").replace(/TRAIL\s*BOSS/g, "TRAIL BOSS").replace(/TRAIL\s*BLAZER/g, "TRAIL BLAZER").replace(/QUAD\s*SPORT/g, "QUADSPORT").replace(/QUAD\s*RACER/g, "QUADRACER").replace(/QUAD\s*RUNNER/g, "QUADRUNNER").replace(/FOUR\s*TRAX/g, "FOURTRAX").replace(/GOLD\s*WING/g, "GOLDWING").replace(/V\s*STROM/g, "V-STROM").replace(/FZ-1/g, "FZ1").replace(/FZ-6/g, "FZ6").replace(/FZ-8/g, "FZ8").replace(/FJR\s*1300/g, "FJR1300").replace(/MT\s*0/g, "MT-0");
+        const families = ["KINGQUAD", "EIGER", "VINSON", "OZARK", "QUADRUNNER", "TWIN PEAKS", "QUADSPORT", "QUADRACER", "SPORTSMAN", "SCRAMBLER", "RANGER", "RZR", "MAGNUM", "XPEDITION", "TRAIL BLAZER", "TRAIL BOSS", "HAWKEYE", "ACE", "GENERAL", "GRIZZLY", "KODIAK", "RAPTOR", "BANSHEE", "BIG BEAR", "WOLVERINE", "BRUIN", "RHINO", "YXZ", "VIKING", "BLASTER", "WARRIOR", "OUTLANDER", "RENEGADE", "COMMANDER", "MAVERICK", "TRAXTER", "QUEST", "DEFENDER", "RANCHER", "FOREMAN", "RUBICON", "RINCON", "RECON", "FOURTRAX", "PIONEER", "TALON", "BRUTE FORCE", "PRAIRIE", "BAYOU", "MULE", "TERYX", "ALTERRA", "THUNDERCAT", "MUDPRO", "PROWLER", "WILDCAT", "CFORCE", "UFORCE", "ZFORCE", "KATANA", "HAYABUSA", "V-STROM", "INTRUDER", "MARAUDER", "VOLUSIA", "SAVAGE", "BANDIT", "GLADIUS", "BOULEVARD", "BURGMAN", "NINJA", "VULCAN", "VERSYS", "CONCOURS", "KLR", "KLX", "GOLDWING", "SHADOW", "VALKYRIE", "MAGNA", "REBEL", "INTERCEPTOR", "AFRICA TWIN", "GROM", "RUCKUS", "METROPOLITAN", "V-STAR", "ROAD STAR", "ROYAL STAR", "STRATOLINER", "ROADLINER", "RAIDER", "BOLT", "VIRAGO", "MAXIM", "SECA", "VINO", "ZUMA", "MAJESTY", "CRYPTON", "ENTICER", "FAZER", "TENERE", "SUPER TENERE", "INDY", "RMK", "SWITCHBACK", "RUSH", "ASSAULT", "VOYAGEUR", "MXZ", "SUMMIT", "RENEGADE", "GRAND TOURING", "SKANDIC", "TUNDRA", "FREERIDE", "ZR", "ZL", "PANTERA", "PANTHER", "FIRECAT", "CROSSFIRE", "M-SERIES", "SNO PRO"];
+        let foundFamily = null;
+        for (const fam of families) { if (s.includes(fam)) { foundFamily = fam; break; } }
+        const ccMatch = s.match(/\b(50|60|65|80|85|90|100|110|125|135|150|170|175|185|200|225|230|250|300|325|330|335|350|375|400|425|450|500|520|550|570|600|650|660|680|700|750|800|850|900|925|950|1000|1100|1200|1300|1400|1500|1600|1700|1800|1900|2000)\b/);
+        const cc = ccMatch ? ccMatch[0] : null;
+        const codeMatch = s.match(new RegExp(`\\b(GS|GSX|GSXR|GR|GN|GV|GL|DR|DRZ|RM|RMZ|ZR|ZL|VL|VZ|AN|DL|SV|LT|LTA|LTF|LTZ|LTR|CB|CBR|VFR|VT|VTX|GL|ST|XR|XL|CRF|TRX|SXS|YZF|FZ|FJR|MT|XT|TTR|PW|XV|XVS|YFM|YFZ|YXZ|YXR|XSR|TMAX|XMAX|ZX|KX|KLX|VN|KZ|KVF|KLF|KRF|CF)(-?[A-Z]*)?\\s*(\\d{1,4})([A-Z0-9]*)?\\b`));
+        if (codeMatch) {
+            let rawPrefix = codeMatch[1];
+            let codeCC = codeMatch[3];
+            if (foundFamily) return codeCC ? `${foundFamily} ${codeCC}` : foundFamily;
+            return `${rawPrefix}${codeCC}`;
+        }
+        if (foundFamily && cc) { return `${foundFamily} ${cc}`; }
+        let clean = s.replace(/[^a-zA-Z0-9\-\s]/g, "").replace(/\s+/g, " ").trim();
+        return clean.length > 1 ? clean : model;
+    }
+
+    processAndPopulateModels(rawModelsList) {
+        let modelMap = {};
+        const distinctCleanModels = new Set();
+        rawModelsList.forEach(rawModel => {
+            const cleanName = this.normalizeModelName(rawModel) || rawModel;
+            if (!modelMap[cleanName]) modelMap[cleanName] = [];
+            modelMap[cleanName].push(rawModel);
+            distinctCleanModels.add(cleanName);
+        });
+        const sortedModels = Array.from(distinctCleanModels).sort();
+        this.modelSelect.innerHTML = '<option value="">Select Model</option>';
+        sortedModels.forEach(cleanName => {
+            const option = document.createElement('option');
+            option.value = cleanName;
+            const count = modelMap[cleanName].length;
+            if (count > 1) { option.textContent = `${cleanName} +`; } else { option.textContent = cleanName; }
+            this.modelSelect.appendChild(option);
+        });
+        this.modelSelect.disabled = false;
     }
 }
 
