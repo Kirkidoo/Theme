@@ -82,6 +82,7 @@
           </div>
         </div>
         <div class="pf-saved-actions">
+           <button id="pf-view-products-{{ section.id }}" class="pf-btn-view" type="button">{{ section.settings.view_btn_text }}</button>
            <button id="pf-change-vehicle-{{ section.id }}" class="pf-btn-change" type="button">{{ section.settings.change_btn_text }}</button>
            <button id="pf-clear-vehicle-{{ section.id }}" class="pf-btn-clear" type="button">{{ section.settings.clear_btn_text }}</button>
         </div>
@@ -198,6 +199,12 @@
       "id": "reset_btn_text",
       "label": "Reset Button Text",
       "default": "Reset Search"
+    },
+    {
+      "type": "text",
+      "id": "view_btn_text",
+      "label": "View Products Button Text",
+      "default": "View Products"
     },
     {
       "type": "text",

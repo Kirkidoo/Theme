@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
         els.savedName = document.getElementById(`pf-saved-vehicle-name-${config.sectionId}`);
         els.changeBtn = document.getElementById(`pf-change-vehicle-${config.sectionId}`);
         els.clearBtn = document.getElementById(`pf-clear-vehicle-${config.sectionId}`);
+        els.viewBtn = document.getElementById(`pf-view-products-${config.sectionId}`);
     }
 
     // Global Elements
@@ -442,6 +443,33 @@ document.addEventListener('DOMContentLoaded', function () {
             els.reset.click();
             toggleGarageView(false);
             toggleSection(true);
+        });
+    }
+
+    if (els.viewBtn) {
+        els.viewBtn.addEventListener('click', function () {
+            // Ensure section is open
+            if (!isExpanded) toggleSection(true);
+
+            // Switch to controls view briefly or just ensure results are shown?
+            // "View Products" implies we want to see the grid.
+            // If the grid is hidden (because we are in "Saved Mode"), we need to show it.
+            // But "Saved Mode" usually hides the results?? 
+            // Wait, looking at `toggleGarageView`:
+            // `els.savedContainer.classList.remove('hidden'); els.controlsWrapper.classList.add('hidden');`
+            // It does NOT hide results. Results are managed separately.
+            // However, if the user navigated away and came back, results might be empty unless `loadFromGarage` rendered them.
+            // `loadFromGarage` calls `renderCachedCards`.
+            // So if products are there, we just scroll to them or ensure they are visible.
+            // If they are not there (expired cache), we might need to re-submit.
+
+            if (els.results.children.length === 0) {
+                // Trigger submit to fetch
+                els.submit.click();
+            } else {
+                // Just scroll to results
+                els.results.scrollIntoView({ behavior: 'smooth' });
+            }
         });
     }
 
