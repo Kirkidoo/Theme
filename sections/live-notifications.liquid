@@ -1,0 +1,646 @@
+<style>
+  live-notifications {
+    display: none;
+  }
+
+  .live-notifications-container {
+    position: fixed;
+    z-index: 1000;
+    max-width: calc(100% - 30px);
+    width: 100%;
+    pointer-events: none;
+  }
+
+  @media (min-width: 750px) {
+    .live-notifications-container {
+      max-width: 30rem;
+    }
+  }
+
+  /* Position styles */
+  .live-notifications-container.position-top-left {
+    top: var(--notification-vertical-margin, 15px);
+    inset-inline-start: 15px;
+  }
+
+  .live-notifications-container.position-top-right {
+    top: var(--notification-vertical-margin, 15px);
+    inset-inline-end: 15px;
+  }
+
+  .live-notifications-container.position-bottom-right {
+    bottom: var(--notification-vertical-margin, 15px);
+    inset-inline-end: 15px;
+  }
+
+  .live-notifications-container.position-bottom-left {
+    bottom: var(--notification-vertical-margin, 15px);
+    inset-inline-start: 15px;
+  }
+
+  @media (min-width: 990px) {
+    .live-notifications-container.position-top-left,
+    .live-notifications-container.position-bottom-left {
+      inset-inline-start: var(--notification-horizontal-margin, 15px);
+    }
+
+    .live-notifications-container.position-top-right,
+    .live-notifications-container.position-bottom-right {
+      inset-inline-end: var(--notification-horizontal-margin, 15px);
+    }
+  }
+
+  @media (max-width: 749px) {
+    .live-notifications-container.position-bottom-right.mobile-dock-offset,
+    .live-notifications-container.position-bottom-left.mobile-dock-offset {
+      bottom: calc(var(--notification-vertical-margin, 15px) + 55px);
+    }
+  }
+
+  .live-notifications-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .live-notification-message {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+    pointer-events: auto;
+    position: relative;
+    border-radius: var(--border-radius-base);
+    border-left: 4px solid rgba(var(--color-accent-2));
+    color: rgba(var(--color-foreground));
+    background-color: rgba(var(--color-background));
+  }
+
+  .live-notification-message.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .live-notification-content {
+    font-size: calc(var(--font-body-scale) * 1.3rem);
+  }
+
+  .live-notification-content :is(h1, h2, h3, h4, h5, h6) {
+    font-size: calc(var(--font-body-scale) * 1.5rem);
+    margin-bottom: 0.8rem;
+    font-weight: var(--font-heading-weight);
+  }
+
+  .live-notification-content p {
+    margin: 0;
+  }
+
+  .live-notification-content a {
+    color: rgba(var(--color-accent-1));
+    text-decoration: underline;
+  }
+
+  .color-background-1 .live-notification-content a {
+    text-decoration: none;
+  }
+
+  .live-notification-close {
+    position: absolute;
+    top: 8px;
+    inset-inline-end: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: rgba(var(--color-foreground));
+    line-height: 0;
+    transition: color 0.2s ease;
+  }
+
+  .live-notification-close svg {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  {% if request.design_mode %}
+    /* Style for messages in the theme editor */
+    .live-notification-message.editor-visible {
+      opacity: 1;
+      transform: translateY(0);
+      display: block !important;
+    }
+
+    /* Editor mode label */
+    .editor-label {
+      background: #fff;
+      color: #333;
+      font-size: calc(var(--font-body-scale) * 1.3rem);
+      padding: 1.5rem;
+      display: block;
+      border: 2px dashed red;
+      margin-bottom: 1rem;
+    }
+  {% endif %}
+</style>
+
+<div class="color-{{ section.settings.color_scheme }}">
+  {%- assign display_time_ms = section.settings.display_time | times: 1000 -%}
+  {%- assign delay_ms = section.settings.delay | times: 1000 -%}
+  {%- assign between_delay_ms = section.settings.between_delay | times: 1000 -%}
+  {%- assign cycle_delay_ms = section.settings.cycle_delay | times: 1000 -%}
+
+  {%- assign horizontal_margin = section.settings.horizontal_margin | append: 'px' -%}
+  {%- assign vertical_margin = section.settings.vertical_margin | append: 'px' -%}
+
+  <live-notifications
+    class="live-notifications-container position-{{ section.settings.position }}{% if section.settings.visibility == 'desktop' %} hidden-mobile{% elsif section.settings.visibility == 'mobile' %} hidden-tablet-up{% endif %}"
+    data-display-time="{{ display_time_ms }}"
+    data-delay="{{ delay_ms }}"
+    data-between-delay="{{ between_delay_ms }}"
+    data-cycle-delay="{{ cycle_delay_ms }}"
+    data-session-persistence="{{ section.settings.session_persistence }}"
+    style="--notification-horizontal-margin: {{ horizontal_margin }}; --notification-vertical-margin: {{ vertical_margin }};"
+  >
+    {% if request.design_mode %}
+      <div class="editor-label">{{ 'sections.live_notifications.design_mode_note' | t }}</div>
+    {% endif %}
+    <div class="live-notifications-wrapper">
+      {% for block in section.blocks %}
+        {% if block.type == 'message' %}
+          {% render 'live-notification-message',
+            block: block,
+            settings: block.settings,
+            id: block.id
+          %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  </live-notifications>
+</div>
+
+<script>
+  if (!customElements.get('live-notifications')) {
+    customElements.define(
+      'live-notifications',
+      class LiveNotifications extends HTMLElement {
+        constructor() {
+          super();
+
+          this.messages = [];
+          this.messageQueue = [];
+          this.activeMessage = null;
+          this.timeoutId = null;
+          this.isFirstMessage = true;
+          this.isDismissed = false;
+          this.storageKey = 'liveNotificationsShown';
+        }
+
+        connectedCallback() {
+          const container = this;
+
+          this.sessionPersistence = container.dataset.sessionPersistence === 'true';
+
+          const displayTimeAttr = parseInt(container.dataset.displayTime, 10);
+          const initialDelayAttr = parseInt(container.dataset.delay, 10);
+          const betweenDelayAttr = parseInt(container.dataset.betweenDelay, 10);
+          const cycleDelayAttr = parseInt(container.dataset.cycleDelay, 10);
+
+          this.displayTime = !isNaN(displayTimeAttr) ? displayTimeAttr : 5000;
+          this.initialDelay = !isNaN(initialDelayAttr) ? initialDelayAttr : 3000;
+          this.betweenDelay = !isNaN(betweenDelayAttr) ? betweenDelayAttr : 1000;
+          this.cycleDelay = !isNaN(cycleDelayAttr) ? cycleDelayAttr : 5000;
+
+          if (window.tfpLiveNotification) {
+            this.addProductNotification(
+              `product-${window.lastViewedProductId}-1`,
+              window.tfpLiveNotification,
+            );
+          }
+
+          // Collect messages
+          this.messages = Array.from(container.querySelectorAll('.live-notification-message'));
+          this.messageQueue = [...this.messages];
+
+          // If the mobile dock is enabled, add a class for improved positioning.
+          // Event listener needed for when the dock is placed after the Live Notifications section.
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', this.addOffsetClass.bind(this));
+          } else {
+            this.addOffsetClass();
+          }
+
+          if (!Shopify.designMode) {
+            container.style.display = 'block';
+          }
+
+          this.init();
+        }
+
+        disconnectedCallback() {
+          if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+          }
+        }
+
+        init() {
+          // Do nothing in the Shopify editor
+          if (Shopify.designMode) {
+            return;
+          }
+
+          // Set up close button event listeners
+          this.messages.forEach((message) => {
+            const closeButton = message.querySelector('.live-notification-close');
+            if (closeButton) {
+              closeButton.addEventListener('click', () => {
+                this.isDismissed = true;
+                this.hideMessage(message);
+              });
+            }
+          });
+
+          // Start showing messages
+          this.showNextMessage();
+        }
+
+        addOffsetClass() {
+          if (document.querySelector('#mobile-dock')) {
+            this.classList.add('mobile-dock-offset');
+          }
+        }
+
+        showNextMessage() {
+          // Stop messages for this pageview.
+          if (this.isDismissed) {
+            return;
+          }
+
+          if (this.messageQueue.length === 0) {
+            // When no more messages are left in the queue, decide if we restart or stop
+            if (this.cycleDelay === 0) {
+              // Cycle delay is 0, stopping message cycle
+              return;
+            }
+
+            if (!this.sessionPersistence) {
+              this.clearSeenNotifications();
+            } else {
+              // There are no more queued messages, and persistence is enabled, so we shouldn't cycle.
+              return;
+            }
+
+            // Reset queue and state to show all messages again
+            this.messageQueue = [...this.messages];
+            this.isFirstMessage = true;
+
+            // Wait cycleDelay then show the next message
+            this.timeoutId = setTimeout(() => {
+              this.showNextMessage();
+            }, this.cycleDelay);
+            return;
+          }
+
+          // Grab next message
+          const message = this.messageQueue.shift();
+          const notificationId = message.dataset.notificationId;
+          if (this.isNotificationSeen(notificationId)) {
+            // Already seen. Move on to the next message.
+            this.showNextMessage();
+            return;
+          }
+
+          // Decide if we should apply initialDelay or 0
+          const delay = this.isFirstMessage ? this.initialDelay : 0;
+
+          if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+          }
+
+          // Schedule showing the message
+          this.timeoutId = setTimeout(() => {
+            message.style.display = 'block';
+
+            setTimeout(() => {
+              message.classList.add('active');
+              this.activeMessage = message;
+              this.isFirstMessage = false;
+
+              this.markNotificationAsSeen(notificationId);
+
+              this.timeoutId = setTimeout(() => {
+                this.hideMessage(message);
+              }, this.displayTime);
+            }, 10); // short delay so CSS transitions can kick in
+          }, delay);
+        }
+
+        hideMessage(message) {
+          if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+          }
+
+          // Remove active class to trigger fade-out
+          message.classList.remove('active');
+
+          // Wait for CSS animation to finish before hiding completely
+          setTimeout(() => {
+            message.style.display = 'none';
+
+            // After betweenDelay, show the next message
+            this.timeoutId = setTimeout(() => {
+              this.showNextMessage();
+            }, this.betweenDelay);
+          }, 300);
+        }
+
+        getSeenNotifications() {
+          const json = sessionStorage.getItem(this.storageKey);
+          try {
+            const seenNotifications = JSON.parse(json);
+            return Array.isArray(seenNotifications) ? seenNotifications : [];
+          } catch (e) {
+            console.error('Error accessing sessionStorage:', e);
+            return [];
+          }
+        }
+
+        markNotificationAsSeen(notificationId) {
+          const seenNotifications = this.getSeenNotifications();
+          if (seenNotifications.indexOf(notificationId) === -1) {
+            seenNotifications.push(notificationId);
+            try {
+              sessionStorage.setItem(this.storageKey, JSON.stringify(seenNotifications));
+            } catch (e) {
+              console.error('Error setting sessionStorage:', e);
+            }
+          }
+        }
+
+        unmarkNotificationAsSeen(notificationId) {
+          const seenNotifications = this.getSeenNotifications();
+          const index = seenNotifications.indexOf(notificationId);
+          if (index !== -1) {
+            seenNotifications.splice(index, 1);
+            try {
+              sessionStorage.setItem(this.storageKey, JSON.stringify(seenNotifications));
+            } catch (e) {
+              console.error('Error setting sessionStorage:', e);
+            }
+          }
+        }
+
+        isNotificationSeen(notificationId) {
+          const seenNotifications = this.getSeenNotifications();
+          return seenNotifications.indexOf(notificationId) !== -1;
+        }
+
+        clearSeenNotifications() {
+          try {
+            sessionStorage.removeItem(this.storageKey);
+          } catch (e) {
+            console.error('Error setting sessionStorage:', e);
+          }
+        }
+
+        createNotificationElement(content, settings = {}) {
+          const element = document.createElement('div');
+          element.className = 'live-notification-message';
+          if (settings.additionalClass) {
+            element.classList.add(settings.additionalClass);
+          }
+
+          if (settings.notificationId) {
+            element.setAttribute('data-notification-id', settings.notificationId);
+          }
+
+          // Hide initially
+          element.style.display = 'none';
+
+          // Inner content
+          const contentContainer = document.createElement('div');
+          contentContainer.className = 'live-notification-content';
+          contentContainer.innerHTML = content;
+          element.appendChild(contentContainer);
+
+          // Close button
+          const closeButton = document.createElement('button');
+          closeButton.type = 'button';
+          closeButton.className = 'live-notification-close';
+          closeButton.setAttribute('aria-label', 'Close');
+          closeButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      `;
+          element.appendChild(closeButton);
+
+          return element;
+        }
+
+        addProductNotification(notificationId, content) {
+          const settings = { additionalClass: 'product-notification', notificationId };
+          const productNotification = this.createNotificationElement(content, settings);
+
+          const wrapper = this.querySelector('.live-notifications-wrapper');
+          if (wrapper) {
+            wrapper.insertBefore(productNotification, wrapper.firstChild);
+          } else {
+            this.insertBefore(productNotification, this.firstChild);
+          }
+
+          // Close button handler
+          const closeButton = productNotification.querySelector('.live-notification-close');
+          if (closeButton) {
+            closeButton.addEventListener('click', () => this.hideMessage(productNotification));
+          }
+        }
+      },
+    );
+  }
+</script>
+
+{% schema %}
+  {
+    "name": "t:sections.live_notifications.name",
+    "tag": "section",
+    "class": "section-live-notifications",
+    "enabled_on": {
+      "groups": ["custom.overlays"]
+    },
+    "limit": 1,
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:sections.live_notifications.settings.header_position.content"
+      },
+      {
+        "type": "select",
+        "id": "position",
+        "label": "t:sections.live_notifications.settings.position.label",
+        "info": "t:sections.live_notifications.settings.position.info",
+        "options": [
+          {
+            "value": "top-left",
+            "label": "t:sections.live_notifications.settings.position.options.label_tl"
+          },
+          {
+            "value": "top-right",
+            "label": "t:sections.live_notifications.settings.position.options.label_tr"
+          },
+          {
+            "value": "bottom-right",
+            "label": "t:sections.live_notifications.settings.position.options.label_br"
+          },
+          {
+            "value": "bottom-left",
+            "label": "t:sections.live_notifications.settings.position.options.label_bl"
+          }
+        ],
+        "default": "bottom-left"
+      },
+      {
+        "type": "range",
+        "id": "horizontal_margin",
+        "min": 0,
+        "max": 100,
+        "step": 5,
+        "unit": "px",
+        "label": "t:sections.live_notifications.settings.horizontal_margin.label",
+        "info": "t:sections.live_notifications.settings.horizontal_margin.info",
+        "default": 20
+      },
+      {
+        "type": "range",
+        "id": "vertical_margin",
+        "min": 0,
+        "max": 100,
+        "step": 5,
+        "unit": "px",
+        "label": "t:sections.live_notifications.settings.vertical_margin.label",
+        "info": "t:sections.live_notifications.settings.vertical_margin.info",
+        "default": 20
+      },
+      {
+        "type": "header",
+        "content": "t:sections.live_notifications.settings.header_visibility.content"
+      },
+      {
+        "type": "select",
+        "id": "visibility",
+        "label": "t:sections.live_notifications.settings.visibility.label",
+        "info": "t:sections.live_notifications.settings.visibility.info",
+        "options": [
+          {
+            "value": "both",
+            "label": "t:sections.live_notifications.settings.visibility.options.label_both"
+          },
+          {
+            "value": "desktop",
+            "label": "t:sections.live_notifications.settings.visibility.options.label_desktop"
+          },
+          {
+            "value": "mobile",
+            "label": "t:sections.live_notifications.settings.visibility.options.label_mobile"
+          }
+        ],
+        "default": "both"
+      },
+      {
+        "type": "checkbox",
+        "id": "session_persistence",
+        "label": "t:sections.live_notifications.settings.session_persistence.label",
+        "info": "t:sections.live_notifications.settings.session_persistence.info",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "t:sections.live_notifications.settings.header_timing.content"
+      },
+      {
+        "type": "range",
+        "id": "display_time",
+        "min": 3,
+        "max": 15,
+        "step": 1,
+        "unit": "sec",
+        "label": "t:sections.live_notifications.settings.display_time.label",
+        "info": "t:sections.live_notifications.settings.display_time.info",
+        "default": 5
+      },
+      {
+        "type": "range",
+        "id": "delay",
+        "min": 0,
+        "max": 30,
+        "step": 1,
+        "unit": "sec",
+        "label": "t:sections.live_notifications.settings.delay.label",
+        "info": "t:sections.live_notifications.settings.delay.info",
+        "default": 3
+      },
+      {
+        "type": "range",
+        "id": "between_delay",
+        "min": 0,
+        "max": 10,
+        "step": 1,
+        "unit": "sec",
+        "label": "t:sections.live_notifications.settings.between_delay.label",
+        "info": "t:sections.live_notifications.settings.between_delay.info",
+        "default": 1
+      },
+      {
+        "type": "range",
+        "id": "cycle_delay",
+        "min": 0,
+        "max": 30,
+        "step": 1,
+        "unit": "sec",
+        "label": "t:sections.live_notifications.settings.cycle_delay.label",
+        "info": "t:sections.live_notifications.settings.cycle_delay.info",
+        "default": 0
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "message",
+        "name": "t:sections.live_notifications.blocks.message.name",
+        "settings": [
+          {
+            "type": "richtext",
+            "id": "text",
+            "label": "t:sections.live_notifications.blocks.message.settings.text.label",
+            "default": "<p>Limited time offer! 20% off all products.</p>"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.live_notifications.presets.name",
+        "blocks": [
+          {
+            "type": "message"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

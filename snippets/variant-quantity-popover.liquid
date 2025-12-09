@@ -1,0 +1,107 @@
+{%- liquid
+  assign has_qty_rules = false
+  if variant.quantity_rule.increment > 1 or variant.quantity_rule.min > 1 or variant.quantity_rule.max != null
+    assign has_qty_rules = true
+  endif
+
+  assign has_vol_pricing = false
+  if variant.quantity_price_breaks.size > 0
+    assign has_vol_pricing = true
+  endif
+
+  assign has_popover = false
+  if has_qty_rules or has_vol_pricing
+    assign has_popover = true
+  endif
+-%}
+{% if has_popover %}
+  <quantity-popover class="quantity-popover">
+    <div class="quantity-popover-container">
+      <button
+        type="button"
+        class="quantity-popover-info-button"
+        aria-expanded="false"
+      >
+        {% render 'icons', icon: 'info' %}
+        <span class="quantity-popover-info-button-label">
+          {%- if has_vol_pricing -%}
+            {{ 'products.product.volume_pricing.note' | t }}
+          {%- elsif has_qty_rules -%}
+            {{ 'products.product.quantity.note' | t }}
+          {%- endif -%}
+        </span>
+      </button>
+
+      <div
+        class="quantity-popover-info"
+        tabindex="-1"
+        hidden
+      >
+        <button
+          class="quantity-popover-button-dismiss"
+          type="button"
+          aria-label="{{ 'accessibility.close' | t }}"
+        >
+          &times;
+        </button>
+
+        {%- if has_qty_rules == false -%}
+          <span class="volume-pricing-label">
+            {{- 'products.product.volume_pricing.title' | t -}}
+          </span>
+        {%- endif -%}
+        <div class="quantity-rules">
+          {%- if variant.quantity_rule.increment > 1 -%}
+            <span class="divider">
+              {{-
+                'products.product.quantity.multiples_of'
+                | t: quantity: variant.quantity_rule.increment
+              -}}
+            </span>
+          {%- endif -%}
+          {%- if variant.quantity_rule.min > 1 -%}
+            <span class="divider">
+              {{- 'products.product.quantity.min_of' | t: quantity: variant.quantity_rule.min -}}
+            </span>
+          {%- endif -%}
+          {%- if variant.quantity_rule.max != null -%}
+            <span class="divider">
+              {{- 'products.product.quantity.max_of' | t: quantity: variant.quantity_rule.max -}}
+            </span>
+          {%- endif -%}
+        </div>
+        {%- if variant.quantity_price_breaks.size > 0 -%}
+          <volume-pricing>
+            <ul class="volume-pricing-list">
+              <li class="volume-pricing-item">
+                <span>{{ variant.quantity_rule.min }}+</span>
+                {% liquid
+                  assign money_price = variant.price | money
+                  if settings.currency_code_enabled
+                    assign money_price = variant.price | money_with_currency
+                  endif
+                %}
+                <span>{{ 'products.product.price.each' | t: money: money_price }}</span>
+              </li>
+              {%- for price_break in variant.quantity_price_breaks -%}
+                <li class="volume-pricing-item">
+                  <span>
+                    {{- price_break.minimum_quantity -}}
+                    <span aria-hidden="true">+</span>
+                  </span>
+                  {% liquid
+                    assign money_price = price_break.price | money
+                    if settings.currency_code_enabled
+                      assign money_price = price_break.price | money_with_currency
+                    endif
+                  %}
+                  <span>{{ 'products.product.price.each' | t: money: money_price }}</span>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </volume-pricing>
+        {%- endif -%}
+      </div>
+    </div>
+  </quantity-popover>
+{% endif %}

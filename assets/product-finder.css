@@ -1,0 +1,938 @@
+.product-finder-section {
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+}
+
+.pf-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* --- Header & Toggle Styles --- */
+.pf-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 10px;
+  user-select: none;
+  transition: opacity 0.2s;
+}
+
+.pf-header-row:hover {
+  opacity: 0.8;
+}
+
+.pf-heading {
+  text-align: center;
+  margin: 0;
+  color: var(--color-foreground, #333);
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.pf-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #004FC7;
+}
+
+.pf-closed .icon-minus { display: none; }
+.pf-closed .icon-plus { display: block; }
+.pf-open .icon-plus { display: none; }
+.pf-open .icon-minus { display: block; }
+
+
+/* --- Controls Container --- */
+.pf-controls-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  align-items: flex-start;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  margin-top: 20px;
+}
+
+.pf-control-group {
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+}
+
+.pf-control-group label {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pf-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  font-size: 1.4rem;
+  color: #333;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px top 50%;
+  background-size: 10px auto;
+  height: 48px;
+}
+
+.pf-select:disabled {
+  background-color: #f9f9f9;
+  color: #aaa;
+  cursor: not-allowed;
+  border-color: #eee;
+}
+
+.pf-select:focus {
+  outline: none;
+  border-color: #004FC7;
+}
+
+/* --- Button Group Container --- */
+.pf-btn-group {
+  flex: 1 0 auto;        
+  display: flex;
+  flex-direction: row;   
+  align-items: flex-start; 
+  justify-content: flex-start;
+  min-width: 280px;      
+  gap: 10px;             
+  padding-top: 29px;     
+}
+
+/* Primary Submit Button */
+.pf-button {
+  flex: 2; 
+  width: auto; 
+  height: 48px;
+  cursor: pointer;
+  border: none;
+  background-color: #004FC7;
+  color: white;
+  border-radius: 4px;
+  font-weight: 700;
+  padding: 0 15px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap; 
+}
+
+.pf-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pf-button:hover:not(:disabled) {
+  background-color: #003d99;
+}
+
+/* Reset Button (Ghost Style) */
+.pf-reset-link {
+  flex: 1; 
+  width: auto;
+  height: 48px; 
+  background-color: #fff;
+  border: 1px solid #d1d5db; 
+  color: #555;
+  border-radius: 4px;
+  font-size: 1.1rem; 
+  font-weight: 600;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-top: 0; 
+  white-space: nowrap;
+}
+
+.pf-reset-link:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+  color: #333;
+  text-decoration: none;
+}
+
+.pf-reset-link::before {
+  content: "↻"; 
+  font-size: 1.4rem;
+  margin-right: 6px;
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+/* Filter Wrapper */
+.pf-filter-wrapper {
+  max-width: 400px;
+  margin: 0 auto 20px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pf-filter-wrapper label {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+/* Messages */
+.pf-error {
+  color: #d20000;
+  background: #ffd2d2;
+  padding: 12px;
+  margin-top: 15px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.pf-status {
+  color: #004FC7;
+  background: #eef6ff;
+  padding: 12px;
+  margin-top: 15px;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 700;
+  border: 1px solid #daeaff;
+}
+
+/* Results Grid */
+.pf-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+/* --- VISUAL CATEGORY DIVIDER --- */
+.pf-category-divider {
+  grid-column: 1 / -1; 
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #333;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e5e5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pf-category-divider:first-child {
+  margin-top: 0;
+}
+
+/* Result Card Styles */
+.pf-result-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  color: inherit;
+  cursor: pointer; /* Ensure card looks clickable */
+}
+
+.pf-result-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+  border-color: #ddd;
+}
+
+/* Image Area */
+.pf-card-image-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  background-color: #f9f9f9;
+  overflow: hidden;
+}
+
+.pf-card-image-wrapper img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 10px; 
+  transition: transform 0.5s ease;
+}
+
+.pf-result-card:hover .pf-card-image-wrapper img {
+  transform: scale(1.05);
+}
+
+.pf-img-placeholder {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  background-color: #f0f0f0;
+}
+
+.pf-img-placeholder.no-img {
+  font-size: 0.9rem;
+  color: #999;
+}
+
+/* Info Area */
+.pf-card-info {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.pf-card-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #333;
+  line-height: 1.3;
+}
+
+.pf-card-sku {
+  font-size: 1.2rem;
+  color: #888;
+  margin-bottom: 10px;
+}
+
+.pf-card-cats {
+  font-size: 1.1rem;
+  color: #aaa;
+  margin-bottom: 10px;
+}
+
+/* Meta: Price & Badge */
+.pf-card-meta {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.pf-price {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #4a4a4a;
+}
+
+/* Badges */
+.pf-badge {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.pf-in-stock {
+  background-color: #e6f4e7;
+  color: #337239; 
+}
+
+.pf-out-stock {
+  background-color: #fceaea;
+  color: #922c2c;
+}
+
+.pf-unavailable {
+  background-color: #f0f0f0;
+  color: #888;
+  border: 1px solid #ddd;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+}
+
+/* --- Special Order / Not Available Yet Styles --- */
+.pf-no-match {
+  background-color: #fff;
+  border-color: #eee;
+  opacity: 1;
+}
+
+.pf-no-match .pf-card-title {
+  color: #333;
+}
+
+.pf-no-match:hover {
+  transform: translateY(-4px); /* Restore hover effect */
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+  border-color: #ddd;
+}
+
+/* The "Not Available Yet" Badge */
+.pf-badge.pf-special-order {
+  background-color: #f3f4f6; /* Light Grey/Blue */
+  color: #4b5563;            /* Dark Grey text */
+  border: 1px solid #e5e7eb;
+  display: inline-block;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* The Contact Button */
+.pf-btn-contact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 36px;
+  margin-top: 8px;
+  background-color: #fff;
+  border: 1px solid #004FC7;
+  color: #004FC7;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  pointer-events: auto; /* Ensure clickable inside card */
+  position: relative;
+  z-index: 2;
+}
+
+.pf-btn-contact:hover {
+  background-color: #004FC7;
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Updated ETA Info to handle longer text */
+.pf-eta-info {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #555;
+  background: #fdf8e4;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #faebcc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  flex-wrap: wrap; /* Allow wrapping for long text */
+  gap: 4px;
+}
+
+.pf-eta-label {
+  font-weight: 600;
+  color: #8a6d3b;
+  white-space: nowrap; /* Keep label on one line if possible */
+}
+
+.pf-eta-date {
+  font-weight: 700;
+  margin-left: auto; /* Push date to right */
+}
+
+.pf-loading-text {
+  font-size: 1.1rem;
+  color: #888;
+  font-style: italic;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Loading Spinner */
+.pf-btn-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Fitment Button & Modal Styles --- */
+
+/* Modal Overlay - Max Z-Index to float above headers */
+.pf-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2147483647; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
+}
+
+.pf-modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Modal Content */
+.pf-modal-content {
+  background: #fff;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  border-radius: 4px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.pf-modal-overlay.open .pf-modal-content {
+  transform: translateY(0);
+}
+
+/* Modal Header */
+.pf-modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #e1e1e1;
+  background: #f7f7f7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pf-modal-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #df472e; 
+  margin: 0;
+}
+
+.pf-modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  color: #515151;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+/* Modal Body */
+.pf-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+/* Fitment List Styling */
+.pf-fitment-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  color: #515151;
+  margin-bottom: 20px; 
+  border-bottom: 1px solid #eee; 
+}
+
+.pf-fitment-table th {
+  text-align: left;
+  border-bottom: 2px solid #df472e;
+  padding: 12px 8px;
+  font-weight: 700;
+  color: #333;
+  position: sticky; 
+  top: 0;
+  background: #fff; 
+  z-index: 5;
+}
+
+.pf-fitment-table td {
+  border-bottom: 1px solid #eee;
+  padding: 10px 8px;
+}
+
+.pf-fitment-table tr:hover td {
+  background-color: #f9f9f9;
+}
+
+.pf-modal-loading {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+  font-style: italic;
+}
+
+/* --- MOBILE OPTIMIZATIONS --- */
+@media screen and (max-width: 768px) {
+  .pf-container {
+    padding: 0 10px;
+  }
+
+  .pf-controls-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 15px;
+    gap: 10px;
+  }
+
+  .pf-control-group {
+    width: 100%;
+    flex: auto;
+    min-width: 0;
+  }
+
+  .pf-select {
+    height: 50px;
+    font-size: 16px;
+  }
+
+  .pf-btn-group {
+    width: 100%;
+    padding-top: 15px;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .pf-button, .pf-reset-link {
+    width: 100%;
+    flex: auto;
+    height: 50px;
+    font-size: 16px;
+  }
+  
+  .pf-reset-link {
+    text-align: center;
+    padding: 12px;
+    margin-top: 0;
+  }
+
+  .pf-filter-wrapper {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .pf-category-divider {
+    font-size: 1.3rem; 
+    margin-top: 20px; 
+    padding-bottom: 5px;
+  }
+
+  .pf-results-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .pf-card-info {
+    padding: 10px;
+  }
+
+  .pf-card-title {
+    font-size: 1.1rem;
+  }
+  
+  .pf-card-sku {
+    font-size: 1rem;
+  }
+
+  .pf-price {
+    font-size: 1.2rem;
+  }
+  
+  .pf-badge {
+    font-size: 0.75rem;
+    padding: 2px 5px;
+  }
+  
+  .pf-modal-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  /* MSRP Price Label */
+  .pf-price-label {
+      font-weight: 400;
+      color: #666;
+      margin-right: 4px;
+      font-size: 0.9em;
+  }
+
+  .pf-eta-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .pf-eta-date {
+    margin-left: 0;
+  }
+}
+
+/* --- Action Buttons Row --- */
+.pf-action-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* Update Fitment Button to share space */
+.pf-fitment-btn {
+  flex: 1;
+  margin-top: 0; /* Reset margin since it's in a flex container */
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  color: #183f7b; 
+  border: 1px solid #183f7b;
+  padding: 8px 4px;
+  border-radius: 0; 
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.pf-fitment-btn:hover {
+  background: #183f7b;
+  color: #fff;
+}
+
+/* New Specs Button Styling */
+.pf-specs-btn {
+  flex: 1;
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  color: #555; 
+  border: 1px solid #999;
+  padding: 8px 4px;
+  border-radius: 0; 
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.pf-specs-btn:hover {
+  background: #555;
+  color: #fff;
+  border-color: #555;
+}
+
+/* --- Tech Specs Modal Styling --- */
+.pf-specs-content {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+/* The API returns raw HTML tables, so we style them to look good */
+.pf-specs-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+
+.pf-specs-content th, 
+.pf-specs-content td {
+  padding: 8px;
+  border: 1px solid #eee;
+  text-align: left;
+}
+
+.pf-specs-content th {
+  background-color: #f9f9f9;
+  font-weight: 700;
+}
+/* --- Modal Footer & Add to Cart --- */
+.pf-modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  background: #f7f7f7;
+  display: flex;
+  justify-content: flex-end; /* Align button to the right */
+  align-items: center;
+}
+
+.pf-btn-modal-atc {
+  background-color: #004FC7;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.pf-btn-modal-atc:hover {
+  background-color: #003d99;
+}
+
+.pf-btn-modal-atc:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pf-btn-modal-atc.success {
+  background-color: #28a745; /* Green for success */
+}
+
+.pf-modal-error-msg {
+  color: #d20000;
+  font-size: 0.9rem;
+  margin-right: 15px;
+}
+/* --- Modal Footer & Add to Cart --- */
+.pf-modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  background: #f7f7f7;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 15px; /* Space between Quantity and Button */
+}
+
+/* Quantity Selector Styles */
+.pf-qty-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center align text with input */
+  margin-right: 15px;
+}
+
+.pf-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pf-qty-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.pf-qty-input {
+  width: 70px; /* Slightly wider */
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1.1rem; /* Larger input text */
+  text-align: center;
+}
+
+/* Stock Info Text - UPDATED */
+.pf-stock-info {
+  font-size: 0.95rem; /* Increased from 0.8rem */
+  font-weight: 600;   /* Made bold */
+  color: #28a745;     /* Green color for visibility */
+  margin-top: 6px;
+  text-align: center;
+}
+
+.pf-btn-modal-atc {
+  background-color: #004FC7;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.pf-btn-modal-atc:hover {
+  background-color: #003d99;
+}
+
+.pf-btn-modal-atc:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pf-btn-modal-atc.success {
+  background-color: #28a745;
+}
+
+.pf-modal-error-msg {
+  color: #d20000;
+  font-size: 0.9rem;
+  margin-right: 15px;
+}
+
+@media screen and (max-width: 768px) {
+  .pf-modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .pf-qty-wrapper {
+    align-items: center;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  .pf-btn-modal-atc {
+    width: 100%;
+  }
+}

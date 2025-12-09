@@ -1,0 +1,33 @@
+{% comment %} Yotpo {% endcomment %}
+<div
+  class="yotpo yotpo-main-widget"
+  data-product-id="{{ product.id }}"
+  data-name="{{ product.title | escape }}"
+  data-url="{{ shop.url }}{{ product.url }}"
+  data-image-url="{{ product.featured_image | image_url: 'large' | replace: '?', '%3F' | replace: '&', '%26' }}"
+  data-price="{{ variant.price | money_without_currency }}"
+  data-currency="{{ shop.currency }}"
+></div>
+
+{% comment %} Stamped {% endcomment %}
+<div
+  id="stamped-main-widget"
+  data-product-id="{{ product.id }}"
+  data-name="{{ product.title | escape }}"
+  data-url="{{ shop.url }}{{ product.url }}"
+  data-image-url="{{ product.featured_image | image_url: "large" | replace: '?', '%3F' | replace: '&', '%26' }}"
+  data-product-sku="{{ product.handle }}"
+  data-product-type="{{ product.type }}"
+></div>
+
+{% comment %} Judge.me {% endcomment %}
+<div style="clear:both"></div>
+<div
+  id="judgeme_product_reviews"
+  class="jdgm-widget jdgm-review-widget"
+  data-product-title="{{ product.title | escape }}"
+  data-id="{{ product.id }}"
+  data-auto-install="false"
+>
+  {{ product.metafields.judgeme.widget }}
+</div>

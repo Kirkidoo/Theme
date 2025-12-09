@@ -1,0 +1,446 @@
+{% liquid
+  assign is_empty = true
+  for block in section.blocks
+    if section.settings.google_maps_api_key != blank and block.settings.address != blank and block.settings.title != blank or block.settings.address_label != blank
+      assign is_empty = false
+    endif
+  endfor
+
+  assign hide_because_empty = false
+  if request.design_mode == false and section.settings.hide_if_empty and is_empty
+    assign hide_because_empty = true
+  endif
+%}
+{%- unless hide_because_empty -%}
+  {{ 'section-map.css' | asset_url | stylesheet_tag }}
+
+  <script src="{{ 'map.js' | asset_url }}" defer="defer"></script>
+
+  {% liquid
+    assign color_scheme_string = section.settings.color_scheme | append: ''
+    assign section_content_class = 'section-content'
+    unless color_scheme_string == 'background-1'
+      assign section_content_class = section_content_class | append: ' section-content-padded'
+    endunless
+
+    assign has_image = false
+    if section.settings.image != blank
+      assign has_image = true
+    endif
+  %}
+
+  <style>
+    #shopify-section-{{ section.id }} .section-content {
+    	margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+    	margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    #shopify-section-{{ section.id }} .section-content-padded {
+    	margin-top: 0;
+    	margin-bottom: 0;
+    	padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+    	padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    @media (min-width: 990px) {
+    	#shopify-section-{{ section.id }} .section-content {
+    		margin-top: {{ section.settings.spacing_top }}px;
+    		margin-bottom: {{ section.settings.spacing_bottom }}px;
+    	}
+
+    	#shopify-section-{{ section.id }} .section-content-padded {
+    		margin-top: 0;
+    		margin-bottom: 0;
+    		padding-top: {{ section.settings.spacing_top }}px;
+    		padding-bottom: {{ section.settings.spacing_bottom }}px;
+    	}
+    }
+  </style>
+
+  {%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+  {%- assign visibility_classes = visibility_classes | strip -%}
+
+  <div class="{{ visibility_classes }}">
+    <div class="color-{{ section.settings.color_scheme }}">
+      <div class="container">
+        <div class="{{ section_content_class }}">
+          {% if section.settings.heading != blank or section.settings.subheading != blank %}
+            <div class="section-headings {% if section.settings.subheading != blank %}with-subheading{% endif %}">
+              {% if section.settings.heading != blank or section.settings.subheading != blank %}
+                <div class="section-headings-content{% if section.settings.headings_alignment == 'center' %} center-aligned{% endif %}">
+                  {% if section.settings.heading != blank %}
+                    <{{ section.settings.heading_tag }} class="section-heading heading-size-{{ section.settings.heading_size }}">
+                      {{- section.settings.heading -}}
+                    </{{ section.settings.heading_tag }}>
+                  {% endif %}
+                  {% if section.settings.subheading != blank %}
+                    <p class="section-subheading">{{ section.settings.subheading }}</p>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          <div class="section-map-wrap color-{{ section.settings.content_color_scheme }}">
+            <map-locations
+              {% if section.settings.google_maps_api_key != blank %}
+                google-maps-api-key="{{ section.settings.google_maps_api_key }}"
+              {% endif %}
+              {% if section.settings.marker_image != blank %}
+                marker-image-url="{{ section.settings.marker_image | image_url: width: 40 }}"
+              {% endif %}
+              section-id="{{ section.id }}"
+              zoom="{{ section.settings.zoom }}"
+              {% if section.settings.custom_colors_enabled %}
+                colors='
+                  {
+                  	"foreground": "{{ section.settings.foreground_color }}",
+                  	"fb_1": "{{ section.settings.background_color | color_mix: section.settings.foreground_color, 20 }}",
+                  	"fb_2": "{{ section.settings.background_color | color_mix: section.settings.foreground_color, 50 }}",
+                  	"fb_3": "{{ section.settings.background_color | color_mix: section.settings.foreground_color, 75 }}",
+                  	"background": "{{ section.settings.background_color }}",
+                  	"bm": "{{ section.settings.background_color | color_modify: 'saturation', 50 | color_darken: 15 }}"
+                  }
+                '
+              {% endif %}
+            >
+              <div class="section-map-wrap-inner">
+                <div class="section-map-locations-wrap">
+                  <div class="section-map-locations-map-wrap-inner">
+                    <div class="section-map-locations-scroll">
+                      <div class="section-map-locations">
+                        {% for block in section.blocks %}
+                          {% if block.settings.address != blank %}
+                            <div
+                              class="section-map-locations-location"
+                              data-address="{{ block.settings.address }}"
+                              data-info="{{ block.settings.address_info_window | escape }}"
+                              {{ block.shopify_attributes }}
+                            >
+                              {% if block.settings.title != blank %}
+                                <h3 class="location-title">
+                                  {% if section.blocks.size > 1 and has_image == false %}
+                                    <a href="#" class="js-location-trigger">
+                                  {% endif %}
+                                  {{ block.settings.title }}
+                                  {% if section.blocks.size > 1 and has_image == false %}
+                                    </a>
+                                  {% endif %}
+                                </h3>
+                              {% endif %}
+
+                              {% if block.settings.address_label != blank %}
+                                <address class="location-address rte">
+                                  {{ block.settings.address_label }}
+                                </address>
+                              {% endif %}
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="section-map-main-wrap">
+                  {% if has_image %}
+                    <div class="map-image-wrap">
+                      <div class="aspect-ratio" style="--ratio-percent: 56.25%;">
+                        {% if section.settings.image_link != blank %}
+                          <a
+                            href="{{ section.settings.image_link }}"
+                            target="_blank"
+                            rel="noopener"
+                          >
+                        {% endif %}
+                        {{
+                          section.settings.image
+                          | image_url: width: 1400
+                          | image_tag:
+                            class: 'map-image',
+                            sizes: '(min-width: 1420px) 700px, (min-width: 990px) calc((100vw - 6rem) / 2), calc(100vw - 3rem)',
+                            widths: '300, 440, 700, 850, 1100, 1200, 1400'
+                        }}
+                        {% if section.settings.image_link != blank %}
+                          </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% else %}
+                    <div id="Map-{{ section.id }}" class="map-card"></div>
+                  {% endif %}
+
+                  {% if section.blocks.size > 1 %}
+                    <button type="button" class="map-card-button-reset visually-hidden">
+                      {{ 'sections.map.reset_map' | t }}
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+            </map-locations>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endunless -%}
+{% schema %}
+  {
+    "name": "t:sections.map.name",
+    "tag": "section",
+    "class": "section section-map",
+    "disabled_on": {
+      "groups": ["header", "footer", "custom.overlays"]
+    },
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:sections.all.section_content.heading"
+      },
+      {
+        "type": "inline_richtext",
+        "id": "heading",
+        "label": "t:sections.map.settings.heading.label",
+        "default": "Our Stores"
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:sections.all.heading_size.label",
+        "default": "md",
+        "options": [
+          {
+            "value": "sm",
+            "label": "t:sections.all.heading_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.heading_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.heading_size.options.label_lg"
+          },
+          {
+            "value": "xl",
+            "label": "t:sections.all.heading_size.options.label_xl"
+          },
+          {
+            "value": "xxl",
+            "label": "t:sections.all.heading_size.options.label_xxl"
+          }
+        ]
+      },
+      {
+        "type": "inline_richtext",
+        "id": "subheading",
+        "label": "t:sections.map.settings.subheading.label"
+      },
+      {
+        "type": "select",
+        "id": "headings_alignment",
+        "label": "t:sections.all.headings_alignment.label",
+        "default": "left",
+        "options": [
+          {
+            "value": "left",
+            "label": "t:sections.all.headings_alignment.options.label_left"
+          },
+          {
+            "value": "center",
+            "label": "t:sections.all.headings_alignment.options.label_center"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.map.settings.header_1.content",
+        "info": "t:sections.map.settings.header_1.info"
+      },
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:sections.map.settings.image.label"
+      },
+      {
+        "type": "url",
+        "id": "image_link",
+        "label": "t:sections.map.settings.image_link.label",
+        "info": "t:sections.map.settings.image_link.info"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.map.settings.header_2.content"
+      },
+      {
+        "type": "text",
+        "id": "google_maps_api_key",
+        "label": "t:sections.map.settings.google_maps_api_key.label",
+        "info": "t:sections.map.settings.google_maps_api_key.info"
+      },
+      {
+        "type": "range",
+        "id": "zoom",
+        "min": 0,
+        "max": 19,
+        "step": 1,
+        "label": "t:sections.map.settings.zoom.label",
+        "info": "t:sections.map.settings.zoom.info",
+        "default": 14
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "checkbox",
+        "id": "custom_colors_enabled",
+        "default": false,
+        "label": "t:sections.map.settings.custom_colors_enabled.label"
+      },
+      {
+        "type": "color",
+        "id": "foreground_color",
+        "label": "t:sections.map.settings.foreground_color.label",
+        "default": "#222222",
+        "visible_if": "{{ section.settings.custom_colors_enabled }}"
+      },
+      {
+        "type": "color",
+        "id": "background_color",
+        "label": "t:sections.map.settings.background_color.label",
+        "default": "#ffffff",
+        "visible_if": "{{ section.settings.custom_colors_enabled }}"
+      },
+      {
+        "type": "image_picker",
+        "id": "marker_image",
+        "label": "t:sections.map.settings.marker_image.label"
+      },
+      {
+        "type": "color_scheme",
+        "id": "content_color_scheme",
+        "label": "t:sections.all.colors.content_color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.seo_heading.label"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "default": "h2",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "hide_if_empty",
+        "default": false,
+        "label": "t:sections.map.settings.hide_if_empty.label",
+        "info": "t:sections.all.advanced.hide_if_empty.info"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "location",
+        "name": "t:sections.map.blocks.location.name",
+        "settings": [
+          {
+            "type": "text",
+            "id": "address",
+            "default": "Athens, Greece",
+            "label": "t:sections.map.blocks.location.address.label"
+          },
+          {
+            "type": "text",
+            "id": "title",
+            "default": "Location",
+            "label": "t:sections.map.blocks.location.title.label"
+          },
+          {
+            "type": "richtext",
+            "id": "address_label",
+            "default": "<p>5241 Van Sig Str<br>Hochkins, Florida<br>51901, United States</p><p><strong>(555) 555-5555</strong></p>",
+            "label": "t:sections.map.blocks.location.address_label.label"
+          },
+          {
+            "type": "richtext",
+            "id": "address_info_window",
+            "label": "t:sections.map.blocks.location.address_info_window.label",
+            "info": "t:sections.map.blocks.location.address_info_window.info"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.map.presets.name",
+        "category": "t:sections.all.preset_category.content",
+        "blocks": [
+          {
+            "type": "location"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

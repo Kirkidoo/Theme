@@ -1,0 +1,87 @@
+{% liquid
+  assign badge_1 = product.metafields.custom.custom_badge_1.value
+  assign badge_2 = product.metafields.custom.custom_badge_2.value
+  assign badge_3 = product.metafields.custom.custom_badge_3.value
+
+  assign badge_1_visible = false
+  assign badge_2_visible = false
+  assign badge_3_visible = false
+
+  unless badge_1 == blank
+    assign badge_1_visible = true
+  endunless
+
+  unless badge_2 == blank
+    assign badge_2_visible = true
+  endunless
+
+  unless badge_3 == blank
+    assign badge_3_visible = true
+  endunless
+
+  assign current_date = 'now' | date: '%s'
+  assign publish_date = product.published_at | date: '%s'
+  assign published_diff_seconds = current_date | minus: publish_date
+  assign published_diff_days = published_diff_seconds | divided_by: 86400
+
+  unless settings.custom_badge_1_days_ago == 0
+    if published_diff_days < settings.custom_badge_1_days_ago and badge_1 != blank
+      assign badge_1_visible = true
+    else
+      assign badge_1_visible = false
+    endif
+  endunless
+
+  unless settings.custom_badge_2_days_ago == 0
+    if published_diff_days < settings.custom_badge_2_days_ago and badge_2 != blank
+      assign badge_2_visible = true
+    else
+      assign badge_2_visible = false
+    endif
+  endunless
+
+  unless settings.custom_badge_3_days_ago == 0
+    if published_diff_days < settings.custom_badge_3_days_ago and badge_3 != blank
+      assign badge_3_visible = true
+    else
+      assign badge_3_visible = false
+    endif
+  endunless
+%}
+
+{% if badge_1_visible or badge_2_visible or badge_3_visible %}
+  <div class="{{ class }}">
+    {% if badge_1_visible %}
+      <div class="card-badge">
+        <span
+          class="badge"
+          style="background-color: {{ settings.custom_badge_1_color_background }}; border-color: {{ settings.custom_badge_1_color_background }}; color: {{ settings.custom_badge_1_color_text }};"
+        >
+          {{ badge_1 }}
+        </span>
+      </div>
+    {% endif %}
+
+    {% if badge_2_visible %}
+      <div class="card-badge">
+        <span
+          class="badge"
+          style="background-color: {{ settings.custom_badge_2_color_background }}; border-color: {{ settings.custom_badge_2_color_background }}; color: {{ settings.custom_badge_2_color_text }};"
+        >
+          {{ badge_2 }}
+        </span>
+      </div>
+    {% endif %}
+
+    {% if badge_3_visible %}
+      <div class="card-badge">
+        <span
+          class="badge"
+          style="background-color: {{ settings.custom_badge_3_color_background }}; border-color: {{ settings.custom_badge_3_color_background }}; color: {{ settings.custom_badge_3_color_text }};"
+        >
+          {{ badge_3 }}
+        </span>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}

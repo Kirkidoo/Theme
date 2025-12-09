@@ -1,0 +1,33 @@
+{% assign block_classes = 'flexi-contact-form__column flexi-contact-form__column--'
+  | append: block.id
+%}
+<div class="{{ block_classes }}">
+  <div class="flexi-column__content" {{ block.shopify_attributes }}>
+    {% content_for 'blocks' %}
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._contact_form_column.name",
+    "tag": null,
+    "settings": [],
+    "blocks": [
+      { "type": "_flexi-heading" },
+      { "type": "_flexi-text" },
+      { "type": "_flexi-richtext" },
+      { "type": "_flexi-media" },
+      { "type": "_contact-form-form-input" },
+      { "type": "_contact-form-form-textarea" },
+      { "type": "_contact-form-form-select" },
+      { "type": "_contact-form-form-checkbox" },
+      { "type": "_contact-form-form-hidden" },
+      { "type": "_contact-form-form-button" }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._contact_form_column.name"
+      }
+    ]
+  }
+{% endschema %}

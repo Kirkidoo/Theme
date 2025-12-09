@@ -1,0 +1,47 @@
+{% comment %}
+  Renders a mega menu side item.
+
+  Accepts:
+  - url: {String} Optional. The URL to link to.
+  - image: {Object} Optional. The side item's image.
+  - title: {String} Optional. The side item's title.
+  - text: {String} Optional. The side item's description.
+{% endcomment %}
+
+<div class="mega-menu-column-feature">
+  {% if url != blank %}
+    <a href="{{ url }}">
+  {% endif %}
+
+  <div class="mega-menu-feature">
+    {% if image != blank %}
+      {{
+        image
+        | image_url: width: 750
+        | image_tag:
+          class: 'mega-menu-feature-media',
+          loading: 'lazy',
+          widths: '200, 420, 650, 750',
+          sizes: 'calc((100vw - 3rem - 1rem) / 5)'
+      }}
+    {% endif %}
+
+    <div class="mega-menu-feature-content">
+      {% if title != blank %}
+        <p class="mega-menu-feature-heading h5">
+          {{ title }}
+        </p>
+      {% endif %}
+
+      {% if text != blank %}
+        <div class="mega-menu-feature-text">
+          {{ text }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if url != blank %}
+    </a>
+  {% endif %}
+</div>

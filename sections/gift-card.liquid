@@ -1,0 +1,169 @@
+<main class="gift-card">
+  <div class="gift-card-header">
+    <h2 class="gift-card-header-title">{{ 'gift_cards.issued.subtext' | t }}</h2>
+
+    {%- if gift_card.enabled == false or gift_card.expired -%}
+      <p class="gift-card-expired">{{ 'gift_cards.issued.expired' | t }}</p>
+    {%- endif -%}
+  </div>
+
+  <div class="gift-card-content">
+    <div class="gift-card-details-wrap">
+      <div class="gift-card-price">
+        <p class="gift-card-price-value">
+          {% if settings.currency_code_enabled %}
+            {{ gift_card.initial_value | money_with_currency }}
+          {% else %}
+            {{ gift_card.initial_value | money }}
+          {% endif %}
+        </p>
+
+        {% if settings.currency_code_enabled %}
+          {%- assign gift_card_balance = gift_card.balance | money_with_currency -%}
+        {% else %}
+          {%- assign gift_card_balance = gift_card.balance | money -%}
+        {% endif %}
+        {%- if gift_card.balance != gift_card.initial_value -%}
+          <p class="gift-card-balance">
+            {{ 'gift_cards.issued.remaining_html' | t: balance: gift_card_balance }}
+          </p>
+        {%- endif -%}
+      </div>
+
+      <div class="gift-card-code-wrap">
+        <input
+          type="text"
+          class="gift-card-number"
+          value="{{ gift_card.code | format_code }}"
+          aria-label="{{ 'gift_cards.issued.gift_card_code' | t }}"
+          readonly
+        >
+        <div class="gift-card-copy-code no-print">
+          <button class="gift-card-copy-link">
+            {% render 'icons', icon: 'copy' %}
+
+            <span class="visually-hidden">{{ 'gift_cards.issued.copy_code' | t }}</span>
+          </button>
+          <span class="gift-card-copy-success" role="status"></span>
+          <template>
+            {%- render 'icons', icon: 'check' -%}
+            {{ 'gift_cards.issued.copy_code_success' | t }}
+          </template>
+        </div>
+      </div>
+
+      {%- if section.settings.gift_card_image != blank -%}
+        {%- liquid
+          assign ratio = 1
+          if section.settings.image_ratio == 'portrait'
+            assign ratio = 0.8
+          elsif section.settings.image_ratio == 'landscape'
+            assign ratio = 1.77
+          elsif section.settings.image_ratio == 'adapt'
+            assign ratio = section.settings.gift_card_image.aspect_ratio
+          endif
+          if ratio == 0 or ratio == null
+            assign ratio = 1
+          endif
+        -%}
+
+        <div
+          class="aspect-ratio"
+          style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+        >
+          {{
+            section.settings.gift_card_image
+            | image_url: width: 650
+            | image_tag: class: 'gift-card-custom-image', loading: 'lazy'
+          }}
+        </div>
+      {%- else -%}
+        <img
+          src="{{ 'gift-card/card.svg' | shopify_asset_url }}"
+          alt=""
+          class="gift-card-image"
+          width="650"
+          height="433"
+          loading="lazy"
+        >
+      {%- endif -%}
+    </div>
+
+    <div class="gift-card-qr-code-wrap">
+      <p>{{ 'gift_cards.issued.qr_image_description' | t }}</p>
+      <div class="gift-card-qr-code" data-identifier="{{ gift_card.qr_identifier }}"></div>
+    </div>
+
+    <div class="gift-card-pass-url">
+      {%- if gift_card.pass_url -%}
+        <a href="{{ gift_card.pass_url }}" class="gift_card-apple-wallet">
+          <img
+            src="{{ 'gift-card/add-to-apple-wallet.svg' | shopify_asset_url }}"
+            width="120"
+            height="40"
+            alt="{{ 'gift_cards.issued.add_to_apple_wallet' | t }}"
+            loading="lazy"
+          >
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+
+  <div class="gift-card-information no-print">
+    <div class="gift-card-buttons">
+      <button
+        class="button-text-link"
+        onclick="window.print();"
+      >
+        {{ 'gift_cards.issued.print_gift_card' | t }}
+      </button>
+
+      <a
+        href="{{ request.origin }}"
+        class="button button-gift-card-shop"
+        target="_blank"
+        rel="noopener"
+        aria-describedby="a11y-new-window-message"
+      >
+        {{ 'gift_cards.issued.shop_link' | t }}
+      </a>
+    </div>
+  </div>
+</main>
+
+{% schema %}
+  {
+    "name": "t:sections.gift_card.name",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "gift_card_image",
+        "label": "t:sections.gift_card.settings.gift_card_image.label"
+      },
+      {
+        "type": "select",
+        "id": "image_ratio",
+        "label": "t:sections.gift_card.settings.image_ratio.label",
+        "default": "landscape",
+        "options": [
+          {
+            "value": "adapt",
+            "label": "t:sections.gift_card.settings.image_ratio.options.adapt"
+          },
+          {
+            "value": "square",
+            "label": "t:sections.gift_card.settings.image_ratio.options.square"
+          },
+          {
+            "value": "portrait",
+            "label": "t:sections.gift_card.settings.image_ratio.options.portrait"
+          },
+          {
+            "value": "landscape",
+            "label": "t:sections.gift_card.settings.image_ratio.options.landscape"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

@@ -1,0 +1,74 @@
+{% comment %}
+  Renders the mini cart's footer
+
+  Usage:
+  {% render 'header-mini-cart-footer' %}
+{% endcomment %}
+
+{%- if cart != empty -%}
+  <div class="mini-cart-footer">
+    {% if settings.minicart_show_coupon_code %}
+      {% render 'cart-coupon', minicart: true %}
+    {% endif %}
+
+    {%- if cart.cart_level_discount_applications.size > 0 -%}
+      <ul
+        class="discounts list-unstyled"
+        role="list"
+        aria-label="{{ 'customer.order.discount' | t }}"
+      >
+        {%- for discount in cart.cart_level_discount_applications -%}
+          <li class="discounts-discount discounts-discount-position">
+            {% render 'icons', icon: 'label' %}
+            {{ discount.title }}
+            (-{{ discount.total_allocated_amount | money }})
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+
+    <div id="mini-cart-totals" class="mini-cart-recap">
+      <span>{{ 'templates.cart.headings.total' | t }}</span>
+      <span>{{ cart.total_price | money_with_currency }}</span>
+    </div>
+
+    {% if settings.cart_policy_consent_page != blank %}
+      <div class="mini-cart-terms-conditions-disclaimer">
+        <cart-consent-checkbox>
+          <label class="checkbox-cart-policy-consent" for="checkbox-cart-policy-consent-mini-cart">
+            <input type="checkbox" id="checkbox-cart-policy-consent-mini-cart" required>
+            <span class="rte">
+              {{
+                'templates.cart.checkbox_cart_policy_consent_html'
+                | t:
+                  link: settings.cart_policy_consent_page.url,
+                  label: settings.cart_policy_consent_page.title
+              }}
+            </span>
+          </label>
+        </cart-consent-checkbox>
+      </div>
+    {% endif %}
+
+    <div class="mini-cart-footer-actions">
+      {% if settings.minicart_show_cart_button %}
+        <a
+          href="{{ routes.cart_url }}"
+          class="button {% if settings.minicart_show_checkout_button %}button-tertiary{% endif %}"
+        >
+          {{ 'sections.minicart.view_cart' | t }}
+          {% render 'angle', direction: 'right' %}
+        </a>
+      {% endif %}
+
+      {% if settings.minicart_show_checkout_button %}
+        <button type="submit" class="button" name="checkout">
+          {{ 'templates.cart.checkout' | t }}
+          {% render 'angle', direction: 'right' %}
+        </button>
+      {% endif %}
+    </div>
+
+    <span class="spinner-sm"></span>
+  </div>
+{%- endif -%}

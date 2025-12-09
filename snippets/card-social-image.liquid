@@ -1,0 +1,98 @@
+{% comment %}
+  Renders a customizable social image card.
+
+  Accepts:
+  - image: {Object} Optional. Image object.
+  - description: {String} Optional. The description.
+  - link: {String} Optional. The link.
+  - class: {String} Optional. CSS class.
+  - columns {Number} Optional. The number of columns the card is rendered in.
+  - id: {String} Optional. HTML id.
+  - aspect: {String} Optional. The image aspect ratio (adapt, landscape, square, portrait).
+  - image_crop: {Boolean} Optional. Whether the image should be cropped in its container or not.
+  - icon: {String} Optional. The card's icon.
+  - new_window: {Boolean} Optional. Opens the link in a new window.
+
+  Usage:
+  {% render 'card-social-image', image: image %}
+{% endcomment %}
+
+{% liquid
+  assign ratio = 1
+  if aspect == 'portrait'
+    assign ratio = 0.8
+  elsif aspect == 'landscape'
+    assign ratio = 1.77
+  elsif image and aspect == 'adapt'
+    assign ratio = image.aspect_ratio
+  endif
+  if ratio == 0 or ratio == null
+    assign ratio = 1
+  endif
+
+  assign fit = 'cover'
+  assign style = ''
+  if image_crop != true
+    assign fit = 'contain'
+    assign style = 'object-position: 50%;'
+  endif
+%}
+
+<div
+  {% if id != blank %}
+    id="{{ id }}"
+  {% endif %}
+  class="card-social-image {{ class }}"
+>
+  {% if link %}
+    <a
+      href="{{ link }}"
+      {% if new_window %}
+        target="_blank" rel="noopener"
+      {% endif %}
+    >
+  {% endif %}
+
+  {% if ratio != 0 %}
+    <div
+      class="aspect-ratio aspect-ratio-fit-{{ fit }}"
+      style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+    >
+  {% endif %}
+  {% if image != blank %}
+    {%- capture image_sizes -%}
+      {% if columns == 1 %}
+        (min-width: 1420px) 1420px, calc(100vw - 3rem)
+      {% else %}
+        (min-width: 1200px) calc((100vw - 6rem) / 2), (min-width: 990px) calc((100vw - 6rem) * 0.6), (min-width: 750px) calc(100vw - 4rem), calc(100vw - 3rem)
+      {% endif %}
+    {%- endcapture -%}
+    {{
+      image
+      | image_url: width: 2840
+      | image_tag:
+        sizes: image_sizes,
+        widths: '165, 440, 650, 850, 1100, 1200, 1420, 2840',
+        style: style
+    }}
+  {% else %}
+    {{ 'collection-1' | strip | placeholder_svg_tag: 'placeholder-svg' }}
+  {% endif %}
+
+  {% unless description == blank %}
+    <span class="visually-hidden">{{ description }}</span>
+  {% endunless %}
+
+  {% if ratio != 0 %}
+    </div>
+  {% endif %}
+
+  {% unless icon == blank %}
+    <span class="card-social-image-icon">
+      {% render 'icons', icon: icon %}
+    </span>
+  {% endunless %}
+  {% if link %}
+    </a>
+  {% endif %}
+</div>

@@ -1,0 +1,93 @@
+/* Section - Popup overlay
+========================================= */
+popup-overlay[open] .modal-dialog-wrap {
+  display: flex;
+}
+
+.popup-overlay-dialog-wrap .modal-dialog-content-wrap {
+  padding: 0;
+}
+
+.popup-overlay-dialog-wrap .modal-dialog-content {
+  padding: 2rem;
+}
+
+@media (min-width: 750px) {
+  .popup-overlay-dialog-wrap .modal-dialog-content {
+    padding: 4.5rem;
+  }
+}
+
+.modal-dialog-image-position-right .modal-dismiss-button,
+.modal-dialog-image-position-top .modal-dismiss-button {
+  color: var(--color-base-white);
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--buttons-radius);
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 32px;
+  height: 32px;
+}
+
+.popup-overlay-content {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  grid-gap: 1.5rem;
+}
+
+.popup-overlay-content > .button {
+  margin: 0.5rem 0;
+}
+
+.popup-overlay-content .popup-overlay-newsletter-form,
+.popup-overlay-content .popup-overlay-countdown {
+  margin: 1rem 0;
+}
+
+.popup-overlay-countdown + .popup-overlay-newsletter-form {
+  margin-top: 0;
+}
+
+.popup-overlay-content > *,
+.popup-overlay-content > :last-child {
+  margin-bottom: 0;
+}
+
+.popup-overlay-countdown .countdown-value {
+  box-shadow: inset 0 0 0 1px rgba(var(--color-border));
+}
+
+.popup-overlay-countdown .countdown-timer-expiration-message {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-border)),
+    0 2px 0 rgba(var(--color-box-shadow));
+  padding: 1rem 2.5rem;
+  border-radius: var(--border-radius-base);
+}
+
+.popup-overlay-countdown .countdown-timer-expiration-message > * {
+  margin: 0;
+}
+
+.popup-overlay-newsletter-form {
+  width: 100%;
+}
+
+.popup-overlay-newsletter-form .checkbox-newsletter-consent {
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+  text-align: left;
+}
+
+.popup-overlay-newsletter-form .checkbox-newsletter-consent [type="checkbox"] {
+  width: 1.6rem;
+  height: 1.6rem;
+  accent-color: auto;
+}
+
+.popup-overlay-newsletter-form.newsletter-form .form-status {
+  margin-top: 2rem;
+  padding: 1.5rem 2rem;
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+}

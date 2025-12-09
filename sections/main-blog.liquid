@@ -1,0 +1,140 @@
+{{ 'component-card.css' | asset_url | stylesheet_tag }}
+{{ 'section-main-blog.css' | asset_url | stylesheet_tag }}
+
+{% liquid
+  assign columns = section.settings.columns
+  assign layout_classes = 'grid grid-1-col grid-' | append: columns | append: '-col-tablet'
+
+  if columns == '4'
+    assign layout_classes = 'grid grid-1-col grid-3-col-tablet grid-4-col-desktop'
+  endif
+%}
+
+<div class="container">
+  <div class="section-content">
+    {%- paginate blog.articles by section.settings.posts_per_page -%}
+      <div class="main-blog section-{{ section.id }}">
+        {% unless section.settings.hide_heading %}
+          <h1 class="page-title page-title-center">
+            {{ blog.title | escape }}
+          </h1>
+        {% endunless %}
+
+        {%- if section.settings.menu != blank -%}
+          <ul class="main-blog-blogs-list list-inline-menu">
+            {%- for link in section.settings.menu.links -%}
+              <li>
+                <a
+                  class="main-blog-blogs-list-link"
+                  href="{{ link.url }}"
+                  {%- if link.current -%}
+                    aria-current="page"
+                  {%- endif -%}
+                >
+                  {{ link.title | escape }}
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        <div class="blog-articles">
+          <div class="{{ layout_classes }}">
+            {%- for article in blog.articles -%}
+              <div class="blog-articles-article grid-item">
+                {%- render 'card-article',
+                  article: article,
+                  show_image: section.settings.show_image,
+                  show_date: section.settings.show_date,
+                  show_author: section.settings.show_author,
+                  show_excerpt: true
+                -%}
+              </div>
+            {%- endfor -%}
+          </div>
+        </div>
+
+        {%- if paginate.pages > 1 -%}
+          {%- render 'pagination', paginate: paginate -%}
+        {%- endif -%}
+      </div>
+    {%- endpaginate -%}
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.main_blog.name",
+    "tag": "section",
+    "class": "section-main-blog",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "hide_heading",
+        "default": false,
+        "label": "t:sections.main_blog.settings.hide_heading.label"
+      },
+      {
+        "type": "link_list",
+        "id": "menu",
+        "label": "t:sections.main_blog.settings.menu.label"
+      },
+      {
+        "type": "range",
+        "id": "posts_per_page",
+        "min": 3,
+        "max": 30,
+        "step": 1,
+        "default": 10,
+        "label": "t:sections.main_blog.settings.posts_per_page.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_image",
+        "default": true,
+        "label": "t:sections.main_blog.settings.show_image.label",
+        "info": "t:sections.main_blog.settings.show_image.info"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_date",
+        "default": true,
+        "label": "t:sections.main_blog.settings.show_date.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_author",
+        "default": true,
+        "label": "t:sections.main_blog.settings.show_author.label"
+      },
+      {
+        "type": "paragraph",
+        "content": "t:sections.main_blog.settings.paragraph_1.content"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.layout.heading"
+      },
+      {
+        "type": "select",
+        "id": "columns",
+        "label": "t:sections.all.layout.desktop_columns.label",
+        "default": "2",
+        "options": [
+          {
+            "value": "2",
+            "label": "2"
+          },
+          {
+            "value": "3",
+            "label": "3"
+          },
+          {
+            "value": "4",
+            "label": "4"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

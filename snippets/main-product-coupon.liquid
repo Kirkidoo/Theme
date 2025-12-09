@@ -1,0 +1,28 @@
+{% comment %}
+  Renders the product's "Coupon code" block.
+
+  Accepts:
+  - block: {Object} The block.
+
+  Usage:
+  {% render 'main-product-coupon', block: block %}
+{% endcomment %}
+
+<div class="product-coupon-block">
+  <div class="product-coupon-block-container color-{{ block.settings.color_scheme }}">
+    <div class="product-coupon-block-description">{{ block.settings.coupon_description }}</div>
+    <div class="product-coupon-block-code">
+      <div class="color-button-{{ block.settings.color_scheme }}">
+        <copy-to-clipboard
+          data-tooltip-text="{{ 'general.copy_to_clipboard.tooltip' | t | escape }}"
+          data-copied-text="{{ 'general.copy_to_clipboard.copied' | t | escape }}"
+        >
+          <button type="button" class="button product-coupon-block-button">
+            {{ block.settings.coupon_code }}
+            {%- render 'icons', icon: 'copy' -%}
+          </button>
+        </copy-to-clipboard>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,86 @@
+{% comment %}
+  Renders the product's "Content drawer" block.
+
+  Accepts:
+  - block: {Object} The block object.
+
+  Usage:
+  {% render 'main-product-metadata-block', block: block %}
+{% endcomment %}
+
+{{ 'component-drawer.css' | asset_url | stylesheet_tag }}
+
+<style>
+  .content-drawer-open-{{ block.id }} #ContentDrawer-{{ block.id }} .content-drawer,
+  [dir="rtl"] .content-drawer-open-{{ block.id }} #ContentDrawer-{{ block.id }} .content-drawer {
+    transform: translateX(0);
+  }
+</style>
+
+<div
+  class="product-block content-drawer-block {% if block.settings.show_bottom_divider %}has-divider{% endif %}"
+  {{ block.shopify_attributes }}
+>
+  {% if block.settings.link_text != blank %}
+    <drawer-toggle for="ContentDrawer-{{ block.id }}" tabindex="-1">
+      <button
+        class="content-drawer-button {% if block.settings.link_style == 'button' %}button{% endif %} button-text-{{ block.settings.link_style }} color-{{ block.settings.button_color_scheme }}"
+        aria-haspopup="dialog"
+      >
+        {% if block.settings.icon == 'custom' and block.settings.custom_icon != blank %}
+          <img
+            src="{{ block.settings.custom_icon | image_url: width: 24 }}"
+            alt="{{ block.settings.title }}"
+            width="24"
+            height="24"
+          >
+        {% elsif block.settings.icon != blank %}
+          {% render 'icons', icon: block.settings.icon %}
+        {% endif %}
+        {{ block.settings.link_text }}
+      </button>
+    </drawer-toggle>
+  {% endif %}
+</div>
+
+<content-drawer
+  id="ContentDrawer-{{ block.id }}"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="ContentDrawerHeading-{{ block.id }}"
+  body-class="content-drawer-open-{{ block.id }}"
+  data-event-prefix="content-drawer"
+>
+  <div class="content-drawer drawer">
+    <div class="drawer-inner">
+      <div class="content-drawer-header drawer-header" tabindex="-1">
+        <h4 class="h5" id="ContentDrawerHeading-{{ block.id }}">
+          {{ block.settings.drawer_title | default: block.settings.link_text }}
+        </h4>
+        <drawer-toggle for="ContentDrawer-{{ block.id }}" tabindex="-1">
+          <button
+            type="button"
+            class="button button-tertiary button-drawer-header-dismiss"
+            aria-label="{{ 'accessibility.close' | t }}"
+          >
+            &times;
+          </button>
+        </drawer-toggle>
+      </div>
+
+      <div class="drawer-content">
+        <div class="drawer-content-inner">
+          {% if block.settings.page_content != blank %}
+            <div class="rte">
+              {{ block.settings.page_content.content }}
+            </div>
+          {% elsif block.settings.richtext_content != blank %}
+            <div class="rte">
+              {{ block.settings.richtext_content }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</content-drawer>

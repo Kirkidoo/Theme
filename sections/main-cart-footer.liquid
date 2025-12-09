@@ -1,0 +1,298 @@
+{{ 'component-cart.css' | asset_url | stylesheet_tag }}
+{{ 'component-discounts.css' | asset_url | stylesheet_tag }}
+
+<div
+  class="container {% if cart == empty %} is-empty{% endif %}"
+  id="main-cart-footer"
+  data-id="{{ section.id }}"
+>
+  <div class="section-content">
+    <div class="cart-footer">
+      {%- if section.settings.show_cart_note -%}
+        <cart-note class="cart-note field">
+          <label for="Cart-note">{{ 'templates.cart.note' | t }}</label>
+          <textarea
+            class="text-area field-input"
+            name="note"
+            form="cart"
+            id="Cart-note"
+            placeholder="{{ 'templates.cart.note' | t }}"
+          >{{ cart.note }}</textarea>
+        </cart-note>
+      {%- endif -%}
+
+      {%- if section.settings.show_shipping_calculator and cart.item_count > 0 -%}
+        <script>
+          window.shippingCalculator = {
+            currencyCode: `{{ cart.currency.iso_code }}`,
+            currencySymbol: `{{ cart.currency.symbol }}`,
+            fetchError: `{{ 'templates.cart.shipping_calculator.fetch_error' | t }}`,
+            responseError: `{{ 'templates.cart.shipping_calculator.response_error' | t }}`,
+            shippingRateTemplate: `{{ 'templates.cart.shipping_calculator.shipping_rate_template' | t }}`,
+            shippingRateWithDescriptionTemplate: `{{ 'templates.cart.shipping_calculator.shipping_rate_with_description_template' | t }}`,
+            noRatesAvailable: `{{ 'templates.cart.shipping_calculator.no_rates_available' | t }}`,
+          };
+        </script>
+        <script src="{{ 'shipping-calculator.js' | asset_url }}" defer="defer"></script>
+        <shipping-calculator
+          class="shipping-calculator"
+          data-language="{{ localization.language.iso_code }}"
+        >
+          <form>
+            <div class="field">
+              <label class="field-label" for="shipping-country-{{ section.id }}">Country</label>
+              <select
+                class="field-input country"
+                id="shipping-country-{{ section.id }}"
+                name="country"
+              >
+                {{ country_option_tags }}
+              </select>
+            </div>
+
+            <div class="field hidden">
+              <label class="field-label" for="shipping-province-{{ section.id }}"
+                >Province/state</label
+              >
+              <select
+                class="field-input province"
+                id="shipping-province-{{ section.id }}"
+                name="province"
+              ></select>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="shipping-postcode-{{ section.id }}">Post code</label>
+              <input
+                type="text"
+                class="field-input postcode"
+                id="shipping-postcode-{{ section.id }}"
+                name="postcode"
+                required
+              >
+            </div>
+
+            <button class="button">Estimate shipping</button>
+          </form>
+
+          <div class="shipping-rates form-status form-status-success hidden"></div>
+          <div class="form-status form-status-error errors hidden"></div>
+        </shipping-calculator>
+      {%- endif -%}
+
+      <div class="cart-blocks">
+        {% if section.settings.show_coupon_code %}
+          {% render 'cart-coupon' %}
+        {% endif %}
+        {% for block in section.blocks %}
+          {%- case block.type -%}
+            {%- when '@app' -%}
+              {% render block %}
+
+            {%- when 'custom_liquid' -%}
+              {{ block.settings.custom_liquid }}
+
+            {%- when 'subtotal' -%}
+              <div class="js-contents" {{ block.shopify_attributes }}>
+                <div class="totals">
+                  <h3 class="totals-subtotal">{{ 'templates.cart.subtotal' | t }}</h3>
+                  <p class="totals-subtotal-value" data-cart-subtotal>
+                    {{ cart.total_price | money_with_currency }}
+                  </p>
+                </div>
+
+                <div>
+                  {%- if cart.cart_level_discount_applications.size > 0 -%}
+                    <ul
+                      class="discounts list-unstyled"
+                      role="list"
+                      aria-label="{{ 'customer.order.discount' | t }}"
+                    >
+                      {%- for discount in cart.cart_level_discount_applications -%}
+                        <li class="discounts-discount discounts-discount-position">
+                          {% render 'icons', icon: 'label' %}
+                          {{ discount.title }}
+                          (-{{ discount.total_allocated_amount | money }})
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  {%- endif -%}
+                </div>
+
+                <small class="cart-totals-note tax-note rte">
+                  {%- if cart.taxes_included and shop.shipping_policy.body != blank -%}
+                    {{
+                      'templates.cart.taxes_included_and_shipping_policy_html'
+                      | t: link: shop.shipping_policy.url
+                    }}
+                  {%- elsif cart.taxes_included -%}
+                    {{ 'templates.cart.taxes_included_but_shipping_at_checkout' | t }}
+                  {%- elsif shop.shipping_policy.body != blank -%}
+                    {{
+                      'templates.cart.taxes_and_shipping_policy_at_checkout_html'
+                      | t: link: shop.shipping_policy.url
+                    }}
+                  {%- else -%}
+                    {{ 'templates.cart.taxes_and_shipping_at_checkout' | t }}
+                  {%- endif -%}
+                </small>
+
+                {% if settings.free_shipping_enabled %}
+                  {% assign free_shipping_threshold = settings.free_shipping_threshold
+                    | times: 100
+                  %}
+                  {% if cart.total_price >= free_shipping_threshold %}
+                    <small class="cart-totals-note cart-free-shipping-note">
+                      {{ 'templates.cart.free_shipping.amount_reached' | t }}
+                    </small>
+                  {% endif %}
+                {% endif %}
+
+                {% form 'cart', cart %}
+                  {{ form | payment_terms }}
+                {% endform %}
+              </div>
+            {%- else -%}
+              <div class="cart-ctas" {{ block.shopify_attributes }}>
+                {% if settings.cart_policy_consent_page != blank %}
+                  <div class="main-cart-terms-conditions-disclaimer">
+                    <cart-consent-checkbox>
+                      <label
+                        class="checkbox-cart-policy-consent"
+                        for="checkbox-cart-policy-consent"
+                      >
+                        <input
+                          type="checkbox"
+                          id="checkbox-cart-policy-consent"
+                          required
+                          form="cart"
+                        >
+                        <span class="rte">
+                          {{
+                            'templates.cart.checkbox_cart_policy_consent_html'
+                            | t:
+                              link: settings.cart_policy_consent_page.url,
+                              label: settings.cart_policy_consent_page.title
+                          }}
+                        </span>
+                      </label>
+                    </cart-consent-checkbox>
+                  </div>
+                {% endif %}
+
+                <button
+                  form="cart"
+                  type="submit"
+                  id="checkout"
+                  class="cart-checkout-button button"
+                  name="checkout"
+                  {% if cart == empty %}
+                    disabled
+                  {% endif %}
+                  form="cart"
+                >
+                  {{ 'templates.cart.checkout' | t }}
+                </button>
+              </div>
+
+              {%- if additional_checkout_buttons and block.settings.show_buy_now -%}
+                <div class="cart-dynamic-checkout-buttons additional-checkout-buttons additional-checkout-buttons--vertical">
+                  {{ content_for_additional_checkout_buttons }}
+                </div>
+              {%- endif -%}
+          {%- endcase -%}
+        {% endfor %}
+
+        <div id="cart-errors" class="cart-errors"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% javascript %}
+  class CartNote extends HTMLElement {
+    constructor() {
+      super();
+
+      this.addEventListener(
+        'change',
+        debounce((event) => {
+          const body = JSON.stringify({ note: event.target.value });
+          fetch(`${routes.cart_update_url}`, { ...fetchConfig(), ...{ body } });
+        }, 300),
+      );
+    }
+  }
+  customElements.define('cart-note', CartNote);
+{% endjavascript %}
+
+{% schema %}
+  {
+    "name": "t:sections.main_cart_footer.name",
+    "class": "cart-footer-wrapper",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show_coupon_code",
+        "default": true,
+        "label": "t:sections.main_cart_footer.settings.show_coupon_code.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "append_coupon_codes",
+        "default": false,
+        "label": "t:sections.main_cart_footer.settings.append_coupon_codes.label",
+        "info": "t:sections.main_cart_footer.settings.append_coupon_codes.info",
+        "visible_if": "{{ section.settings.show_coupon_code }}"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_cart_note",
+        "default": false,
+        "label": "t:sections.main_cart_footer.settings.show_cart_note.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_shipping_calculator",
+        "default": false,
+        "label": "t:sections.main_cart_footer.settings.show_shipping_calculator.label",
+        "info": "t:sections.main_cart_footer.settings.show_shipping_calculator.info"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "@app"
+      },
+      {
+        "type": "subtotal",
+        "name": "t:sections.main_cart_footer.blocks.subtotal.name",
+        "limit": 1
+      },
+      {
+        "type": "buttons",
+        "name": "t:sections.main_cart_footer.blocks.buttons.name",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "checkbox",
+            "id": "show_buy_now",
+            "label": "t:sections.main_cart_footer.blocks.buttons.settings.show_buy_now.label",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "custom_liquid",
+        "name": "t:sections.all.custom_liquid.name",
+        "settings": [
+          {
+            "type": "liquid",
+            "id": "custom_liquid",
+            "label": "t:sections.all.custom_liquid.custom_liquid.label",
+            "info": "t:sections.all.custom_liquid.custom_liquid.info"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

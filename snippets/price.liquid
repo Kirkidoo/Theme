@@ -1,0 +1,140 @@
+{% comment %}
+  Renders a list of product's price (regular, sale)
+
+  Accepts:
+  - product: {Object} Product Liquid object (optional)
+  - use_variant: {Boolean} Renders selected or first variant price instead of overall product pricing. Default false.
+  - discount_badge: {Boolean} Renders a discount badge. Default false.
+  - price_class: {String} Adds a price class to the price element (optional)
+  - rows: {Boolean} Enables row mode (optional)
+  - no_link: {Boolean} Disables outputing links to avoid nested link issues (optional)
+
+  Usage:
+  {% render 'price', product: product %}
+{% endcomment %}
+
+{%- liquid
+  if use_variant
+    assign target = product.selected_or_first_available_variant
+  else
+    assign target = product
+  endif
+
+  assign compare_at_price = target.compare_at_price
+  assign price = target.price | default: 1999
+  assign available = target.available | default: false
+  assign money_price = price | money
+  if settings.currency_code_enabled
+    assign money_price = price | money_with_currency
+  endif
+
+  if target == product and product.price_varies
+    assign money_price = 'products.product.price.from_price_html' | t: price: money_price
+  endif
+
+  # theme-check-disable-next-line VariableName
+  assign preorderSuffixArray = product.template_suffix | split: 'pre-order-'
+  assign is_pre_order = false
+  if product.template_suffix != blank and preorderSuffixArray[0] == blank or product.template_suffix == 'pre-order'
+    assign is_pre_order = true
+  endif
+
+  assign show_free = false
+  if price == 0 and settings.zero_price_mode == 'free'
+    if use_variant == true or use_variant == blank and product.price_varies == false
+      assign show_free = true
+    endif
+  endif
+-%}
+{%- capture show_call_for_pricing -%}{%- render 'price-get-call-for-pricing', product: product, use_variant: use_variant -%}{%- endcapture -%}
+{%- assign show_call_for_pricing = show_call_for_pricing | strip -%}
+
+{% if show_call_for_pricing == 'false' %}
+  <div
+    class="
+      price
+      {%- if price_class %} {{ price_class }}{% endif -%}
+      {%- if available == false %} price-sold-out {% endif -%}
+      {%- if product.price_varies == false and product.compare_at_price_varies %} price-no-compare{% endif -%}
+      {%- if compare_at_price > price %} price-on-sale {% endif -%}
+      {%- if rows %} row-price {% endif -%}
+    "
+  >
+    <div class="price-container">
+      <div class="price-regular {% if is_pre_order %}price-regular-preorder{% endif %}">
+        {% if is_pre_order %}
+          <span class="badge badge-sale">
+            {{ 'products.product.pre_order' | t }}
+          </span>
+        {% endif %}
+
+        <span class="visually-hidden">{{ 'products.product.price.regular_price' | t }}</span>
+        <span class="price-item price-item-regular">
+          {% if show_free %}
+            {{ settings.zero_price_free_text }}
+          {% else %}
+            {{ money_price }}
+
+            {% if settings.price_tax_suffix and cart.taxes_included %}
+              <span class="sup">{{ settings.price_tax_suffix }}</span>
+            {% endif %}
+          {% endif %}
+        </span>
+      </div>
+
+      {% if compare_at_price > price %}
+        <div class="price-sale">
+          {% unless product.price_varies == false and product.compare_at_price_varies %}
+            <span class="visually-hidden">{{ 'products.product.price.regular_price' | t }}</span>
+            <span>
+              {% if discount_badge == true
+                and target.compare_at_price > target.price
+                and settings.sale_badge_mode != 'none'
+              %}
+                {% render 'badge-sale', product: product, use_variant: use_variant %}
+              {% endif %}
+
+              <s class="price-item price-item-regular">
+                {% if settings.currency_code_enabled %}
+                  {{ compare_at_price | money_with_currency }}
+                {% else %}
+                  {{ compare_at_price | money }}
+                {% endif %}
+              </s>
+            </span>
+          {% endunless %}
+
+          <span class="visually-hidden">{{ 'products.product.price.sale_price' | t }}</span>
+          <span class="price-item price-item-sale price-item-last">
+            {% if show_free %}
+              {{ settings.zero_price_free_text }}
+            {% else %}
+              {{ money_price }}
+
+              {% if settings.price_tax_suffix and cart.taxes_included %}
+                <span class="sup">{{ settings.price_tax_suffix }}</span>
+              {% endif %}
+            {% endif %}
+          </span>
+        </div>
+      {% endif %}
+    </div>
+
+    {% unless product.selected_or_first_available_variant.unit_price_measurement == null %}
+      <div class="unit-price">
+        <span class="visually-hidden">{{ 'products.product.price.unit_price' | t }}</span>
+        {{ product.selected_or_first_available_variant.unit_price | money }}
+        <span aria-hidden="true">/</span>
+        <span class="visually-hidden"
+          >&nbsp;{{ 'accessibility.unit_price_separator' | t }}&nbsp;</span
+        >
+        {%- if product.selected_or_first_available_variant.unit_price_measurement.reference_value
+            != 1
+        -%}
+          {{- product.selected_or_first_available_variant.unit_price_measurement.reference_value -}}
+        {%- endif -%}
+        {{ product.selected_or_first_available_variant.unit_price_measurement.reference_unit }}
+      </div>
+    {% endunless %}
+  </div>
+{% endif %}

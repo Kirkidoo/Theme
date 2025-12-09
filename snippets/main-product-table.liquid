@@ -1,0 +1,207 @@
+{% comment %}
+  Renders the product's "Table" block.
+
+  Accepts:
+  - block: {Object} The block.
+  - position: {String} Position of the block on the product page. One of 'left' or 'right'.
+
+  Usage:
+  {% render 'main-product-table', block: block, position: 'left' %}
+{% endcomment %}
+{% liquid
+  assign is_expandable = false
+  if block.settings.title != blank or block.settings.icon != blank
+    assign is_expandable = true
+  endif
+
+  assign block_classes = 'product-block-content product-block-table variant-changed-update product-block-content-' | append: section.id
+
+  assign metafield_id = block.settings.rows_metafield
+  assign first_row_header = block.settings.first_row_header
+  assign first_column_header = block.settings.first_column_header
+  assign restrict_columns = block.settings.restrict_columns
+
+  assign fields = metafield_id | strip | split: '.'
+  assign field_source = fields[-3]
+  assign field_ns = fields[-2]
+  assign field_key = fields[-1]
+
+  if field_source == 'variant'
+    assign metafield_object = product.selected_or_first_available_variant.metafields[field_ns][field_key]
+  else
+    assign metafield_object = product.metafields[field_ns][field_key]
+  endif
+
+  assign metaobject = metafield_object.value
+
+  assign max_rows = 0
+  assign max_columns = 0
+  for entry in metaobject
+    assign rows_count = 0
+    for row_num in (1..128)
+      assign row_id = 'row_' | append: row_num
+      if entry[row_id] != blank
+        assign rows_count = rows_count | plus: 1
+      endif
+
+      if restrict_columns == true and forloop.index == 1 and forloop.parentloop.index == 1
+        assign max_columns = entry[row_id].value.size
+      elsif restrict_columns == false and entry[row_id].value.size > max_columns
+        assign max_columns = entry[row_id].value.size
+      endif
+    endfor
+    if rows_count > max_rows
+      assign max_rows = rows_count
+    endif
+  endfor
+%}
+{% capture output %}
+  {% if metaobject != blank %}
+    <table class="product-info-table">
+      {% for entry in metaobject %}
+        {% assign entry_num = forloop.index %}
+        {% for row_num in (1..max_rows) %}
+          {% liquid
+            assign row_id = 'row_' | append: row_num
+            if entry[row_id] == blank
+              continue
+            endif
+          %}
+
+          {% if first_row_header and row_num == 1 and entry_num == 1 %}
+            <thead>
+          {% endif %}
+
+          <tr>
+            {% for value in entry[row_id].value %}
+              {% liquid
+                assign column_num = forloop.index
+                if restrict_columns and column_num > max_columns
+                  break
+                endif
+
+                assign colspan = 1
+                if forloop.last and column_num < max_columns
+                  assign colspan = max_columns | minus: column_num | plus: 1
+                endif
+              %}
+
+              {% if first_row_header and entry_num == 1 and row_num == 1 %}
+                <th
+                  scope="col"
+                  {% if colspan > 1 %}
+                    colspan="{{ colspan }}"
+                  {% endif %}
+                >
+              {% elsif first_column_header and column_num == 1 %}
+                <th
+                  scope="row"
+                  {% if colspan > 1 %}
+                    colspan="{{ colspan }}"
+                  {% endif %}
+                >
+              {% else %}
+                <td
+                  {% if colspan > 1 %}
+                    colspan="{{ colspan }}"
+                  {% endif %}
+                >
+              {% endif %}
+
+              {{ value }}
+
+              {% if first_row_header and entry_num == 1 and row_num == 1 %}
+                </th>
+              {% elsif first_column_header and column_num == 1 %}
+                </th>
+              {% else %}
+                </td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+
+          {% if first_row_header and row_num == 1 and entry_num == 1 %}
+            </thead>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </table>
+  {% endif %}
+{% endcapture %}
+{% assign output = output | strip %}
+
+{% if output == blank %}
+  {% assign block_classes = block_classes | append: ' hidden' %}
+  {% if position == 'left' %}
+    {% if is_expandable %}
+      <collapsible-expandable
+        class="{{ block_classes }}"
+        expanded="{{ block.settings.expanded }}"
+        {{ block.shopify_attributes }}
+      ></collapsible-expandable>
+    {% else %}
+      <div class="facet facet-standalone {{ block_classes }}" {{ block.shopify_attributes }}></div>
+    {% endif %}
+  {% else %}
+    <div
+      id="ProductInfoTable-{{ section.id }}-{{ block.id }}-{{ forloop.index0 }}"
+      class="product-info-table-wrapper {{ block_classes }}"
+      {{ block.shopify_attributes }}
+    ></div>
+  {% endif %}
+{% else %}
+  {% if position == 'left' %}
+    {% if is_expandable %}
+      <collapsible-expandable
+        class="{{ block_classes }}"
+        expanded="{{ block.settings.expanded }}"
+        {{ block.shopify_attributes }}
+      >
+        <div class="facet">
+          <button
+            class="facet-toggle"
+            type="button"
+            aria-expanded="{{ block.settings.expanded }}"
+          >
+            <span>
+              {% if block.settings.icon != blank %}
+                {% render 'icons', icon: block.settings.icon %}
+              {% endif %}
+              {{ block.settings.title }}
+            </span>
+            {% render 'angle', direction: 'down' %}
+          </button>
+    {% else %}
+      <div class="facet facet-standalone {{ block_classes }}" {{ block.shopify_attributes }}>
+    {% endif %}
+
+    <div class="facet-content">
+      {{ output }}
+    </div>
+
+    {% if is_expandable %}
+      </div>
+      </collapsible-expandable>
+    {% else %}
+      </div>
+    {% endif %}
+
+  {% elsif position == 'right' %}
+    <div
+      id="ProductInfoTable-{{ section.id }}-{{ block.id }}-{{ forloop.index0 }}"
+      class="product-info-table-wrapper {{ block_classes }}"
+      {{ block.shopify_attributes }}
+    >
+      {% if block.settings.title != blank %}
+        <p class="product-info-details-title h5">
+          {% if block.settings.icon != blank %}
+            {% render 'icons', icon: block.settings.icon %}
+          {% endif %}
+          {{ block.settings.title }}
+        </p>
+      {% endif %}
+
+      {{ output }}
+    </div>
+  {% endif %}
+{% endif %}

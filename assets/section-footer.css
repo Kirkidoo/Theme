@@ -1,0 +1,144 @@
+/* Section - Footer
+=================================== */
+.footer-blocks-wrapper {
+  padding: 4.5rem 0;
+  row-gap: 3.5rem;
+
+  @media (min-width: 990px) {
+    row-gap: 0;
+  }
+}
+
+.footer .widget-media {
+  margin: 0 0 1.5rem;
+}
+
+.footer .widget-media:last-child {
+  margin-bottom: 0;
+}
+
+/* Footer Info (Credits / Payment icons)
+=================================== */
+.footer-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-top: 1px dashed rgba(var(--color-border));
+  padding: 1.5rem 0;
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+
+  @media (min-width: 990px) {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  a {
+    color: rgba(var(--color-accent-1));
+    text-underline-offset: 0.3rem;
+    text-decoration-thickness: 0.1rem;
+    text-decoration-color: transparent;
+    transition: text-decoration 0.18s ease;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.footer-info-start {
+  &:only-child {
+    text-align: center;
+    width: 100%;
+  }
+}
+
+.footer-info-end {
+  @media (min-width: 990px) {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.footer-social-links-wrap {
+  .list-social {
+    justify-content: center;
+  }
+}
+
+.footer-follow-on-shop {
+  margin-top: 2rem;
+
+  @media (min-width: 990px) {
+    margin: 0;
+    display: flex;
+    justify-content: flex-end;
+    text-align: right;
+  }
+}
+
+/*  Social / Language / Region
+=================================== */
+.footer-pre-info-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 3rem;
+
+  &.footer-pre-info-content-centered {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.footer-lang-region {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Component - List Payment
+=================================== */
+.list-payment {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  grid-gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  @media (min-width: 990px) {
+    margin-top: 0;
+  }
+}
+
+.list-payment-item {
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+}
+
+/* Component - List Footer Links */
+.footer-info-links {
+  list-style-type: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+
+  li:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+
+  @media (min-width: 990px) {
+    margin: 0;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+  }
+}

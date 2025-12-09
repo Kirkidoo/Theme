@@ -1,0 +1,44 @@
+{% comment %}
+  Renders the product's "Image" block.
+
+  Accepts:
+  - block: {Object} The block.
+  - settings: {Object} The block's settings.
+  - settings.image: {String} The image.
+  - settings.link: {String} The image's link.
+  - settings.alignment: {String} The image's alignment (left, center, right).
+
+  Usage:
+  {% render 'main-product-image-block', settings: block.settings, block: block %}
+{% endcomment %}
+
+{% capture image_sizes %}
+	(min-width: 990px) calc(650px * {{ settings.width | divided_by: 100.0 }}), calc((100vw - 3rem) * {{ settings.mobile_width | default: settings.width | divided_by: 100.0 }})
+{% endcapture %}
+
+<div
+  class="product-image-block product-image-block-align-{{ settings.alignment }}"
+  style="--product-image-block-width: {{ settings.width }}%; --product-image-block-mobile-width: {{ settings.mobile_width | default: settings.width }}%;"
+>
+  {% if settings.image %}
+    {% if settings.link != blank %}
+      <a href="{{ settings.link }}">
+    {% endif %}
+    {{
+      settings.image
+      | image_url: width: 1600
+      | image_tag:
+        class: 'product-image-block-img',
+        loading: 'lazy',
+        sizes: image_sizes,
+        widths: '150, 200, 250, 30, 400, 500, 650, 800, 1000, 1300, 1600'
+    }}
+    {% if settings.link != blank %}
+      </a>
+    {% endif %}
+  {% else %}
+    <div class="product-image-block-placeholder-wrap">
+      {{ 'collection-1' | strip | placeholder_svg_tag: 'product-image-block-placeholder' }}
+    </div>
+  {% endif %}
+</div>

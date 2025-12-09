@@ -1,0 +1,132 @@
+{% comment %}
+  Renders a navigation menu's items
+
+  Accepts:
+  - menu: {Object} Menu (linklist) object
+  - blocks: {Object} The section's blocks
+
+  Usage:
+  {% render 'header-mobile-menu-items', menu: main_menu %}
+{% endcomment %}
+
+{%- for link in menu.links -%}
+  {% liquid
+    assign has_content_mega = false
+    assign content_mega_block = null
+    for block in blocks
+      if block.type == 'megamenu_featured_content' and block.settings.menu_item == link.title
+        assign has_content_mega = true
+        assign content_mega_block = block
+      endif
+    endfor
+  %}
+
+  <li class="navigation-mobile-item">
+    <span class="navigation-mobile-item-link">
+      <a
+        href="{{ link.url }}"
+        {%- if link.current -%}
+          aria-current="page" class="current"
+        {%- endif -%}
+      >
+        {{ link.title | escape }}
+
+        {% for block in blocks %}
+          {% if block.type == 'badge'
+            and block.settings.badge_menu_item == link.title
+            and block.settings.label != empty
+          %}
+            <span
+              class="menu-badge"
+              style="color: {{ block.settings.text_color }}; background-color: {{ block.settings.background_color }};"
+            >
+              {{ block.settings.label }}
+            </span>
+          {% endif %}
+        {% endfor %}
+      </a>
+
+      {%- if link.links != blank or has_content_mega -%}
+        <button class="navigation-mobile-item-link-expand">
+          {% render 'icons', icon: 'arrow-down' %}
+        </button>
+      {%- endif -%}
+    </span>
+
+    {%- if link.links != blank -%}
+      <ul class="navigation-sub-menu">
+        {%- for childlink in link.links -%}
+          <li class="navigation-mobile-item">
+            <span class="navigation-mobile-item-link">
+              <a
+                href="{{ childlink.url }}"
+                {%- if childlink.current -%}
+                  aria-current="page" class="current"
+                {%- endif -%}
+              >
+                {{ childlink.title | escape }}
+              </a>
+
+              {%- if childlink.links != blank -%}
+                <button class="navigation-mobile-item-link-expand">
+                  {% render 'icons', icon: 'arrow-down' %}
+                </button>
+              {%- endif -%}
+            </span>
+
+            {%- if childlink.links != blank -%}
+              <ul class="navigation-sub-menu">
+                {%- for grandchildlink in childlink.links -%}
+                  <li class="navigation-mobile-item">
+                    <span class="navigation-mobile-item-link">
+                      <a
+                        href="{{ grandchildlink.url }}"
+                        {%- if grandchildlink.current -%}
+                          aria-current="page" class="current"
+                        {%- endif -%}
+                      >
+                        {{ grandchildlink.title | escape }}
+                      </a>
+                    </span>
+                  </li>
+                {%- endfor -%}
+              </ul>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- elsif has_content_mega -%}
+      <ul class="navigation-sub-menu">
+        {% if content_mega_block.settings.content_type == 'products'
+          and content_mega_block.settings.product_list.count > 0
+        %}
+          {% for product in content_mega_block.settings.product_list
+            limit: content_mega_block.settings.item_limit
+          %}
+            <li class="navigation-mobile-item">
+              <span class="navigation-mobile-item-link">
+                <a href="{{ product.url }}" title="{{ product.title }}">
+                  {{ product.title }}
+                </a>
+              </span>
+            </li>
+          {% endfor %}
+        {% elsif content_mega_block.settings.content_type == 'collections'
+          and content_mega_block.settings.collection_list.count > 0
+        %}
+          {% for collection in content_mega_block.settings.collection_list
+            limit: content_mega_block.settings.item_limit
+          %}
+            <li class="navigation-mobile-item">
+              <span class="navigation-mobile-item-link">
+                <a href="{{ collection.url }}" title="{{ collection.title }}">
+                  {{ collection.title }}
+                </a>
+              </span>
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ul>
+    {%- endif -%}
+  </li>
+{%- endfor -%}

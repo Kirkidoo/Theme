@@ -1,0 +1,281 @@
+/* Section - Countdown banner
+========================================= */
+.section-countdown-banner-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--border-radius-base);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-countdown-banner-wrap-inner {
+  display: flex;
+  flex-direction: column;
+  flex: auto;
+  height: 100%;
+}
+
+.section-countdown-banner-wrap-inner::after {
+  content: "";
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius-base);
+}
+
+.section-fullwidth .section-countdown-banner-wrap,
+.section-fullwidth .section-countdown-banner-wrap-inner::after {
+  border-radius: 0;
+}
+
+.section-countdown-banner-wrap .container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex: auto;
+}
+
+.section-countdown-banner-wrap::after {
+  content: "";
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius-base);
+}
+
+.section-countdown-banner-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.section-countdown-banner-content-wrap {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  padding: 3rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (min-width: 990px) {
+  .section-countdown-banner-content-wrap {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    grid-gap: 2rem;
+    text-align: left;
+  }
+}
+
+.section-fullwidth .section-countdown-banner-content-wrap {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.section-countdown-banner-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: auto;
+  text-align: start;
+}
+
+@media (min-width: 990px) {
+  .section-countdown-banner-content-wrap {
+    padding: 3.5rem;
+  }
+}
+
+.section-countdown-banner-caption {
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+  line-height: 1.5;
+  margin-top: 1rem;
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+@media (min-width: 990px) {
+  .section-countdown-banner-caption {
+    text-align: start;
+    margin: 1rem 0 0;
+  }
+}
+
+.section-countdown-banner-caption:last-child,
+.section-countdown-banner-caption > :last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 1200px) {
+  .section-countdown-banner-content-inner {
+    max-width: 65rem;
+  }
+}
+
+.section-countdown-banner-caption a {
+  color: currentColor;
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+  text-decoration-thickness: 0.1rem;
+  transition: text-decoration 0.18s ease;
+}
+
+.section-countdown-banner-caption a:hover {
+  text-decoration-thickness: 0.2rem;
+}
+
+.section-countdown-banner-title-wrap {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-wrap: wrap;
+  grid-gap: 1.5rem;
+}
+
+@media (min-width: 990px) {
+  .section-countdown-banner-title-wrap {
+    text-align: left;
+    justify-content: flex-start;
+  }
+}
+
+.section-countdown-banner-title-wrap .button {
+  padding: 0.9rem 1.4rem;
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+  min-width: 0;
+}
+
+.section-countdown-banner-title-wrap .button-text-link {
+  text-underline-offset: 0.3rem;
+  text-decoration-thickness: 0.1rem;
+  text-decoration: underline;
+}
+
+.section-countdown-banner-title {
+  margin: 0;
+}
+
+.section-countdown-banner-title a {
+  color: currentColor;
+}
+
+.section-countdown-banner-title:last-child {
+  margin-bottom: 0;
+}
+
+.section-countdown-banner-title-sm {
+  font-size: calc(var(--font-heading-scale) * 1.8rem);
+}
+
+.section-countdown-banner-title-md {
+  font-size: calc(var(--font-heading-scale) * 2rem);
+}
+
+.section-countdown-banner-title-lg {
+  font-size: calc(var(--font-heading-scale) * 2.4rem);
+}
+
+.section-countdown-banner-title-xl {
+  font-size: calc(var(--font-heading-scale) * 2.6rem);
+}
+
+.section-countdown-banner-title-xxl {
+  font-size: calc(var(--font-heading-scale) * 2.8rem);
+}
+
+@media (min-width: 750px) {
+  .section-countdown-banner-title-desktop-sm {
+    font-size: calc(var(--font-heading-scale) * 2.2rem);
+  }
+
+  .section-countdown-banner-title-desktop-md {
+    font-size: calc(var(--font-heading-scale) * 2.4rem);
+  }
+
+  .section-countdown-banner-title-desktop-lg {
+    font-size: calc(var(--font-heading-scale) * 2.6rem);
+  }
+
+  .section-countdown-banner-title-desktop-xl {
+    font-size: calc(var(--font-heading-scale) * 3rem);
+  }
+
+  .section-countdown-banner-title-desktop-xxl {
+    font-size: calc(var(--font-heading-scale) * 3.6rem);
+  }
+}
+
+.section-countdown-banner-content-wrap > .button,
+.section-countdown-banner-content-wrap > .button-text-link {
+  margin-top: 3rem;
+}
+
+.section-countdown-banner-countdown + .button,
+.section-countdown-banner-countdown + .button-text-link {
+  margin-top: 0;
+}
+
+/* Countdown timer */
+.section-countdown-banner-countdown {
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+}
+
+.section-countdown-banner-countdown:last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 990px) {
+  .section-countdown-banner-countdown {
+    margin: 0;
+  }
+}
+
+.section-countdown-banner-wrap .countdown-timer-expiration-message {
+  border-radius: var(--border-radius);
+  box-shadow: inset 0 0 0 0.1rem rgba(var(--color-card-border));
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  display: inline-block;
+  min-width: 24rem;
+}
+
+.section-countdown-banner-wrap .countdown-timer-expiration-message > :last-child {
+  margin-bottom: 0;
+}
+
+.section-countdown-banner-editor-hidden-note {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 1rem;
+  background: var(--color-error-background);
+  color: var(--color-error);
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+  opacity: 0.85;
+  border-radius: var(--border-radius);
+  z-index: 5;
+}

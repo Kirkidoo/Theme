@@ -1,0 +1,94 @@
+{% comment %}
+  Renders a customizable collection card.
+
+  Accepts:
+  - collection: {Object} Collection object
+  - image: {Object} Override image object. Optional.
+  - title: {String} Override title. Optional.
+  - description: {String} Override description. Optional.
+  - button_text: {String} Override button text. Optional.
+  - class: {String} Extra CSS classes. Optional
+  - settings: {Object} Optional. The card settings.
+  - settings.collection_box_align: {String} Content alignment.
+  - settings.hide_collection_description: {String} Hide the collection's description.
+  - settings.collection_button_color_scheme: {String} The button's color scheme.
+
+  Usage:
+  {% render 'card-collection-custom' collection: collection, image: image, title: 'The title' %}
+{% endcomment %}
+
+<div class="card-overlay {% unless overlay == false %}card-overlay-on{% else %}card-overlay-off{% endunless %} {{ class }}">
+  <a href="{{ collection.url }}">
+    {% if image != blank %}
+      {{
+        image
+        | image_url: width: 1420
+        | image_tag:
+          class: 'card-overlay-media',
+          widths: '165, 440, 650, 850, 1100, 1200, 1420',
+          sizes: '(min-width: 1200px) calc((100vw - 6rem) / 2), (min-width: 990px) calc((100vw - 6rem) * 0.6), (min-width: 750px) calc(100vw - 4rem), calc(100vw - 3rem)'
+      }}
+    {% elsif collection.featured_image %}
+      {{
+        collection.featured_image
+        | image_url: width: 1420
+        | image_tag:
+          class: 'card-overlay-media',
+          widths: '165, 440, 650, 850, 1100, 1200, 1420',
+          sizes: '(min-width: 1200px) calc((100vw - 6rem) / 2), (min-width: 990px) calc((100vw - 6rem) * 0.6), (min-width: 750px) calc(100vw - 4rem), calc(100vw - 3rem)'
+      }}
+    {% else %}
+      {{ 'collection-1' | strip | placeholder_svg_tag: 'card-overlay-media' }}
+    {% endif %}
+
+    <span class="visually-hidden">
+      {% if title != blank %}
+        {{ title }}
+      {% elsif collection.title != blank %}
+        {{ collection.title }}
+      {% else %}
+        {{ 'onboarding.collection_title' | t }}
+      {% endif %}
+    </span>
+  </a>
+
+  <div class="card-overlay-info {% if settings.collection_box_align != blank %}content-align-{{ settings.collection_box_align }}{% endif %}">
+    <h3 class="card-overlay-heading">
+      {% if title != blank %}
+        <a href="{{ collection.url }}">{{ title }}</a>
+      {% elsif collection.title != blank %}
+        <a href="{{ collection.url }}">{{ collection.title }}</a>
+      {% else %}
+        {{ 'onboarding.collection_title' | t }}
+      {% endif %}
+    </h3>
+
+    {% unless description == blank
+      and collection.description == blank
+      or settings.hide_collection_description == true
+    %}
+      <div class="card-overlay-caption">
+        {% if description != blank %}
+          {{ description }}
+        {% else %}
+          {{ collection.description }}
+        {% endif %}
+      </div>
+    {% endunless %}
+
+    <a
+      class="button color-button-{{ settings.collection_button_color_scheme }}"
+      {% if collection.url == blank %}
+        role="link" aria-disabled="true"
+      {% else %}
+        href="{{ collection.url }}"
+      {% endif %}
+    >
+      {% if button_text != blank %}
+        {{ button_text }}
+      {% else %}
+        {{ 'general.collection.shop_collection' | t: title: collection.title }}
+      {% endif %}
+    </a>
+  </div>
+</div>

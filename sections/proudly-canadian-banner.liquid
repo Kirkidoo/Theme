@@ -1,0 +1,159 @@
+{% comment %}
+  Section: Proudly Canadian Banner
+  Displays a simple banner at the top of the store.
+  Uses an image uploaded via theme settings for the icon.
+  Include in theme.liquid right after the opening <body> tag.
+{% endcomment %}
+
+{%- liquid
+  assign show_banner = section.settings.show_banner
+  assign bg_color = section.settings.background_color
+  assign text_color = section.settings.text_color
+  assign text_left = section.settings.text_left | default: "Proudly Canadian"
+  assign text_right = section.settings.text_right | default: "Fièrement Canadien"
+  assign banner_link = section.settings.banner_link
+  assign icon_image = section.settings.icon_image
+  # Default max height in pixels
+  assign icon_max_height = section.settings.icon_max_height | default: 24
+-%}
+
+{%- if show_banner -%}
+  <div class="proudly-canadian-banner" style="--pcb-background-color: {{ bg_color }}; --pcb-text-color: {{ text_color }};">
+    {%- if banner_link != blank -%}
+      <a href="{{ banner_link }}" class="proudly-canadian-banner__link" aria-label="{{ text_left | escape }} {{ text_right | escape }}">
+    {%- endif -%}
+
+    <div class="proudly-canadian-banner__content page-width">
+      <span class="proudly-canadian-banner__text proudly-canadian-banner__text--left">{{ text_left | escape }}</span>
+
+      {% comment %} Use an image tag linked to the theme setting {% endcomment %}
+      {%- if icon_image != blank -%}
+        <span class="proudly-canadian-banner__icon">
+          <img
+            src="{{ icon_image | image_url: height: icon_max_height }}"
+            alt="Canadian Flag" {% comment %} Alt text for accessibility {% endcomment %}
+            height="{{ icon_max_height }}"
+            width="{{ icon_image.width | times: icon_max_height | divided_by: icon_image.height | round }}" {% comment %} Calculate width based on height to maintain aspect ratio {% endcomment %}
+            loading="lazy"
+            style="height: {{ icon_max_height }}px; max-height: {{ icon_max_height }}px; width: auto;" {% comment %} Style ensures height is respected {% endcomment %}
+          >
+        </span>
+      {%- endif -%}
+
+      <span class="proudly-canadian-banner__text proudly-canadian-banner__text--right">{{ text_right | escape }}</span>
+    </div>
+
+    {%- if banner_link != blank -%}
+      </a>
+    {%- endif -%}
+  </div>
+
+  {% comment %} Add CSS directly here for simplicity, or move to theme CSS file {% endcomment %}
+  <style>
+    .proudly-canadian-banner {
+      background-color: var(--pcb-background-color, #f8f8f8);
+      color: var(--pcb-text-color, #333);
+      padding: 0.7em 1em; /* Adjusted padding slightly */
+      text-align: center;
+      font-size: 1.5rem; /* Slightly reduced font size to balance with image */
+      line-height: 1.4;
+    }
+    .proudly-canadian-banner__link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .proudly-canadian-banner__link:hover,
+    .proudly-canadian-banner__link:focus {
+      opacity: 0.9;
+    }
+    .proudly-canadian-banner__content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75em;
+      flex-wrap: wrap;
+    }
+    .proudly-canadian-banner__icon {
+       flex-shrink: 0;
+       display: inline-flex;
+       align-items: center;
+       /* Adjust line-height/height if needed for vertical alignment */
+       line-height: 0; /* Prevents extra space below image */
+    }
+    .proudly-canadian-banner__icon img {
+        vertical-align: middle;
+        max-height: {{ icon_max_height }}px; /* Use setting value */
+        width: auto; /* Maintain aspect ratio */
+        display: inline-block;
+    }
+    /* Ensure page-width class provides max-width and centering if needed */
+    /* .page-width { max-width: 1200px; margin: 0 auto; padding: 0 15px; } */
+  </style>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Proudly Canadian Banner",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_banner",
+      "label": "Show Banner",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#333333"
+    },
+    {
+      "type": "text",
+      "id": "text_left",
+      "label": "Text (Left / English)",
+      "default": "Proudly Canadian"
+    },
+    {
+      "type": "text",
+      "id": "text_right",
+      "label": "Text (Right / French)",
+      "default": "Fièrement Canadien"
+    },
+    {
+      "type": "image_picker",
+      "id": "icon_image",
+      "label": "Icon Image",
+      "info": "Recommended: Upload an SVG or transparent PNG of the Canadian flag. Max height set below."
+    },
+    {
+      "type": "range",
+      "id": "icon_max_height",
+      "min": 16,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "label": "Icon Max Height",
+      "default": 24
+    },
+    {
+      "type": "url",
+      "id": "banner_link",
+      "label": "Banner Link (Optional)",
+      "info": "Make the entire banner clickable."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Proudly Canadian Banner"
+    }
+  ]
+}
+{% endschema %}
+

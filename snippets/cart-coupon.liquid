@@ -1,0 +1,141 @@
+<style>
+  .cart-coupon {
+    margin-bottom: 3rem;
+    display: block;
+  }
+
+  .cart-coupon-wrapper {
+    display: block;
+    width: 100%;
+  }
+
+  .cart-coupon-field-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .button-cart-coupon {
+    position: absolute;
+    inset-inline-end: 4px;
+    top: 4px;
+    height: calc(100% - 8px);
+    min-height: 0;
+    min-width: 0;
+    z-index: 2;
+    border-radius: calc(var(--border-radius-base) - 2px);
+    font-size: calc(var(--font-body-scale) * 1.5rem);
+    padding: 0 2rem;
+  }
+
+  .button-cart-coupon.loading {
+    position: absolute;
+  }
+
+  .minicart-coupon {
+    display: block;
+    margin-bottom: 1.5rem;
+  }
+
+  .mini-cart-coupon-dropdown {
+    position: relative;
+    border-bottom: 0.1rem solid rgb(var(--color-border));
+    padding: 0 1.5rem 1.5rem;
+    margin: 0 -1.5rem;
+  }
+
+  .mini-cart-coupon-dropdown-toggle {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    color: rgb(var(--color-foreground-alt));
+    cursor: pointer;
+  }
+
+  .mini-cart-coupon-dropdown[open] > .mini-cart-coupon-dropdown-toggle {
+    margin-bottom: 1rem;
+  }
+
+  .minicart-coupon .button-cart-coupon .spinner-xs {
+    width: 15px;
+    height: 15px;
+  }
+
+  .mini-cart-coupon-dropdown[open] .mini-cart-coupon-dropdown-toggle .angle-icon::before,
+  .mini-cart-coupon-dropdown[open] .mini-cart-coupon-dropdown-toggle .angle-icon::after {
+    transform: rotate(0);
+    height: 2px;
+  }
+
+  cart-coupon .form-status {
+    padding: 1rem 2rem;
+    margin: 1rem 0 0;
+  }
+</style>
+<script src="{{ 'cart-coupon.js' | asset_url }}" defer="defer"></script>
+{% liquid
+  if minicart
+    assign allow_multiple = settings.minicart_append_coupon_codes
+  else
+    assign allow_multiple = section.settings.append_coupon_codes
+  endif
+%}
+<cart-coupon
+  class="{% if minicart %}minicart-coupon{% else %}cart-coupon{% endif %}"
+  data-multiple="{{ allow_multiple | json }}"
+>
+  {% if minicart %}
+    <details class="mini-cart-coupon-dropdown">
+      <summary class="mini-cart-coupon-dropdown-toggle">
+        {{ 'templates.cart.coupon.code' | t }}
+        {% render 'angle', direction: 'down' %}
+      </summary>
+      <div class="cart-coupon-wrapper">
+        <label class="visually-hidden" for="Cart-coupon-input">
+          {{- 'templates.cart.coupon.code' | t -}}
+        </label>
+        <div class="cart-coupon-field-wrapper">
+          <input
+            type="text"
+            class="field-input"
+            name="coupon"
+            id="Cart-coupon-input"
+            placeholder="{{ 'templates.cart.coupon.code' | t }}"
+            form=""
+          >
+          <button class="button button-cart-coupon" type="button">
+            {{ 'templates.cart.coupon.apply' | t }}
+            <div class="button-overlay-spinner hidden">
+              <span class="spinner-xs"></span>
+            </div>
+          </button>
+        </div>
+      </div>
+      <div class="cart-coupon-status form-status hidden"></div>
+    </details>
+
+  {% else %}
+    <div class="cart-coupon-wrapper">
+      <label for="Cart-coupon-input" class="visually-hidden">
+        {{- 'templates.cart.coupon.code' | t -}}
+      </label>
+      <div class="cart-coupon-field-wrapper">
+        <input
+          type="text"
+          class="field-input"
+          name="coupon"
+          id="Cart-coupon-input"
+          placeholder="{{ 'templates.cart.coupon.code' | t }}"
+          form=""
+        >
+        <button class="button button-cart-coupon" type="button">
+          {{ 'templates.cart.coupon.apply' | t }}
+          <div class="button-overlay-spinner hidden">
+            <span class="spinner-xs"></span>
+          </div>
+        </button>
+      </div>
+    </div>
+    <div class="cart-coupon-status form-status hidden"></div>
+  {% endif %}
+</cart-coupon>

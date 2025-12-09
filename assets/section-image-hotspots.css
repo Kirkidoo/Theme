@@ -1,0 +1,238 @@
+/* Section - Image hotspots
+=================================== */
+
+.image-hotspots {
+  overflow: hidden;
+}
+
+.image-hotspots.loaded {
+  overflow: visible;
+}
+
+.image-hotspots-image-wrap {
+  position: relative;
+  border-radius: var(--border-radius-base);
+}
+
+.image-hotspots-image-wrap svg {
+  fill: currentColor;
+  opacity: 0.7;
+}
+
+.image-hotspots-image {
+  border-radius: var(--border-radius-base);
+}
+
+@keyframes hotspot-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.hotspot-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  cursor: pointer;
+  box-shadow: none;
+  padding: 0;
+  position: relative;
+  border-radius: 50%;
+  border: 0;
+  transform: translate(-50%, -50%);
+  background: none;
+}
+
+.hotspot-toggle::after {
+  content: "";
+  background-color: rgba(var(--color-foreground));
+  width: 1.2rem;
+  height: 1.2rem;
+  z-index: 1;
+  border-radius: 50%;
+}
+
+.hotspot-toggle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: hotspot-pulse 2s infinite ease-in-out;
+  z-index: 0;
+}
+
+@media (min-width: 750px) {
+  .hotspot-toggle {
+    width: 3.4rem;
+    height: 3.4rem;
+  }
+}
+
+.hotspot-reveal-hover .hotspot:hover .hotspot-toggle,
+.hotspot-reveal-hover .hotspot-toggle:hover,
+.is-active .hotspot-toggle {
+  border: 0.2rem solid rgba(var(--color-foreground));
+}
+
+.hotspot {
+  position: absolute;
+}
+
+.hotspot-card-wrap {
+  width: 28rem;
+  position: absolute;
+  padding: 2rem 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.95);
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease,
+    visibility 0s ease 0.2s;
+  z-index: 18;
+  visibility: hidden;
+}
+
+.hotspot-reveal-hover .hotspot-card-wrap {
+  transition:
+    transform 0.25s ease 0.2s,
+    opacity 0.25s ease 0.2s,
+    visibility 0s ease 0.35s;
+}
+
+.hotspot-card-wrap-long {
+  width: 30rem;
+}
+
+@media (min-width: 990px) {
+  .hotspot-card-wrap {
+    width: 34rem;
+    top: 3rem;
+    transform: scale(0.95);
+  }
+
+  .hotspot-card-wrap-long {
+    width: 38rem;
+  }
+}
+
+.hotspot-reveal-hover
+  :is(
+    .hotspot-toggle:hover + .hotspot-card-wrap,
+    .hotspot:hover .hotspot-card-wrap,
+    .hotspot-card-wrap:hover
+  ),
+.hotspot.is-active .hotspot-card-wrap {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+  visibility: visible;
+  transition-delay: 0s, 0s, 0s;
+}
+
+@media (min-width: 990px) {
+  .hotspot-reveal-hover
+    :is(
+      .hotspot-toggle:hover + .hotspot-card-wrap,
+      .hotspot:hover .hotspot-card-wrap,
+      .hotspot-card-wrap:hover
+    ),
+  .hotspot.is-active .hotspot-card-wrap {
+    transform: scale(1);
+  }
+}
+
+.card.hotspot-card {
+  background-color: rgba(var(--color-product-cards-background));
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-product-cards-border)),
+    0 2px 0 rgba(var(--color-product-cards-box-shadow));
+  color: rgba(var(--color-product-cards-foreground));
+}
+
+.card.hotspot-card .card-heading {
+  color: rgba(var(--color-product-cards-foreground-alt));
+}
+
+.hotspot-card .card-media {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.hotspot-card-image {
+  border-radius: var(--border-radius-base);
+  width: auto;
+}
+
+.hotspot-card .hotspot-card-heading {
+  margin-bottom: 1rem;
+  font-weight: var(--font-bolder-weight);
+}
+
+.hotspot-card .card-caption:not(:last-child) {
+  margin-bottom: 1.5rem;
+}
+
+.hotspot .card-product {
+  background-color: rgba(var(--color-product-cards-background));
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-product-cards-border)),
+    0 2px 0 rgba(var(--color-product-cards-box-shadow));
+}
+
+.hotspot .card-product-media {
+  padding: 1rem;
+  grid-gap: 1.5rem;
+}
+
+.hotspot .card-eyebrow {
+  word-break: break-word;
+}
+
+.hotspot .card-product-media .card-product-actions .button {
+  padding: 1rem 1rem;
+  min-width: 10rem;
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+}
+
+.hotspot .card-product-media .card-product-actions .button.button-text-link {
+  padding: 0;
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+}
+
+.hotspot .card-product-media .card-info-wrap {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hotspot .card-product-media .card-footer-intro {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hotspot .card-product-media .card-info {
+  padding: 0;
+}
+
+@media (min-width: 990px) {
+  .hotspot .card-product-media {
+    padding: 1.8rem;
+  }
+
+  .hotspot .card-product-media .card-media {
+    width: 10rem;
+  }
+}

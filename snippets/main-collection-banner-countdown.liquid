@@ -1,0 +1,41 @@
+{% comment %}
+  Renders the countdown module of the main collection banner section.
+
+  Accepts:
+  - expiration_date: {Number} The expiration date.
+
+  Usage:
+  {% render 'main-collection-banner-countdown', expiration_date: expiration_date %}
+{% endcomment %}
+
+{% liquid
+  assign now = 'now' | date: '%s'
+  assign distance = expiration_date | minus: now
+  if distance < 0
+    assign distance = 0
+  endif
+%}
+
+{{ 'component-countdown.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'countdown.js' | asset_url }}" defer="defer"></script>
+
+<countdown-timer date="{{ expiration_date }}">
+  <div class="countdown">
+    <div class="countdown-item">
+      <div class="countdown-value-pair countdown-days"></div>
+      <span class="countdown-item-label">{{ 'general.countdown.days' | t }}</span>
+    </div>
+    <div class="countdown-item">
+      <div class="countdown-value-pair countdown-hours"></div>
+      <span class="countdown-item-label">{{ 'general.countdown.hours' | t }}</span>
+    </div>
+    <div class="countdown-item">
+      <div class="countdown-value-pair countdown-minutes"></div>
+      <span class="countdown-item-label">{{ 'general.countdown.minutes' | t }}</span>
+    </div>
+    <div class="countdown-item">
+      <div class="countdown-value-pair countdown-seconds"></div>
+      <span class="countdown-item-label">{{ 'general.countdown.seconds' | t }}</span>
+    </div>
+  </div>
+</countdown-timer>

@@ -1,0 +1,24 @@
+{% comment %}
+  Quantity input for variants
+
+  Accepts:
+  - variant: {Object} Variant object
+  - min: {Number} Min (optional)
+  - reveal_header: {Boolean} Reveal header (if hidden) after items are added to the cart. Default true.
+  - trigger_cart: {Boolean} Reveal the mini cart after items are added to the cart. Default true.
+
+  Usage:
+  {% render 'card-product-quick-add-bulk' variant: variant %}
+{% endcomment %}
+
+<quick-add-bulk
+  data-min="{{ variant.quantity_rule.min }}"
+  id="quick-add-bulk-{{ variant.id }}-{{ section.id }}"
+  class="quick-add-bulk"
+  data-index="{{ variant.id }}"
+  data-section-id="{{ section.id }}"
+  data-reveal-header="{%- unless reveal_header == false -%}true{%- else -%}false{%- endunless -%}"
+  data-trigger-cart="{%- unless trigger_cart == false -%}true{%- else -%}false{%- endunless -%}"
+>
+  {% render 'quantity-input-variant', variant: variant, min: min %}
+</quick-add-bulk>

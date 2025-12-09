@@ -1,0 +1,122 @@
+{% comment %}
+  Renders the side menu on the collection page
+
+  Accepts:
+  - menu: {Object} Collection or Search object
+  - menu_title: {String} The menu title. Required.
+  - expand_on_arrow: {Boolean}: Optional. Whether the sub-menus of the side menu should expand only on arrow click.
+
+  Usage:
+  {% render 'collection-side-menu', menu: side_menu, menu_title: 'Menu' %}
+{% endcomment %}
+
+{% if menu.links != blank %}
+  <collapsible-expandable expanded="true">
+    <div class="facet facet-long">
+      <button class="facet-toggle" type="button" aria-expanded="true">
+        <span>{{ menu_title | escape }}</span>
+        {% render 'angle', direction: 'down' %}
+      </button>
+
+      <div class="facet-content">
+        <expandable-list
+          close-others="true"
+          {% if expand_on_arrow %}
+            expand-on-arrows="true"
+          {% endif %}
+        >
+          <ul class="navigation-side" role="list">
+            {%- for link in menu.links -%}
+              <li
+                class="
+                  navigation-side-item
+                  {% if link.links != blank %} has-sub-menu {% endif %}
+                  {% if link.child_active %} is-expanded is-active {% endif %}
+                "
+              >
+                <span class="navigation-side-item-wrap">
+                  <a
+                    href="{{ link.url }}"
+                    {%- if link.current -%}
+                      aria-current="page" class="current"
+                    {%- endif -%}
+                  >
+                    {{ link.title | escape }}
+                  </a>
+
+                  {%- if link.links != blank -%}
+                    <button class="navigation-side-toggle">
+                      {% render 'icons', icon: 'angle' %}
+                    </button>
+                  {%- endif -%}
+                </span>
+
+                {%- if link.links != blank -%}
+                  <ul
+                    class="navigation-side-item-submenu"
+                    aria-expanded="{%- if link.child_active -%}true{%- else -%}false{%- endif -%}"
+                  >
+                    {%- for childlink in link.links -%}
+                      <li
+                        class="
+                          navigation-side-item
+                          {% if childlink.links != blank %} has-sub-menu {% endif %}
+                          {% if childlink.child_active %} is-expanded is-active {% endif %}
+                        "
+                      >
+                        <span class="navigation-side-item-wrap">
+                          <a
+                            href="{{ childlink.url }}"
+                            {%- if childlink.current -%}
+                              aria-current="page" class="current"
+                            {%- endif -%}
+                          >
+                            {{ childlink.title | escape }}
+                          </a>
+
+                          {%- if childlink.links != blank -%}
+                            <button class="navigation-side-toggle">
+                              {% render 'icons', icon: 'angle' %}
+                            </button>
+                          {%- endif -%}
+                        </span>
+
+                        {%- if childlink.links != blank -%}
+                          <ul
+                            class="navigation-side-item-submenu"
+                            aria-expanded="{%- if childlink.child_active -%}true{%- else -%}false{%- endif -%}"
+                          >
+                            {%- for grandchildlink in childlink.links -%}
+                              <li
+                                class="
+                                  navigation-side-item
+                                  {% if grandchildlink.links != blank %} has-sub-menu {% endif %}
+                                  {% if grandchildlink.child_active %} is-expanded is-active {% endif %}
+                                "
+                              >
+                                <span class="navigation-side-item-wrap">
+                                  <a
+                                    href="{{ grandchildlink.url }}"
+                                    {%- if grandchildlink.current -%}
+                                      aria-current="page" class="current"
+                                    {%- endif -%}
+                                  >
+                                    {{ grandchildlink.title | escape }}
+                                  </a>
+                                </span>
+                              </li>
+                            {%- endfor -%}
+                          </ul>
+                        {%- endif -%}
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                {%- endif -%}
+              </li>
+            {%- endfor -%}
+          </ul>
+        </expandable-list>
+      </div>
+    </div>
+  </collapsible-expandable>
+{% endif %}

@@ -1,0 +1,54 @@
+{% comment %}
+  Renders the product's "Info box" block.
+
+  Accepts:
+  - block: {Object} The block.
+  - settings: {Object} The block's settings.
+  - settings.heading: {String} The heading (optional).
+  - settings.text: {String} The text (optional).
+  - settings.info: {String} The icon (optional).
+  - settings.color: {String} The block's color (optional).
+
+  Usage:
+  {% render 'main-product-info-box', settings: block.settings, block: block %}
+{% endcomment %}
+
+{% liquid
+  assign foreground_color = settings.color_foreground
+  assign background_color = settings.color_background
+%}
+
+<div
+  class="product-info-box-block"
+  style="--product-details-block-text-color: {{ foreground_color }}; --product-details-block-background-color: {{ background_color }};"
+>
+  {% if settings.icon != blank %}
+    <div class="product-info-box-block-icon">
+      {% render 'icons', icon: settings.icon %}
+    </div>
+  {% endif %}
+
+  <div class="product-info-box-block-content">
+    {% if settings.heading != blank %}
+      <p class="product-info-box-block-heading h5">
+        {{ settings.heading }}
+      </p>
+    {% endif %}
+
+    {% if settings.enable_payment_icons %}
+      <ul class="list-inline-menu list-payment" role="list">
+        {%- for type in shop.enabled_payment_types -%}
+          <li class="list-payment-item">
+            {{ type | payment_type_svg_tag: class: 'icon' }}
+          </li>
+        {%- endfor -%}
+      </ul>
+    {% endif %}
+
+    {% if settings.text != blank %}
+      <div class="product-info-box-block-caption rte">
+        {{ settings.text }}
+      </div>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,191 @@
+{%- assign subcollections = collection.metafields.custom.subcollections.value -%}
+{%- assign subcollections_size = collection.metafields.custom.subcollections
+  | split: ','
+  | uniq
+  | size
+-%}
+
+{%- if subcollections -%}
+  {{ 'component-card.css' | asset_url | stylesheet_tag }}
+  {{ 'component-pills.css' | asset_url | stylesheet_tag }}
+  {{ 'component-scroller.css' | asset_url | stylesheet_tag }}
+{%- endif -%}
+
+{%- if subcollections and section.settings.layout == 'slider' -%}
+  {{ 'flickity.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'flickity.pkgd.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'carousel-slider.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+{% liquid
+  assign columns = section.settings.columns | at_most: 8
+  assign layout_classes = 'grid grid-2-col'
+
+  if columns >= 7
+    assign layout_classes = layout_classes | append: ' grid-compact-tablet grid-6-col-tablet grid-' | append: columns | append: '-col-desktop-xl'
+  elsif columns >= 4
+    assign layout_classes = layout_classes | append: ' grid-3-col-tablet grid-' | append: columns | append: '-col-desktop'
+  elsif columns == 2
+    assign layout_classes = layout_classes | append: ' grid-2-col-tablet'
+  else
+    assign layout_classes = layout_classes | append: ' grid-3-col-tablet'
+  endif
+
+  if section.settings.layout == 'slider'
+    assign layout_classes = layout_classes | append: ' grid-carousel'
+  endif
+%}
+
+{%- if subcollections -%}
+  <div class="container">
+    <div class="section-content collection-block-subcollections">
+      {%- if section.settings.layout == 'slider' and subcollections_size > columns -%}
+        <carousel-slider id="Carousel-{{ section.id }}">
+      {%- endif -%}
+
+      {%- unless section.settings.stack_on_mobile or subcollections_size == 1 -%}
+        <div class="scroller">
+          <div class="scroller-inner">
+      {%- endunless -%}
+
+      <div class="{{ layout_classes }}">
+        {% for subcollection in subcollections %}
+          <div class="grid-item">
+            {% render 'card-simple-collection-info',
+              collection: subcollection,
+              title: section.settings.show_title,
+              product_size: section.settings.show_product_size,
+              aspect: section.settings.image_ratio,
+              columns: columns,
+              enable_border: section.settings.enable_border,
+              heading_size: 'sm'
+            %}
+          </div>
+        {% endfor %}
+      </div>
+
+      {%- unless section.settings.stack_on_mobile or subcollections_size == 1 -%}
+        </div>
+        </div>
+      {%- endunless -%}
+
+      {%- if section.settings.layout == 'slider' and subcollections_size > columns -%}
+        <carousel-navigation for="Carousel-{{ section.id }}">
+          <div class="visible-tablet-up">
+            <div
+              class="pill-nav pill-nav-slider pill-nav-slider-inline-nav {% if section.settings.show_title %}pill-nav-slider-offset-negative{% endif %}"
+            >
+              <button
+                class="pill-nav-item pill-nav-item-prev pill-nav-item-disabled focus-none js-prev"
+                aria-disabled="true"
+              >
+                <span class="visually-hidden">{{ 'sections.slideshow.previous_slide' | t }}</span>
+                {% render 'angle', direction: 'left' %}
+              </button>
+              <button
+                class="pill-nav-item pill-nav-item-next js-next"
+                aria-disabled="false"
+              >
+                <span class="visually-hidden">{{ 'sections.slideshow.next_slide' | t }}</span>
+                {% render 'angle', direction: 'right' %}
+              </button>
+            </div>
+          </div>
+        </carousel-navigation>
+        </carousel-slider>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+  {
+    "name": "t:sections.main_collection_subcollections.name",
+    "tag": "section",
+    "class": "section section-main-collection-subcollections",
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:sections.main_collection_subcollections.settings.header_1.content"
+      },
+      {
+        "type": "select",
+        "id": "image_ratio",
+        "label": "t:sections.all.layout.image_ratio.label",
+        "default": "adapt",
+        "options": [
+          {
+            "value": "adapt",
+            "label": "t:sections.all.layout.image_ratio.options.label_1"
+          },
+          {
+            "value": "portrait",
+            "label": "t:sections.all.layout.image_ratio.options.label_2"
+          },
+          {
+            "value": "square",
+            "label": "t:sections.all.layout.image_ratio.options.label_3"
+          },
+          {
+            "value": "landscape",
+            "label": "t:sections.all.layout.image_ratio.options.label_4"
+          }
+        ]
+      },
+      {
+        "type": "checkbox",
+        "id": "show_title",
+        "default": true,
+        "label": "t:sections.main_collection_subcollections.settings.show_title.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_product_size",
+        "default": true,
+        "label": "t:sections.main_collection_subcollections.settings.show_product_size.label",
+        "visible_if": "{{ section.settings.show_title }}"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.layout.heading"
+      },
+      {
+        "type": "select",
+        "id": "layout",
+        "label": "t:sections.all.layout.layout.label",
+        "default": "grid",
+        "options": [
+          {
+            "value": "grid",
+            "label": "t:sections.all.layout.layout.options.label_grid"
+          },
+          {
+            "value": "slider",
+            "label": "t:sections.all.layout.layout.options.label_slider"
+          }
+        ]
+      },
+      {
+        "type": "range",
+        "id": "columns",
+        "min": 2,
+        "max": 8,
+        "step": 1,
+        "default": 8,
+        "label": "t:sections.all.layout.desktop_columns.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "stack_on_mobile",
+        "default": false,
+        "label": "t:sections.all.layout.stack_on_mobile.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_border",
+        "label": "t:sections.main_collection_subcollections.settings.enable_border.label",
+        "default": true
+      }
+    ]
+  }
+{% endschema %}

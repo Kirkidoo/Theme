@@ -1,0 +1,49 @@
+{% comment %}
+  Renders a sale badge for a product.
+
+  Accepts:
+  - product: {Object} Product object
+  - use_variant: {Boolean} Renders selected or first variant sale percentage, instead of max product percentage our of all variants. Default false.
+
+  Usage:
+  {% render 'badge-sale' product: product, use_variant: true %}
+{% endcomment %}
+{% liquid
+  if use_variant
+    assign target = product.selected_or_first_available_variant
+  else
+    assign target = product
+  endif
+
+  if use_variant
+    if target.price == 0 and settings.zero_price_mode == 'call'
+      assign sale_percentage = 0
+    else
+      assign sale_percentage = target.compare_at_price | minus: target.price | times: 1.0 | divided_by: target.compare_at_price | times: 100 | round
+    endif
+  else
+    assign max_percentage = 0
+    for variant in target.variants
+      if variant.price == 0 and settings.zero_price_mode == 'call'
+        assign sale_percentage = 0
+      else
+        assign sale_percentage = variant.compare_at_price | minus: variant.price | times: 1.0 | divided_by: variant.compare_at_price | times: 100 | round
+      endif
+
+      if sale_percentage > max_percentage
+        assign max_percentage = sale_percentage
+      endif
+    endfor
+
+    assign sale_percentage = max_percentage
+  endif
+%}
+{% if sale_percentage > 0 %}
+  <span class="badge badge-sale">
+    {% if settings.sale_badge_mode == 'percentage' %}
+      -{{ sale_percentage }}%
+    {% else %}
+      {{ 'products.product.on_sale' | t }}
+    {% endif %}
+  </span>
+{% endif %}

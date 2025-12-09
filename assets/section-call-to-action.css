@@ -1,0 +1,220 @@
+/* Section - Call to action
+=================================== */
+.section-cta-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--border-radius-base);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-cta-wrap-inner {
+  display: flex;
+  flex-direction: column;
+  flex: auto;
+  height: 100%;
+}
+
+.section-cta-wrap-inner::after {
+  content: "";
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius-base);
+}
+
+.section-fullwidth .section-cta-wrap,
+.section-fullwidth .section-cta-wrap-inner::after {
+  border-radius: 0;
+}
+
+.section-cta-wrap .container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex: auto;
+}
+
+.section-cta-wrap::after {
+  content: "";
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius-base);
+}
+
+.section-cta-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.section-cta-with-mobile-media .section-cta-backdrop-desktop {
+  display: none;
+}
+
+@media (min-width: 750px) {
+  .section-cta-with-mobile-media .section-cta-backdrop-desktop {
+    display: block;
+  }
+
+  .section-cta-backdrop-mobile {
+    display: none;
+  }
+}
+
+.section-cta-content-wrap {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  flex: auto;
+}
+
+.section-cta-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 3rem;
+  flex: auto;
+}
+
+.section-fullwidth .section-cta-content {
+  padding: 3.5rem 0;
+}
+
+@media (min-width: 750px) {
+  .section-cta-content {
+    padding: 5rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .section-fullwidth .section-cta-content {
+    padding: 6rem 0;
+  }
+}
+
+.section-cta-caption {
+  line-height: 1.5;
+  margin-bottom: 2.5rem;
+}
+
+.section-cta-caption:last-child,
+.section-cta-caption > :last-child {
+  margin-bottom: 0;
+}
+
+.section-cta-content-inner {
+  padding: 2.5rem;
+  border-radius: var(--border-radius-base);
+}
+
+@media (min-width: 990px) {
+  .section-cta-content-inner {
+    max-width: 50%;
+    padding: 5rem;
+  }
+}
+
+@media (min-width: 750px) {
+  .section-cta-content-inner {
+    max-width: 50%;
+    padding: 3rem;
+    min-width: 38rem;
+  }
+}
+
+.section-cta-text-align-left {
+  text-align: left;
+}
+
+.section-cta-text-align-center {
+  text-align: center;
+}
+
+.section-cta-text-align-right {
+  text-align: right;
+}
+
+.section-cta-caption a {
+  color: currentColor;
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+  text-decoration-thickness: 0.1rem;
+  transition: text-decoration 0.18s ease;
+}
+
+.section-cta-caption a:hover {
+  text-decoration-thickness: 0.2rem;
+}
+
+.section-cta-title {
+  margin-bottom: 1rem;
+}
+
+.section-cta-title a {
+  color: rgba(var(--color-accent-1));
+}
+
+.section-cta-title:last-child {
+  margin-bottom: 0;
+}
+
+.section-cta-title-sm {
+  font-size: calc(var(--font-heading-scale) * 1.8rem);
+}
+
+.section-cta-title-md {
+  font-size: calc(var(--font-heading-scale) * 2rem);
+}
+
+.section-cta-title-lg {
+  font-size: calc(var(--font-heading-scale) * 2.4rem);
+}
+
+.section-cta-title-xl {
+  font-size: calc(var(--font-heading-scale) * 2.6rem);
+}
+
+.section-cta-title-xxl {
+  font-size: calc(var(--font-heading-scale) * 2.8rem);
+}
+
+@media (min-width: 750px) {
+  .section-cta-title-desktop-sm {
+    font-size: calc(var(--font-heading-scale) * 2.2rem);
+  }
+
+  .section-cta-title-desktop-md {
+    font-size: calc(var(--font-heading-scale) * 2.4rem);
+  }
+
+  .section-cta-title-desktop-lg {
+    font-size: calc(var(--font-heading-scale) * 2.6rem);
+  }
+
+  .section-cta-title-desktop-xl {
+    font-size: calc(var(--font-heading-scale) * 3rem);
+  }
+
+  .section-cta-title-desktop-xxl {
+    font-size: calc(var(--font-heading-scale) * 3.6rem);
+  }
+}

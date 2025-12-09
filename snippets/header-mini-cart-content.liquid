@@ -1,0 +1,235 @@
+{% comment %}
+  Renders the mini cart's content
+
+  Usage:
+  {% render 'header-mini-cart-content' %}
+{% endcomment %}
+
+<div id="mini-cart-error" class="mini-cart-error form-status form-status-error"></div>
+
+{% if settings.free_shipping_enabled and cart != empty %}
+  {% assign free_shipping_threshold = settings.free_shipping_threshold | times: 100 %}
+  <div class="mini-cart-content-notice mini-cart-content-notice-free-shipping">
+    {% if cart.total_price >= free_shipping_threshold %}
+      {{ 'templates.cart.free_shipping.amount_reached' | t }}
+    {% else %}
+      {% assign amount_left = free_shipping_threshold | minus: cart.total_price | money %}
+      {{ 'templates.cart.free_shipping.amount_required' | t: amount: amount_left }}
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="drawer-content-inner">
+  {%- if cart != empty -%}
+    <div class="mini-cart-item-list">
+      {%- for item in cart.items -%}
+        <div class="mini-cart-item js-cart-item" id="MiniCartItem-{{ item.index | plus: 1 }}">
+          <div class="mini-cart-item-image-wrap">
+            {%- if item.image -%}
+              <a href="{{ item.url }}">
+                {%- capture image_sizes -%}
+									{%- if item.image.width >= 70 -%}{{ item.image | image_url: width: 70 }} 1x,{%- endif -%}
+									{%- if item.image.width >= 140 -%}{{ item.image | image_url: width: 140 }} 2x{%- endif -%}
+								{%- endcapture -%}
+                {% assign image_height = 140 | divided_by: item.image.aspect_ratio | ceil %}
+                {{
+                  item.image
+                  | image_url: width: 140
+                  | image_tag:
+                    width: 140,
+                    height: image_height,
+                    loading: 'lazy',
+                    srcset: image_sizes
+                }}
+                <span class="visually-hidden">{{ item.product.title }}</span>
+              </a>
+            {%- endif -%}
+          </div>
+
+          <div class="mini-cart-item-info">
+            {% if settings.minicart_show_vendor %}
+              <p class="mini-cart-item-eyebrow">{{ item.product.vendor }}</p>
+            {% endif %}
+            <h3 class="mini-cart-item-heading typography-body">
+              <a
+                href="{{ item.url }}"
+                {% if settings.product_cards_truncate_title_chars > 0 %}
+                  title="{{ item.product.title | escape }}"
+                {% endif %}
+              >
+                {% if settings.product_cards_truncate_title_chars > 0 %}
+                  {{
+                    item.product.title
+                    | truncate: settings.product_cards_truncate_title_chars
+                    | escape
+                  }}
+                {% else %}
+                  {{ item.product.title | escape }}
+                {% endif %}
+              </a>
+            </h3>
+            <div class="mini-cart-item-price">
+              {%- if item.original_line_price != item.final_line_price -%}
+                <div class="mini-cart-item-discounted-prices">
+                  <span class="visually-hidden">
+                    {{ 'products.product.price.regular_price' | t }}
+                  </span>
+                  <s class="mini-cart-item-old-price">
+                    {{- item.original_line_price | money -}}
+                  </s>
+                  <span class="visually-hidden">
+                    {{ 'products.product.price.sale_price' | t }}
+                  </span>
+                  <strong class="mini-cart-item-final-price">
+                    {{ item.final_line_price | money }}
+                  </strong>
+                </div>
+              {%- else -%}
+                <div class="mini-cart-item-final-price">
+                  {{ item.original_line_price | money }}
+                </div>
+              {%- endif -%}
+            </div>
+
+            {%- if item.variant.available and item.unit_price_measurement -%}
+              <div class="unit-price mini-cart-unit-price">
+                <span class="visually-hidden">{{ 'products.product.price.unit_price' | t }}</span>
+                {{ item.variant.unit_price | money }}
+                <span aria-hidden="true">/</span>
+                <span class="visually-hidden"
+                  >&nbsp;{{ 'accessibility.unit_price_separator' | t }}&nbsp;</span
+                >
+                {%- if item.variant.unit_price_measurement.reference_value != 1 -%}
+                  {{- item.variant.unit_price_measurement.reference_value -}}
+                {%- endif -%}
+                {{ item.variant.unit_price_measurement.reference_unit }}
+              </div>
+            {%- endif -%}
+            {%- if item.product.has_only_default_variant == false
+              or item.properties.size != 0
+              or item.selling_plan_allocation != null
+            -%}
+              <dl class="mini-cart-variations-list">
+                {%- if item.product.has_only_default_variant == false -%}
+                  {%- for option in item.options_with_values -%}
+                    <div class="mini-cart-variation-option">
+                      <dt>{{ option.name }}:</dt>
+                      <dd>{{ option.value }}</dd>
+                    </div>
+                  {%- endfor -%}
+                {%- endif -%}
+
+                {%- for property in item.properties -%}
+                  {%- assign property_first_char = property.first | slice: 0 -%}
+                  {%- if property.last != blank and property_first_char != '_' -%}
+                    <div class="mini-cart-variation-option">
+                      <dt>{{ property.first }}:</dt>
+                      <dd>
+                        {%- if property.last contains '/uploads/' -%}
+                          <a href="{{ property.last }}" class="link" target="_blank">
+                            {{ property.last | split: '/' | last }}
+                          </a>
+                        {%- else -%}
+                          {{ property.last }}
+                        {%- endif -%}
+                      </dd>
+                    </div>
+                  {%- endif -%}
+                {%- endfor -%}
+              </dl>
+
+              {% if item.selling_plan_allocation != null %}
+                <p class="mini-cart-variation-option">
+                  {{ item.selling_plan_allocation.selling_plan.name }}
+                </p>
+              {% endif %}
+            {%- endif -%}
+
+            <ul
+              class="discounts list-unstyled"
+              role="list"
+              aria-label="{{ 'customer.order.discount' | t }}"
+            >
+              {%- for discount in item.discounts -%}
+                <li class="discounts-discount">
+                  {% render 'icons', icon: 'label' %}
+                  {{ discount.title }}
+                </li>
+              {%- endfor -%}
+            </ul>
+
+            <div class="mini-cart-item-actions">
+              <quantity-input class="quantity-input">
+                <button
+                  type="button"
+                  name="minus"
+                  class="quantity-input-button quantity-input-minus"
+                >
+                  &minus;
+                  <span class="visually-hidden">
+                    {{-
+                      'products.product.quantity.decrease'
+                      | t: product: item.product.title
+                      | escape
+                    -}}
+                  </span>
+                </button>
+                <label for="Mini-Cart-Quantity-{{ item.index | plus: 1 }}" class="visually-hidden">
+                  {{- 'products.product.quantity.label' | t -}}
+                </label>
+                <input
+                  name="updates[]"
+                  type="number"
+                  class="quantity-input-field"
+                  min="1"
+                  value="{{ item.quantity }}"
+                  id="Mini-Cart-Quantity-{{ item.index | plus: 1 }}"
+                  data-index="{{ item.index | plus: 1 }}"
+                  aria-label="{{ 'products.product.quantity.input_label' | t: product: item.product.title | escape }}"
+                >
+                <button
+                  type="button"
+                  name="plus"
+                  class="quantity-input-button quantity-input-plus"
+                >
+                  &plus;
+                  <span class="visually-hidden">
+                    {{-
+                      'products.product.quantity.increase'
+                      | t: product: item.product.title
+                      | escape
+                    -}}
+                  </span>
+                </button>
+              </quantity-input>
+
+              <cart-remove-button
+                id="Remove-{{ item.index | plus: 1 }}"
+                data-index="{{ item.index | plus: 1 }}"
+              >
+                <a href="{{ item.url_to_remove }}" class="mini-cart-item-remove link-text">
+                  {{- 'templates.cart.remove' | t -}}
+                </a>
+              </cart-remove-button>
+            </div>
+
+            <div
+              class="cart-item-error"
+              id="MiniCart-Line-item-error-{{ item.index | plus: 1 }}"
+              role="alert"
+            >
+              <small class="cart-item-error-text"></small>
+              {% render 'icons', icon: 'warning' %}
+            </div>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  {%- else -%}
+    <div class="mini-cart-message-empty">
+      {% render 'icons', icon: 'cart' %}
+
+      <p>{{ 'templates.cart.empty' | t }}</p>
+    </div>
+  {%- endif -%}
+</div>

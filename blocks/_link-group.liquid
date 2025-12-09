@@ -1,0 +1,74 @@
+{% assign links_layout_class = 'flexi-link-group--links-' | append: block.settings.links_layout %}
+
+<div class="{{ links_layout_class }}">
+  {% if block.settings.heading != blank %}
+    <{{ block.settings.heading_tag }} class="flexi-link-group__heading">
+      {{ block.settings.heading }}
+    </{{ block.settings.heading_tag }}>
+  {% endif %}
+
+  {% content_for 'blocks' %}
+</div>
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._link_group.name",
+    "class": "flexi-block flexi-link-group",
+    "settings": [
+      {
+        "type": "text",
+        "id": "heading",
+        "label": "t:theme_blocks._link_group.settings.heading.label",
+        "default": "Heading"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "default": "h3",
+        "options": [
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          },
+          {
+            "value": "h4",
+            "label": "H4"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "links_layout",
+        "label": "t:theme_blocks._link_group.settings.links_layout.label",
+        "default": "rows",
+        "options": [
+          {
+            "value": "rows",
+            "label": "t:theme_blocks._link_group.settings.links_layout.options.label_rows"
+          },
+          {
+            "value": "columns",
+            "label": "t:theme_blocks._link_group.settings.links_layout.options.label_columns"
+          }
+        ]
+      }
+    ],
+    "blocks": [{ "type": "_link" }],
+    "presets": [
+      {
+        "name": "t:theme_blocks._link_group.presets.name",
+        "blocks": [
+          { "type": "_link" },
+          { "type": "_link" },
+          { "type": "_link" },
+          { "type": "_link" }
+        ]
+      }
+    ]
+  }
+{% endschema %}

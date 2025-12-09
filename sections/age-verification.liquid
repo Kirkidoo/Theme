@@ -1,0 +1,378 @@
+{% liquid
+  assign is_hidden = false
+
+  if section.settings.hide_logged_in and customer
+    assign is_hidden = true
+  endif
+
+  if section.settings.storage_expiration > 0 and section.settings.enable_storage
+    assign storage_name = 'age_verification_' | append: section.id
+  endif
+%}
+
+{% unless is_hidden %}
+  {{ 'component-modal-dialog.css' | asset_url | stylesheet_tag }}
+  {{ 'section-age-verification.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'section-age-verification.js' | asset_url }}" defer="defer"></script>
+
+  <style>
+    .age-verification-dialog-wrap .modal-dialog {
+    	width: {{ section.settings.width }}px;
+    }
+
+    @media (min-width: 990px) {
+    	.age-verification-dialog-wrap .modal-dialog-image-position-left .modal-dialog-content,
+    	.age-verification-dialog-wrap .modal-dialog-image-position-right .modal-dialog-content {
+    		width: {{ section.settings.width }}px;
+    		max-width: 100%;
+    	}
+
+    	.age-verification-dialog-wrap .modal-dialog-image-position-left.modal-dialog,
+    	.age-verification-dialog-wrap .modal-dialog-image-position-right.modal-dialog {
+    		width: auto;
+    	}
+    }
+  </style>
+
+  <age-verification
+    id="Modal-{{ section.id }}"
+    class="modal-dialog-component {% if section.settings.hide_on_mobile %}hidden-mobile{% endif %}"
+    data-delay="{{ section.settings.delay }}"
+    {% if section.settings.enable_storage %}
+      data-storage-name="{{ storage_name }}"
+      data-storage-expiration="{{ section.settings.storage_expiration }}"
+    {% endif %}
+  >
+    <div class="modal-dialog-wrap modal-dialog-position-{{ section.settings.popup_position }} age-verification-dialog-wrap">
+      <div class="modal-dialog {% if section.settings.image != blank %} modal-dialog-image-position-{{ section.settings.image_position }} {% endif %}">
+        <div
+          role="dialog"
+          class="modal-dialog-content-wrap color-{{ section.settings.color_scheme }}"
+        >
+          {% if section.settings.show_close_button %}
+            <button id="ModalClose-{{ section.id }}" class="modal-dismiss-button" data-close-button>
+              &times;
+            </button>
+          {% endif %}
+
+          {% if section.settings.image != blank %}
+            <div class="modal-dialog-image">
+              {{
+                section.settings.image
+                | image_url: width: 2220
+                | image_tag:
+                  sizes: '(min-width: 750px) 740px, calc(100vw - 3rem)',
+                  widths: '165, 300, 440, 500, 650, 740, 1480, 2220',
+                  fetchpriority: 'high'
+              }}
+            </div>
+          {% endif %}
+
+          <div class="modal-dialog-content age-verification-content">
+            {% for block in section.blocks %}
+              {%- case block.type -%}
+                {%- when 'heading' -%}
+                  <h2
+                    class="heading-size-{{ block.settings.heading_size }}"
+                    {{ block.shopify_attributes }}
+                  >
+                    {{ block.settings.heading | escape }}
+                  </h2>
+                {%- when 'text' -%}
+                  <div
+                    class="rte text-size-{{ block.settings.text_size }}"
+                    {{ block.shopify_attributes }}
+                  >
+                    {{ block.settings.text }}
+                  </div>
+                {%- when 'divider' -%}
+                  <div class="age-verification-divider" {{ block.shopify_attributes }}></div>
+                {%- when 'buttons' -%}
+                  <div class="age-verification-buttons" {{ block.shopify_attributes }}>
+                    <button class="button age-verification-button-yes">
+                      {{ block.settings.yes_button_label | escape }}
+                    </button>
+                    <button class="button button-outline button-secondary age-verification-button-no">
+                      {{ block.settings.no_button_label | escape }}
+                    </button>
+                  </div>
+                  {% if block.settings.rejection_message != blank %}
+                    <div class="age-verification-rejection-message" style="display: none;">
+                      <div class="rte">
+                        {{ block.settings.rejection_message }}
+                      </div>
+                    </div>
+                  {% endif %}
+              {%- endcase -%}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </age-verification>
+{% endunless %}
+
+{% schema %}
+  {
+    "name": "t:sections.age_verification.name",
+    "tag": "section",
+    "class": "section-age-verification",
+    "enabled_on": {
+      "groups": ["custom.overlays"]
+    },
+    "limit": 1,
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:sections.age_verification.settings.header_content.content"
+      },
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:sections.age_verification.settings.image.label"
+      },
+      {
+        "type": "select",
+        "id": "image_position",
+        "visible_if": "{{ section.settings.image }}",
+        "label": "t:sections.age_verification.settings.image_position.label",
+        "info": "t:sections.age_verification.settings.image_position.info",
+        "default": "top",
+        "options": [
+          {
+            "value": "top",
+            "label": "t:sections.age_verification.settings.image_position.options.label_top"
+          },
+          {
+            "value": "left",
+            "label": "t:sections.age_verification.settings.image_position.options.label_left"
+          },
+          {
+            "value": "right",
+            "label": "t:sections.age_verification.settings.image_position.options.label_right"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.age_verification.settings.header_layout.content"
+      },
+      {
+        "type": "range",
+        "id": "width",
+        "min": 400,
+        "max": 740,
+        "step": 20,
+        "unit": "px",
+        "label": "t:sections.age_verification.settings.width.label",
+        "default": 500
+      },
+      {
+        "type": "select",
+        "id": "popup_position",
+        "label": "t:sections.age_verification.settings.popup_position.label",
+        "default": "center",
+        "options": [
+          {
+            "value": "center",
+            "label": "t:sections.age_verification.settings.popup_position.options.label_center"
+          },
+          {
+            "value": "bottom-left",
+            "label": "t:sections.age_verification.settings.popup_position.options.label_bottom_left"
+          },
+          {
+            "value": "bottom-right",
+            "label": "t:sections.age_verification.settings.popup_position.options.label_bottom_right"
+          }
+        ]
+      },
+      {
+        "type": "range",
+        "id": "delay",
+        "min": 0,
+        "max": 10,
+        "step": 1,
+        "unit": "s",
+        "label": "t:sections.age_verification.settings.delay.label",
+        "info": "t:sections.age_verification.settings.delay.info",
+        "default": 0
+      },
+      {
+        "type": "checkbox",
+        "id": "hide_on_mobile",
+        "default": false,
+        "label": "t:sections.age_verification.settings.hide_on_mobile.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "hide_logged_in",
+        "default": false,
+        "label": "t:sections.age_verification.settings.hide_logged_in.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_close_button",
+        "default": false,
+        "label": "t:sections.age_verification.settings.show_close_button.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.age_verification.settings.header_storage.content"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_storage",
+        "default": true,
+        "label": "t:sections.age_verification.settings.enable_storage.label",
+        "info": "t:sections.age_verification.settings.enable_storage.info"
+      },
+      {
+        "type": "range",
+        "id": "storage_expiration",
+        "visible_if": "{{ section.settings.enable_storage }}",
+        "min": 1,
+        "max": 100,
+        "step": 1,
+        "default": 30,
+        "label": "t:sections.age_verification.settings.storage_expiration.label",
+        "info": "t:sections.age_verification.settings.storage_expiration.info"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "heading",
+        "name": "t:sections.age_verification.blocks.heading.name",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "text",
+            "id": "heading",
+            "default": "Age verification",
+            "label": "t:sections.age_verification.blocks.heading.settings.heading"
+          },
+          {
+            "type": "select",
+            "id": "heading_size",
+            "label": "t:sections.all.heading_size.label",
+            "default": "md",
+            "options": [
+              {
+                "value": "sm",
+                "label": "t:sections.all.heading_size.options.label_sm"
+              },
+              {
+                "value": "md",
+                "label": "t:sections.all.heading_size.options.label_md"
+              },
+              {
+                "value": "lg",
+                "label": "t:sections.all.heading_size.options.label_lg"
+              },
+              {
+                "value": "xl",
+                "label": "t:sections.all.heading_size.options.label_xl"
+              },
+              {
+                "value": "xxl",
+                "label": "t:sections.all.heading_size.options.label_xxl"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "name": "t:sections.age_verification.blocks.text.name",
+        "settings": [
+          {
+            "type": "richtext",
+            "id": "text",
+            "default": "<p>You must be of legal drinking age to enter this site. Please verify your age.</p>",
+            "label": "t:sections.age_verification.blocks.text.settings.heading"
+          },
+          {
+            "type": "select",
+            "id": "text_size",
+            "label": "t:sections.all.text_size.label",
+            "default": "md",
+            "options": [
+              {
+                "value": "sm",
+                "label": "t:sections.all.text_size.options.label_sm"
+              },
+              {
+                "value": "md",
+                "label": "t:sections.all.text_size.options.label_md"
+              },
+              {
+                "value": "lg",
+                "label": "t:sections.all.text_size.options.label_lg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "divider",
+        "name": "t:sections.age_verification.blocks.divider.name",
+        "settings": []
+      },
+      {
+        "type": "buttons",
+        "name": "t:sections.age_verification.blocks.buttons.name",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "text",
+            "id": "yes_button_label",
+            "default": "Yes, I am of legal age",
+            "label": "t:sections.age_verification.blocks.buttons.settings.yes_button_label.label"
+          },
+          {
+            "type": "text",
+            "id": "no_button_label",
+            "default": "No, I am not",
+            "label": "t:sections.age_verification.blocks.buttons.settings.no_button_label.label"
+          },
+          {
+            "type": "richtext",
+            "id": "rejection_message",
+            "default": "<p>Sorry, you must be of legal drinking age to enter this site.</p>",
+            "label": "t:sections.age_verification.blocks.buttons.settings.rejection_message.label",
+            "info": "t:sections.age_verification.blocks.buttons.settings.rejection_message.info"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.age_verification.presets.name",
+        "blocks": [
+          {
+            "type": "heading"
+          },
+          {
+            "type": "text"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

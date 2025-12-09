@@ -1,0 +1,223 @@
+{% liquid
+  assign color_scheme_string = section.settings.color_scheme | append: ''
+  assign section_content_class = 'section-content'
+  unless color_scheme_string == 'background-1'
+    assign section_content_class = section_content_class | append: ' section-content-padded'
+  endunless
+%}
+
+<style>
+  #shopify-section-{{ section.id }} .section-content {
+  	margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+  	margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+  }
+
+  #shopify-section-{{ section.id }} .section-content-padded {
+  	margin-top: 0;
+  	margin-bottom: 0;
+  	padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+  	padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+  }
+
+  @media (min-width: 990px) {
+  	#shopify-section-{{ section.id }} .section-content {
+  		margin-top: {{ section.settings.spacing_top }}px;
+  		margin-bottom: {{ section.settings.spacing_bottom }}px;
+  	}
+
+  	#shopify-section-{{ section.id }} .section-content-padded {
+  		margin-top: 0;
+  		margin-bottom: 0;
+  		padding-top: {{ section.settings.spacing_top }}px;
+  		padding-bottom: {{ section.settings.spacing_bottom }}px;
+  	}
+  }
+</style>
+
+{%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+{%- assign visibility_classes = visibility_classes | strip -%}
+
+<div class="{{ visibility_classes }}">
+  <div class="color-{{ section.settings.color_scheme }}">
+    <div class="color-{{ section.settings.color_scheme }}">
+      <div class="{% if section.settings.full_width %} section-fullwidth{% else %} container {{ section_content_class }}{% endif %}">
+        {% if section.settings.title != blank or section.settings.subtitle != blank %}
+          <div class="section-headings {% if section.settings.subtitle != blank %}with-subheading{% endif %}">
+            <div class="section-headings-content{% if section.settings.headings_alignment == 'center' %} center-aligned{% endif %}">
+              {% if section.settings.title != blank %}
+                <{{ section.settings.heading_tag }} class="section-heading heading-size-{{ section.settings.heading_size }}">
+                  {{- section.settings.title -}}
+                </{{ section.settings.heading_tag }}>
+              {% endif %}
+              {% if section.settings.subtitle != blank %}
+                <p class="section-subheading">{{ section.settings.subtitle }}</p>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="liquid">
+          {{ section.settings.liquid }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.custom_liquid.name",
+    "tag": "section",
+    "class": "section-custom-liquid",
+    "disabled_on": {
+      "groups": ["custom.overlays"]
+    },
+    "settings": [
+      {
+        "type": "inline_richtext",
+        "id": "title",
+        "label": "t:sections.custom_liquid.settings.title.label",
+        "default": "Your title"
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:sections.all.heading_size.label",
+        "default": "md",
+        "options": [
+          {
+            "value": "sm",
+            "label": "t:sections.all.heading_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.heading_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.heading_size.options.label_lg"
+          },
+          {
+            "value": "xl",
+            "label": "t:sections.all.heading_size.options.label_xl"
+          },
+          {
+            "value": "xxl",
+            "label": "t:sections.all.heading_size.options.label_xxl"
+          }
+        ]
+      },
+      {
+        "type": "inline_richtext",
+        "id": "subtitle",
+        "label": "t:sections.custom_liquid.settings.subtitle.label"
+      },
+      {
+        "type": "select",
+        "id": "headings_alignment",
+        "label": "t:sections.all.headings_alignment.label",
+        "default": "left",
+        "options": [
+          {
+            "value": "left",
+            "label": "t:sections.all.headings_alignment.options.label_left"
+          },
+          {
+            "value": "center",
+            "label": "t:sections.all.headings_alignment.options.label_center"
+          }
+        ]
+      },
+      {
+        "type": "checkbox",
+        "id": "full_width",
+        "label": "t:sections.custom_liquid.settings.full_width.label",
+        "default": false
+      },
+      {
+        "type": "liquid",
+        "id": "liquid",
+        "label": "t:sections.custom_liquid.settings.liquid.label",
+        "default": "Write or copy/paste Liquid code"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.seo_heading.label"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "default": "h2",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.custom_liquid.preset.name",
+        "category": "t:sections.all.preset_category.layout"
+      }
+    ]
+  }
+{% endschema %}

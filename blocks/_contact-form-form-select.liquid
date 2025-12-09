@@ -1,0 +1,91 @@
+{% liquid
+  assign form_id = section.settings.form_id | handleize | default: 'flexi-contact-form'
+  assign field_name = block.settings.title | handleize
+  assign field_id = form_id | append: '-' | append: field_name | append: '-' | append: block.id
+  assign field_classes = 'flexi-block field field-select'
+  assign options_array = block.settings.options | split: ','
+%}
+
+{% if block.settings.title != blank and options_array.size > 0 %}
+  <div class="{{ field_classes }}" {{ block.shopify_attributes }}>
+    <label class="field-label" for="{{ field_id }}">
+      {{ block.settings.title }}
+      {% if block.settings.required -%}
+        <span aria-hidden="true">*</span>
+      {%- endif %}
+    </label>
+
+    <select
+      id="{{ field_id }}"
+      name="contact[{{ field_name }}]"
+      class="field-input"
+      {% if block.settings.required %}
+        required="required"
+        aria-required="true"
+      {% endif %}
+    >
+      {% if block.settings.placeholder != blank %}
+        <option value="">{{ block.settings.placeholder | escape }}</option>
+      {% endif %}
+
+      {% for option in options_array %}
+        {% assign option_value = option | strip %}
+        <option value="{{ option_value | escape }}">
+          {{ option_value }}
+        </option>
+      {% endfor %}
+    </select>
+
+    {% if block.settings.help_text != blank %}
+      <small class="field-help-text">{{ block.settings.help_text }}</small>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._contact_form_form_select.name",
+    "tag": null,
+    "class": "flexi-block flexi-select",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "t:theme_blocks._contact_form_form_select.settings.title.label",
+        "info": "t:theme_blocks._contact_form_form_select.settings.title.info",
+        "default": "Select an option"
+      },
+      {
+        "type": "textarea",
+        "id": "options",
+        "label": "t:theme_blocks._contact_form_form_select.settings.options.label",
+        "info": "t:theme_blocks._contact_form_form_select.settings.options.info",
+        "default": "Option 1, Option 2, Option 3"
+      },
+      {
+        "type": "text",
+        "id": "placeholder",
+        "label": "t:theme_blocks._contact_form_form_select.settings.placeholder.label",
+        "default": "Please select an option"
+      },
+      {
+        "type": "checkbox",
+        "id": "required",
+        "label": "t:theme_blocks._contact_form_form_select.settings.required.label",
+        "info": "t:theme_blocks._contact_form_form_select.settings.required.info",
+        "default": false
+      },
+      {
+        "type": "inline_richtext",
+        "id": "help_text",
+        "label": "t:theme_blocks._contact_form_form_select.settings.help_text.label"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._contact_form_form_select.name",
+        "category": "t:theme_blocks.categories.form"
+      }
+    ]
+  }
+{% endschema %}

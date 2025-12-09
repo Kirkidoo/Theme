@@ -1,0 +1,91 @@
+{% comment %}
+  Renders a product's availability (in stock, out of stock, only X left)
+
+  Accepts:
+  - product: {Object} Product object
+
+  Usage:
+  {% render 'product-availability', product: product %}
+{% endcomment %}
+
+{% liquid
+  assign variant = product.selected_or_first_available_variant
+
+  # theme-check-disable-next-line VariableName
+  assign preorderSuffixArray = product.template_suffix | split: 'pre-order-'
+  assign is_pre_order = false
+  if product.template_suffix != blank and preorderSuffixArray[0] == blank or product.template_suffix == 'pre-order'
+    assign is_pre_order = true
+  endif
+%}
+{%- capture show_call_for_pricing -%}{%- render 'price-get-call-for-pricing', product: product, use_variant: true -%}{%- endcapture -%}
+{%- assign show_call_for_pricing = show_call_for_pricing | strip -%}
+
+{% if show_call_for_pricing == 'false' %}
+  {% if is_pre_order
+    and variant.inventory_policy == 'continue'
+    or variant.inventory_management == null
+  %}
+    <div class="badge-stock badge-preorder">
+      <span class="badge-stock-dot"></span>
+      <span class="js-stock-text">{{ 'products.product.availability.pre_order' | t }}</span>
+    </div>
+  {% elsif variant.inventory_policy == 'continue' and variant.inventory_quantity <= 0 %}
+    <div class="badge-stock badge-backorder">
+      <span class="badge-stock-dot"></span>
+      <span class="js-stock-text">{{ 'products.product.availability.backorder' | t }}</span>
+    </div>
+  {% elsif variant.inventory_policy == 'continue' and variant.inventory_quantity > 0 %}
+    <div class="badge-stock badge-stock-in">
+      <span class="badge-stock-dot"></span>
+      <span class="js-stock-text">
+        {{ 'products.product.availability.always_in_stock' | t }}
+        {% if settings.show_items_in_stock %}
+          -
+          {{
+            'products.product.availability.number_available'
+            | t: count: variant.inventory_quantity
+          -}}
+        {%- endif %}
+      </span>
+    </div>
+  {% elsif variant.inventory_policy == 'continue' or variant.inventory_management == null %}
+    <div class="badge-stock badge-stock-in">
+      <span class="badge-stock-dot"></span>
+      <span class="js-stock-text">{{ 'products.product.availability.always_in_stock' | t }}</span>
+    </div>
+  {% else %}
+    {% if variant.available == false %}
+      <div class="badge-stock badge-stock-out">
+        <span class="badge-stock-dot"></span>
+        <span class="js-stock-text">{{ 'products.product.availability.out_of_stock' | t }}</span>
+      </div>
+    {% else %}
+      {% if settings.only_x_left >= 1 and variant.inventory_quantity <= settings.only_x_left %}
+        <div class="badge-stock badge-stock-warning">
+          <span class="badge-stock-dot"></span>
+          <span class="js-stock-text">
+            {{-
+              'products.product.availability.number_left'
+              | t: count: variant.inventory_quantity
+            -}}
+          </span>
+        </div>
+      {% else %}
+        <div class="badge-stock badge-stock-in">
+          <span class="badge-stock-dot"></span>
+          <span class="js-stock-text">
+            {{ 'products.product.availability.in_stock' | t }}
+            {% if settings.show_items_in_stock %}
+              -
+              {{
+                'products.product.availability.number_available'
+                | t: count: variant.inventory_quantity
+              -}}
+            {%- endif %}
+          </span>
+        </div>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endif %}

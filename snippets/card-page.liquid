@@ -1,0 +1,38 @@
+{% comment %}
+  Renders a page card.
+
+  Accepts:
+  - page: {Object} Page object
+  - show_excerpt: {Boolean} Show the page excerpt. Default: false
+  - is_card: {Boolean} If the item should be displayed as a (product) card visually. Default: false
+
+  Usage:
+  {% render 'card-page' page: page, show_excerpt: true %}
+{% endcomment %}
+{%- if page and page != empty -%}
+  <div
+    class="
+      card-article card-page
+      {% if is_card %} card{% endif %}
+    "
+  >
+    <h3 class="card-article-heading">
+      <a href="{{ page.url }}">
+        {{ page.title | truncate: 50 | escape }}
+      </a>
+    </h3>
+
+    {%- if show_excerpt -%}
+      {%- if page.content.size > 0 -%}
+        <p class="card-article-excerpt rte">
+          {{ page.content | strip_html | truncatewords: 30 }}
+        </p>
+      {%- endif -%}
+    {%- endif -%}
+
+    <a href="{{ page.url }}" class="button">
+      {{ 'blogs.article.read_more' | t }}
+      {% render 'angle', direction: 'right' %}
+    </a>
+  </div>
+{%- endif -%}

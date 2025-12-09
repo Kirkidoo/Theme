@@ -1,0 +1,91 @@
+{% comment %}
+  Renders an article card for a given blog with settings to either show the image or not.
+
+  Accepts:
+  - blog: {Object} Blog object
+  - article: {Object} Article object
+  - show_date: {String} The setting either show the article date or not. If it's not included it will show the image by default
+  - show_author: {String} The setting either show the article author or not. If it's not included it will show the author by default
+  - show_excerpt: {String} The setting either show the article excerpt or not. Default false.
+  - class: {String} Optional CSS class
+  - mobile_two_columns: {Boolean} Whether the card is rendered in two columns in mobile
+
+  Usage:
+  {% render 'card-article-home' blog: blog, article: article %}
+{% endcomment %}
+
+{%- if article and article != empty -%}
+  {%- capture image_sizes -%}
+		{% if mobile_two_columns %}
+			(min-width: 1420px) calc(1420px / 3), (min-width: 750px) calc((100vw - 4rem - 3rem) / 3), calc((100vw - 3rem - 1rem) / 2)
+		{% else %}
+			(min-width: 1420px) calc(1420px / 3), (min-width: 750px) calc((100vw - 4rem - 3rem) / 3), calc(100vw - 3rem - 1rem)
+		{% endif %}
+	{%- endcapture -%}
+
+  <div class="card card-standard {{ class }}">
+    {%- if article.image -%}
+      <figure class="card-media">
+        <a href="{{ article.url }}" title="{{ article.title }}">
+          <div class="aspect-ratio" style="--ratio-percent: 66.66667%;">
+            {{
+              article.image
+              | image_url: width: 750
+              | image_tag: widths: '250, 375, 460, 550, 750', sizes: image_sizes
+            }}
+          </div>
+        </a>
+      </figure>
+    {%- endif -%}
+
+    <div class="card-info">
+      <div class="card-article-info card-eyebrow">
+        {%- if show_date -%}
+          <span>
+            {{ article.published_at | time_tag: format: 'date' }}
+          </span>
+        {%- endif -%}
+
+        {%- if show_author -%}
+          <span>
+            {% if article.user.homepage %}
+              <a href="{{ article.user.homepage }}">{{ article.author }}</a>
+            {% else %}
+              {{ article.author }}
+            {% endif %}
+          </span>
+        {%- endif -%}
+      </div>
+
+      <h3 class="card-heading">
+        <a href="{{ article.url }}">
+          {{ article.title | escape }}
+        </a>
+      </h3>
+
+      {%- if show_excerpt and article.excerpt_or_content != blank -%}
+        <p class="card-content">
+          {% if article.excerpt != blank %}
+            {{ article.excerpt }}
+          {% else %}
+            {{ article.content | strip_html | truncatewords: 30 }}
+          {% endif %}
+        </p>
+      {%- endif -%}
+    </div>
+  </div>
+{%- else -%}
+  <div class="card card-standard card-placeholder">
+    <figure class="card-media color-background-1">
+      <div class="aspect-ratio" style="--ratio-percent: 66.66667%;">
+        {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+      </div>
+    </figure>
+
+    <div class="card-info">
+      <h3 class="card-heading">
+        {{ 'onboarding.article_title' | t }}
+      </h3>
+    </div>
+  </div>
+{%- endif -%}

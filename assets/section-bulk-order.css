@@ -1,0 +1,480 @@
+/* Section - Bulk order
+================================ */
+.bulk-order-list-table {
+  border-spacing: 0;
+  border-collapse: separate;
+  box-shadow: none;
+  width: 100%;
+  display: table;
+  margin: 0;
+}
+
+.bulk-order-list-table *.text-end {
+  text-align: end;
+}
+
+.bulk-order-list-table td {
+  padding: 0.5rem 0;
+  border: 0;
+}
+
+td.bulk-variant-item-totals {
+  padding-inline-end: 1rem;
+  font-weight: var(--font-bolder-weight);
+  color: rgba(var(--color-foreground-alt));
+}
+
+.bulk-order-list-table thead th {
+  padding: 0 0 1.5rem;
+  font-weight: normal;
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+  text-transform: uppercase;
+  border: 0;
+  border-bottom: 0.1rem solid rgba(var(--color-border));
+}
+
+.bulk-order-list-row:nth-child(even) {
+  background-color: color-mix(in srgb, rgba(var(--color-foreground)), transparent 90%);
+  border-radius: var(--border-radius-base);
+}
+
+:is(.color-background-1, .color-background-2) .bulk-order-list-row:nth-child(even) {
+  background-color: color-mix(in srgb, rgba(var(--color-foreground)), transparent 96%);
+}
+
+@media (min-width: 750px) {
+  .bulk-order-list-table thead th + th,
+  .bulk-order-list-table td.bulk-variant-item-quantity {
+    padding-inline-start: 4rem;
+  }
+
+  .bulk-variant-item-details {
+    width: 35.2%;
+  }
+
+  .bulk-order-list-table td.bulk-variant-item-details-no-image {
+    padding-inline-start: 1rem;
+  }
+
+  .bulk-variant-item-price {
+    width: 20%;
+  }
+}
+
+.bulk-variant-item-image-container {
+  width: 5rem;
+  flex: none;
+
+  img {
+    box-shadow:
+      inset 0 0 0 1px rgba(var(--color-border)),
+      0 2px 0 rgba(var(--color-box-shadow));
+    border-radius: var(--border-radius-base);
+    background: rgba(var(--color-background));
+    padding: 0.5rem;
+  }
+}
+
+.bulk-variant-thumbnail-no-image .bulk-variant-item-image-container {
+  box-shadow: none;
+  background: none;
+}
+
+.bulk-variant-item-info-container {
+  display: flex;
+  gap: 1.5rem;
+}
+
+@media (min-width: 750px) {
+  .bulk-variant-item-info-container {
+    padding-inline-start: 0.5rem;
+  }
+}
+
+.bulk-variant-item-info {
+  text-align: start;
+  align-self: center;
+}
+
+.bulk-variant-item-title {
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+  color: rgba(var(--color-foreground-alt));
+  margin: 0;
+  display: block;
+  text-decoration-color: transparent;
+}
+
+.bulk-variant-item-sku {
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+}
+
+.bulk-variant-item-quantity .quantity-input {
+  height: 4rem;
+  width: 12rem;
+}
+
+.bulk-variant-item-quantity .quantity-input .quantity-input-field {
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+}
+
+.bulk-variant-out-of-stock {
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+.bulk-variant-item-quantity-container {
+  display: flex;
+  width: 100%;
+  gap: 1rem;
+  align-items: center;
+  position: relative;
+}
+
+@media (min-width: 750px) {
+  [dir="rtl"] .bulk-variant-item-quantity-container {
+    justify-content: end;
+  }
+}
+
+.bulk-order-list-remove-button {
+  padding: 1rem;
+  border: 0;
+  box-shadow: none;
+  background: none;
+  color: rgba(var(--color-foreground));
+  cursor: pointer;
+}
+
+.bulk-order-list-remove-button svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+td.bulk-variant-item-price {
+  padding-inline-end: 1rem;
+}
+
+.bulk-variant-item-quantity + td.bulk-variant-item-price {
+  padding-inline-end: 0;
+}
+
+.bulk-variant-item-price .price-sale {
+  display: inline-flex;
+  gap: 0.75rem;
+}
+
+.bulk-variant-item-price .price-sale s {
+  display: inline-flex;
+  gap: 0.75rem;
+  color: currentColor;
+}
+
+.bulk-variant-item-price .unit-price {
+  font-size: calc(var(--font-body-scale) * 1.2rem);
+  margin-top: 0.5rem;
+}
+
+.bulk-variant-item-price .price-item .sup {
+  display: block;
+  margin-top: 0.5rem;
+  top: auto;
+  color: currentColor;
+}
+
+.bulk-variant-item-price :is(.price-regular .price-item-regular, .price-item-sale) {
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+  color: rgba(var(--color-foreground-alt));
+}
+
+/* Quantity popover */
+.quantity-popover {
+  display: block;
+  line-height: normal;
+}
+
+@media (min-width: 750px) {
+  .quantity-popover {
+    margin-inline-start: -3rem;
+  }
+}
+
+.quantity-popover-info-button {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(var(--color-foreground));
+  cursor: pointer;
+}
+
+.quantity-popover-info-button svg {
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+}
+
+@media (min-width: 750px) {
+  .quantity-popover-info-button-label {
+    display: none;
+  }
+}
+
+.quantity-popover-info {
+  width: 24rem;
+  position: absolute;
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  top: 100%;
+  border-radius: var(--border-radius-base);
+  background: rgba(var(--color-background));
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-border)),
+    0 2px 0 rgba(var(--color-box-shadow));
+  z-index: 10;
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+}
+
+@media (min-width: 750px) {
+  .quantity-popover-info {
+    width: 24rem;
+    inset-inline-start: -3rem;
+    top: calc(100% + 0.5rem);
+  }
+}
+
+.quantity-popover-button-dismiss {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  top: 0.5rem;
+  inset-inline-end: 0.3rem;
+  font-size: calc(var(--font-body-scale) * 2.3rem);
+  line-height: 0;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  border: 0;
+  cursor: pointer;
+  color: rgba(var(--color-foreground));
+  background: none;
+  opacity: 0.7;
+  transition: opacity 0.18s ease;
+}
+
+.quantity-popover-button-dismiss:hover {
+  opacity: 1;
+}
+
+.quantity-popover-info .volume-pricing-label,
+.quantity-popover-info .quantity-rules {
+  padding: 1.25rem;
+  line-height: normal;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0.2rem;
+}
+
+.quantity-popover-info .quantity-rules:empty {
+  display: none;
+}
+
+.quantity-popover-info .volume-pricing-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quantity-popover-info .volume-pricing-item {
+  margin: 0;
+  padding: 0.8rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.quantity-popover-info .volume-pricing-item:nth-child(odd) {
+  background: color-mix(in srgb, rgba(var(--color-foreground)), transparent 96%);
+}
+
+/* Totals section bottom row */
+.bulk-order-list-total {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  position: sticky;
+  bottom: 0;
+  padding: 1.5rem 0;
+  border-top: 0.1rem solid rgba(var(--color-border));
+}
+
+.bulk-order-list-total-buttons {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.bulk-order-remove-product-from-cart {
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+.bulk-order-list-total-items {
+  text-align: center;
+}
+
+.bulk-order-list-total-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+  gap: 0.35rem;
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+.bulk-order-list-total-items-value {
+  color: rgba(var(--color-foreground-alt));
+  font-weight: var(--font-heading-weight);
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+}
+
+.bulk-order-list-total-price {
+  text-align: end;
+}
+
+.bulk-order-list-subtotal {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  justify-content: center;
+  line-height: normal;
+  gap: 0.35rem;
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+.bulk-order-list-subtotal-value {
+  color: rgba(var(--color-foreground-alt));
+  font-weight: var(--font-heading-weight);
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+}
+
+.bulk-order-list-subtotal-heading {
+  margin: 0;
+}
+
+.bulk-order-list-wrapper .pagination {
+  padding-top: 3rem;
+  margin-top: 0;
+  border-top: 0.1rem solid rgba(var(--color-border));
+}
+
+.bulk-order-list-wrapper .pagination .page-number {
+  width: 3.4rem;
+  height: 3.4rem;
+  line-height: normal;
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+.bulk-order-list-wrapper .pagination .page-number svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+@media (max-width: 749px) {
+  .bulk-order-list-table,
+  .bulk-order-list-table thead,
+  .bulk-order-list-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .bulk-order-list-table thead th {
+    border: 0;
+  }
+
+  .bulk-order-list-table thead tr {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 0.1rem solid rgba(var(--color-border));
+  }
+
+  .bulk-order-list-table tbody tr {
+    padding: 1rem;
+  }
+
+  .bulk-order-list-table td {
+    padding: 0;
+    min-height: auto;
+    text-align: start;
+  }
+
+  .bulk-order-list-row {
+    display: grid;
+    grid-template: repeat(2, auto) / repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .bulk-variant-item-details {
+    grid-column: 1 / 3;
+  }
+
+  .bulk-variant-item-quantity {
+    grid-column: 1 / 3;
+  }
+
+  .bulk-variant-item-image-container {
+    width: 5rem;
+  }
+
+  .bulk-variant-item-details .price-container {
+    margin-top: 0.5rem;
+  }
+
+  .bulk-variant-item-details .price-sale s {
+    margin-bottom: 0;
+    color: currentColor;
+  }
+
+  .bulk-variant-item-details .unit-price {
+    font-size: calc(var(--font-body-scale) * 1.2rem);
+  }
+
+  .bulk-variant-item-details :is(.price-regular .price-item-regular, .price-item-sale) {
+    font-size: calc(var(--font-body-scale) * 1.6rem);
+  }
+
+  .bulk-variant-item-quantity-container {
+    flex-wrap: wrap;
+    min-width: 19rem;
+    margin-inline-start: 6rem;
+  }
+
+  .bulk-order-list-row-images-disabled .bulk-variant-item-quantity-container {
+    margin-inline-start: 0;
+  }
+
+  .quantity-popover {
+    order: 1;
+    position: relative;
+  }
+
+  .bulk-order-list-total {
+    padding: 1.5rem 0;
+    grid-template: repeat(2, 1fr) / repeat(2, 1fr);
+    gap: 1.5rem;
+    position: relative;
+  }
+
+  .bulk-order-list-total-buttons {
+    grid-row: 2 / 3;
+    grid-column: 1 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .bulk-order-list-total-items {
+    justify-self: start;
+    align-items: start;
+  }
+}

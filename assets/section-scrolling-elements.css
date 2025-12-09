@@ -1,0 +1,100 @@
+/* Section - Scrolling elements
+=================================== */
+
+@keyframes scrolling-elements {
+  0% {
+    transform: translate(0);
+  }
+  to {
+    transform: translate(-100%);
+  }
+}
+
+@keyframes scrolling-elements-rtl {
+  0% {
+    transform: translate(0);
+  }
+  to {
+    transform: translate(100%);
+  }
+}
+
+.section-scrolling-elements-wrapper:not(.section-scrolling-elements-wrapper-fullwidth)
+  .section-content-padded {
+  padding-left: 2rem;
+  padding-right: 2rem;
+  border-radius: var(--border-radius-base);
+}
+
+@media (min-width: 990px) {
+  .section-scrolling-elements-wrapper:not(.section-scrolling-elements-wrapper-fullwidth)
+    .section-content-padded {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+.scrolling-elements-container {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.scrolling-elements-wrap {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  font-size: max(calc(var(--scrolling-speed-font-size) * 0.75), 1.6rem);
+  color: rgba(var(--color-foreground));
+}
+
+@media (min-width: 990px) {
+  .scrolling-elements-wrap {
+    font-size: var(--scrolling-speed-font-size);
+  }
+}
+
+.scrolling-elements-group {
+  display: flex;
+  align-items: center;
+  animation: scrolling-elements var(--scrolling-elements-speed) linear infinite;
+  grid-gap: 0;
+}
+
+[dir="rtl"] .scrolling-elements-group {
+  animation-name: scrolling-elements-rtl;
+}
+
+.scrolling-elements-container.pause-on-hover:hover .scrolling-elements-group {
+  animation-play-state: paused;
+}
+
+.scrolling-elements-content {
+  display: flex;
+  align-items: center;
+  padding: 0 max(calc(var(--scrolling-speed-font-size) / 2.5), 1rem);
+  grid-gap: max(calc(var(--scrolling-speed-font-size) / 2.75), 1rem);
+}
+
+.scrolling-elements-text {
+  white-space: nowrap;
+  line-height: normal;
+}
+
+.scrolling-elements-text a {
+  color: currentColor;
+}
+
+.scrolling-elements-text a:hover {
+  text-decoration: underline;
+}
+
+.scrolling-elements-icon {
+  line-height: 0;
+  font-size: calc(var(--scrolling-speed-font-size) * 1.1);
+}
+
+.scrolling-elements-icon svg {
+  width: 0.95em;
+  height: 0.95em;
+}

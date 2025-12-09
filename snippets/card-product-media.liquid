@@ -1,0 +1,230 @@
+{% comment %}
+  Renders a product card.
+
+  Accepts:
+  - card_product: {Object} Product object
+  - show_vendor: {Boolean} Show the product vendor. Default: false
+  - show_stock: {Boolean} Show the product stock. Default: false
+  - show_rating: {Boolean} Show the product rating. Default: false
+  - show_add_to_cart: {Boolean} Show the Add To Cart button. Default: false
+  - new_window: {Boolean} Optional. Opens the link in a new window.
+  - event_context: {Object} The JavaScript's cart-item:add event context (the location of the product card).
+  - collection: {Object} Collection object associated with the product. Optional.
+
+  Usage:
+  {% render 'card-product' card_product: product %}
+{% endcomment %}
+
+{%- liquid
+  assign featured_media = card_product.featured_media | default: settings.product_placeholder_image
+
+  assign ratio = 1
+  if featured_media and settings.product_image_ratio == 'portrait'
+    assign ratio = 0.8
+  elsif featured_media and settings.product_image_ratio == 'landscape'
+    assign ratio = 1.77
+  elsif featured_media and settings.product_image_ratio == 'adapt'
+    assign ratio = featured_media.aspect_ratio
+  endif
+  if ratio == 0 or ratio == null
+    assign ratio = 1
+  endif
+-%}
+{%- capture show_call_for_pricing -%}{%- render 'price-get-call-for-pricing', product: card_product, use_variant: false -%}{%- endcapture -%}
+{%- assign show_call_for_pricing = show_call_for_pricing | strip -%}
+
+{% if card_product and card_product != empty %}
+  <div class="card card-product card-product-media {% if featured_media == nil %} card-no-media{% endif %} {{ class }}">
+    <figure class="card-media color-background-1">
+      <a
+        class="js-product-link"
+        href="{% if settings.collection_product_url_enabled %}{{ card_product.url | within: collection }}{% else %}{{ card_product.url }}{% endif %}"
+        {% if new_window == true %}
+          target="_blank"
+        {% endif %}
+      >
+        {% if featured_media %}
+          {% if ratio != 0 %}
+            <div
+              class="aspect-ratio"
+              style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+            >
+          {% endif %}
+          {{
+            featured_media
+            | image_url: width: 950
+            | image_tag:
+              class: 'card-media-image',
+              loading: 'lazy',
+              sizes: '(min-width: 1200px) 420px, (min-width: 750px) calc((100vw - 4rem - 3rem) / 3), calc(100vw - 3rem - 1rem)',
+              widths: '200, 420, 650, 750, 950'
+          }}
+
+          {% assign second_image = card_product.images[1] %}
+          {%- if second_image != null and settings.products_show_secondary_image -%}
+            {{
+              second_image
+              | image_url: width: 950
+              | image_tag:
+                class: 'card-media-image',
+                loading: 'lazy',
+                sizes: '(min-width: 1200px) 420px, (min-width: 750px) calc((100vw - 4rem - 3rem) / 3), calc(100vw - 3rem - 1rem)',
+                widths: '200, 420, 650, 750, 950'
+            }}
+          {%- endif -%}
+          {% if ratio != 0 %}
+            </div>
+          {% endif %}
+        {% endif %}
+      </a>
+
+      {% unless settings.catalog_enabled or settings.sale_badge_mode == 'none' %}
+        {% if card_product.compare_at_price > card_product.price %}
+          <div class="card-badge top left">
+            {% render 'badge-sale', product: card_product, use_variant: false %}
+          </div>
+        {% endif %}
+      {% endunless %}
+    </figure>
+
+    <div class="card-info-wrap">
+      <div class="card-info">
+        {% if show_vendor and card_product.vendor != blank %}
+          {% liquid
+            assign matching_collection = false
+            assign vendor_handle = card_product.vendor | handleize
+            for collection in card_product.collections
+              if collection.handle == vendor_handle
+                assign matching_collection = true
+              endif
+            endfor
+          %}
+          <div class="card-eyebrow">
+            <span class="card-eyebrow-item">
+              {% if matching_collection %}
+                <a
+                  href="{{ routes.collections_url }}/{{ vendor_handle }}"
+                  {% if new_window == true %}
+                    target="_blank"
+                  {% endif %}
+                >
+                  {{- card_product.vendor -}}
+                </a>
+              {% else %}
+                {{ card_product.vendor | link_to_vendor }}
+              {% endif %}
+            </span>
+            {% if show_sku and card_product.selected_or_first_available_variant.sku != blank %}
+              <span class="card-eyebrow-item" data-card-sku>
+                {{- card_product.selected_or_first_available_variant.sku -}}
+              </span>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <h3 class="card-heading typography-{{ settings.product_title_font }}">
+          <a
+            class="js-product-link"
+            href="{% if settings.collection_product_url_enabled %}{{ card_product.url | within: collection }}{% else %}{{ card_product.url }}{% endif %}"
+            {% if new_window == true %}
+              target="_blank"
+            {% endif %}
+          >
+            {% if settings.product_cards_truncate_title_chars > 0 %}
+              {{
+                card_product.title
+                | truncate: settings.product_cards_truncate_title_chars
+                | escape
+              }}
+            {% else %}
+              {{ card_product.title | escape }}
+            {% endif %}
+          </a>
+        </h3>
+
+        {% unless settings.catalog_enabled %}
+          <div class="card-footer-intro {% if settings.products_hide_empty_star_rating %}product-rating-hide-empty{% endif %}">
+            {%- capture login_for_price -%}{%- render 'price-get-login-for-price', product: card_product -%}{%- endcapture -%}
+            {%- assign login_for_price = login_for_price | strip -%}
+            {% if login_for_price == 'true' %}
+              {% render 'price-login-for-price' %}
+            {% else %}
+              {% render 'price', product: card_product, discount_badge: false %}
+            {% endif %}
+
+            {% liquid
+              if show_stock
+                render 'product-availability-listing', product: card_product
+              endif
+              if show_rating
+                render 'product-rating-widget', product: card_product, new_window: new_window
+              endif
+            %}
+          </div>
+        {% endunless %}
+      </div>
+
+      {% unless settings.catalog_enabled %}
+        {%- capture login_for_price -%}{%- render 'price-get-login-for-price', product: card_product -%}{%- endcapture -%}
+        {%- assign login_for_price = login_for_price | strip -%}
+        {% if login_for_price != 'true' %}
+          {% if show_call_for_pricing == 'true' and show_add_to_cart == false %}
+            <div class="product-actions card-product-actions">
+              {% render 'price-call-for-pricing',
+                product: card_product,
+                class: 'button-text-link'
+              %}
+            </div>
+          {% elsif show_add_to_cart %}
+            {% render 'card-product-add-to-cart',
+              product: card_product,
+              event_context: event_context,
+              collection: collection
+            %}
+          {% endif %}
+        {% endif %}
+      {% endunless %}
+    </div>
+  </div>
+{% else %}
+  <div class="card card-product card-product-media {{ class }}">
+    <figure class="card-media">
+      <a role="link" aria-disabled="true" aria-label="{{ 'onboarding.product_title' | t }}">
+        {{ 'product-1' | strip | placeholder_svg_tag: 'placeholder-svg' }}
+      </a>
+    </figure>
+
+    <div class="card-info">
+      {% if show_vendor and card_product.vendor != blank %}
+        <div class="card-eyebrow">{{ 'products.product.vendor' | t }}</div>
+      {% endif %}
+
+      <h3 class="card-heading typography-{{ settings.product_title_font }}">
+        <a role="link" aria-disabled="true">{{ 'onboarding.product_title' | t }}</a>
+      </h3>
+
+      {% unless settings.catalog_enabled %}
+        <div class="card-footer-intro {% if settings.products_hide_empty_star_rating %}product-rating-hide-empty{% endif %}">
+          {%- capture login_for_price -%}{%- render 'price-get-login-for-price', product: card_product -%}{%- endcapture -%}
+          {%- assign login_for_price = login_for_price | strip -%}
+          {% if login_for_price == 'true' %}
+            {% render 'price-login-for-price' %}
+          {% else %}
+            {% render 'price', product: card_product, discount_badge: false %}
+          {% endif %}
+
+          {% if show_stock %}
+            <div class="badge-stock badge-stock-in">
+              <span class="badge-stock-dot"></span>
+              {{ 'products.product.availability.in_stock' | t }}
+            </div>
+          {% endif %}
+
+          {%- if show_rating -%}
+            {% render 'rating', product: card_product %}
+          {% endif %}
+        </div>
+      {% endunless %}
+    </div>
+  </div>
+{% endif %}

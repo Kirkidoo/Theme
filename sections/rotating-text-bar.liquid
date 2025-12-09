@@ -1,0 +1,218 @@
+{{ 'flickity.css' | asset_url | stylesheet_tag }}
+{{ 'component-pills.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'flickity.pkgd.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'text-slider.js' | asset_url }}" defer="defer"></script>
+
+<style>
+  @media (min-width: 990px) {
+  	.rotating-text-bar {
+  		padding-top: {{ section.settings.spacing_top }}rem;
+  		padding-bottom: {{ section.settings.spacing_bottom }}rem;
+  	}
+  }
+</style>
+
+{%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+{%- assign visibility_classes = visibility_classes | strip -%}
+
+<div class="rotating-text-bar-wrapper color-{{ section.settings.color_scheme }} {% if section.settings.remove_border %}border-bottom-none{% endif %} {{ visibility_classes }}">
+  <div class="container">
+    <div class="rotating-text-bar text-size-{{ section.settings.text_size }}">
+      <div class="rotating-text-bar-content">
+        <text-slider
+          id="Carousel-{{ section.id }}"
+          data-autoplay="{{ section.settings.auto_rotate }}"
+          data-cell-selector=".rotating-text-item"
+          data-slideshow-selector=".rotating-text-carousel"
+          data-set-display="true"
+          data-speed="{{ section.settings.change_slides_speed }}"
+          data-auto-height="true"
+        >
+          <div class="rotating-text-carousel">
+            {% for block in section.blocks %}
+              <div class="rotating-text-item" {{ block.shopify_attributes }}>
+                {% if block.settings.link != blank %}
+                  <a href="{{ block.settings.link }}">
+                {% endif %}
+                {{ block.settings.text }}
+                {% if block.settings.link != blank %}
+                  </a>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </text-slider>
+
+        {% if section.settings.show_navigation %}
+          <text-slider-navigation
+            for="Carousel-{{ section.id }}"
+            class="rotating-text-carousel-navigation"
+            data-wrap="true"
+          >
+            <div class="pill-nav pill-nav-slider">
+              <button class="pill-nav-item focus-none js-prev">
+                <span class="visually-hidden">{{ 'sections.slideshow.previous_slide' | t }}</span>
+                {% render 'angle', direction: 'left' %}
+              </button>
+              <button class="pill-nav-item js-next">
+                <span class="visually-hidden">{{ 'sections.slideshow.next_slide' | t }}</span>
+                {% render 'angle', direction: 'right' %}
+              </button>
+            </div>
+          </text-slider-navigation>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.rotating_text_bar.name",
+    "tag": "section",
+    "class": "section-rotating-text-bar",
+    "enabled_on": {
+      "groups": ["header", "footer"]
+    },
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "auto_rotate",
+        "label": "t:sections.rotating_text_bar.settings.auto_rotate.label",
+        "default": true
+      },
+      {
+        "type": "range",
+        "id": "change_slides_speed",
+        "min": 3,
+        "max": 9,
+        "step": 1,
+        "unit": "s",
+        "label": "t:sections.rotating_text_bar.settings.change_slides_speed.label",
+        "default": 5,
+        "visible_if": "{{ section.settings.auto_rotate }}"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_navigation",
+        "label": "t:sections.rotating_text_bar.settings.show_navigation.label",
+        "default": false
+      },
+      {
+        "type": "select",
+        "id": "text_size",
+        "label": "t:sections.all.text_size.label",
+        "default": "sm",
+        "options": [
+          {
+            "value": "xs",
+            "label": "t:sections.all.text_size.options.label_xs"
+          },
+          {
+            "value": "sm",
+            "label": "t:sections.all.text_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.text_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.text_size.options.label_lg"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-2"
+      },
+      {
+        "type": "checkbox",
+        "id": "remove_border",
+        "default": false,
+        "label": "t:sections.announcement_bar.settings.remove_border.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading",
+        "info": "t:sections.rotating_text_bar.settings.section_spacing.info"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 3,
+        "step": 0.1,
+        "default": 1.5,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 3,
+        "step": 0.1,
+        "default": 1.5,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "text",
+        "name": "t:sections.rotating_text_bar.blocks.text.name",
+        "settings": [
+          {
+            "type": "text",
+            "id": "text",
+            "label": "t:sections.rotating_text_bar.blocks.text.settings.text.label",
+            "default": "Craft engaging content for your customers"
+          },
+          {
+            "type": "url",
+            "id": "link",
+            "label": "t:sections.rotating_text_bar.blocks.text.settings.link.label"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.rotating_text_bar.preset.name",
+        "category": "t:sections.all.preset_category.content",
+        "blocks": [
+          {
+            "type": "text"
+          },
+          {
+            "type": "text"
+          },
+          {
+            "type": "text"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

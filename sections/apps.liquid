@@ -1,0 +1,31 @@
+<div class="{% if section.settings.full_width %} section-fullwidth{% else %} container section-content{% endif %}">
+  {%- for block in section.blocks -%}
+    {% render block %}
+  {%- endfor -%}
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.apps.name",
+    "tag": "section",
+    "class": "section section-apps",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "full_width",
+        "label": "t:sections.apps.settings.full_width.label",
+        "default": false
+      }
+    ],
+    "blocks": [
+      {
+        "type": "@app"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.apps.presets.name"
+      }
+    ]
+  }
+{% endschema %}

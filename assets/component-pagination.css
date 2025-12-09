@@ -1,0 +1,45 @@
+/* Component - Pagination
+=================================== */
+.pagination {
+  margin-top: 4rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  grid-gap: 1rem;
+}
+
+.page-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 4.3rem;
+  height: 4.3rem;
+  font-size: calc(var(--font-body-scale) * 1.6rem);
+  background: rgba(var(--color-background));
+  color: rgba(var(--color-foreground-alt));
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-border));
+  border-radius: var(--buttons-radius);
+  transition: all 0.3s ease;
+}
+
+.page-number:not(.page-number-active):hover {
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-button));
+}
+
+[dir="rtl"] .page-number svg {
+  transform: rotate(180deg);
+}
+
+.page-number-active {
+  background: rgba(var(--color-button));
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-button));
+  color: rgba(var(--color-button-text));
+}
+
+/* Ajax pagination button */
+.ajax-paginate-wrapper {
+  text-align: center;
+  margin-top: 4rem;
+}

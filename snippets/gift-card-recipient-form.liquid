@@ -1,0 +1,229 @@
+{% comment %}
+  Renders gift card recipient form.
+  Accepts:
+  - product: {Object} product object.
+  - form: {Object} the product form object.
+  - section: {Object} section to which this snippet belongs.
+
+  Usage:
+  {% render 'gift-card-recipient-form', product: product, form: form, section: section %}
+{% endcomment %}
+
+<div class="gift-card-recipient-wrap">
+  {%- assign gift_card_recipient_control_flag = 'properties[__shopify_send_gift_card_to_recipient]' -%}
+  <script src="{{ 'recipient-form.js' | asset_url }}" defer="defer"></script>
+
+  <recipient-form
+    class="recipient-form"
+    data-section-id="{{ section.id }}"
+    data-product-variant-id="{{ product.selected_or_first_available_variant.id }}"
+  >
+    <label class="recipient-checkbox" for="recipient-checkbox-{{ section.id }}">
+      <span>{{ 'recipient.form.checkbox' | t }}</span>
+    </label>
+    <input
+      id="recipient-checkbox-{{ section.id }}"
+      type="checkbox"
+      name="{{ gift_card_recipient_control_flag }}"
+      disabled
+    >
+
+    <div
+      class="product-form-recipient-error-message-wrapper form-status form-status-error"
+      role="alert"
+      {% unless form.errors %}
+        hidden
+      {% endunless %}
+    >
+      <p class="form-message h3" tabindex="-1" autofocus>
+        <span class="error-message">{{ 'general.form.error_heading' | t }}</span>
+      </p>
+
+      <ul class="form-message">
+        {%- if form.errors -%}
+          {%- for field in form.errors -%}
+            <li>
+              {%- if field == 'form' -%}
+                {{ form.errors.messages[field] }}
+              {%- else -%}
+                <a href="#recipient-{{ field }}-{{ section.id }}">
+                  {% comment %}This translated_fields line has been removed in trunk. Test and remove? {% endcomment %}
+                  {{ form.errors.translated_fields[field] | capitalize }}
+                  {{ form.errors.messages[field] }}
+                </a>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        {%- endif -%}
+      </ul>
+    </div>
+
+    <div class="recipient-fields">
+      <hr>
+      <div class="recipient-fields-field">
+        <div class="field">
+          <label class="field-label" for="recipient-email-{{ section.id }}">
+            <span class="recipient-email-label required">
+              {{- 'recipient.form.email_label' | t -}}
+            </span>
+            <span class="recipient-email-label optional">
+              {{- 'recipient.form.email_label_optional_for_no_js_behavior' | t -}}
+            </span>
+          </label>
+          <input
+            class="field-input"
+            id="recipient-email-{{ section.id }}"
+            type="email"
+            placeholder="{{ 'recipient.form.email' | t }}"
+            name="properties[Recipient email]"
+            value="{{ form.email }}"
+            {% if form.errors contains 'email' %}
+              aria-invalid="true"
+              aria-describedby="RecipientForm-email-error-{{ section.id }}"
+            {% endif %}
+          >
+        </div>
+
+        <div
+          id="RecipientForm-email-error-{{ section.id }}"
+          class="form-message{% unless form.errors contains 'email' %} hidden{% endunless %}"
+        >
+          <span class="error-message">
+            {%- if form.errors contains 'email' -%}
+              {% comment %}This translated_fields line has been removed in trunk. Test and remove? {% endcomment %}
+              {{ form.errors.translated_fields.email | capitalize }}
+              {{ form.errors.messages.email }}.
+            {%- endif -%}
+          </span>
+        </div>
+      </div>
+
+      <div class="recipient-fields-field">
+        <div class="field">
+          <label class="field-label" for="recipient-name-{{ section.id }}">
+            {{- 'recipient.form.name_label' | t -}}
+          </label>
+          <input
+            class="field-input"
+            autocomplete="name"
+            type="text"
+            id="recipient-name-{{ section.id }}"
+            name="properties[Recipient name]"
+            placeholder="{{ 'recipient.form.name' | t }}"
+            value="{{ form.name }}"
+            {% if form.errors contains 'name' %}
+              aria-invalid="true"
+              aria-describedby="RecipientForm-name-error-{{ section.id }}"
+            {% endif %}
+          >
+        </div>
+
+        <div
+          id="RecipientForm-name-error-{{ section.id }}"
+          class="form-message{% unless form.errors contains 'name' %} hidden{% endunless %}"
+        >
+          {% render 'icons', icon: 'warning' %}
+          <span class="error-message">
+            {%- if form.errors contains 'name' -%}
+              {% comment %}This translated_fields line has been removed in trunk. Test and remove? {% endcomment %}
+              {{ form.errors.translated_fields.name | capitalize }}
+              {{ form.errors.messages.name }}.
+            {%- endif -%}
+          </span>
+        </div>
+      </div>
+
+      <div class="recipient-fields-field">
+        {%- assign max_chars_message = 200 -%}
+        {%- assign max_chars_message_rendered = 'recipient.form.max_characters'
+          | t: max_chars: max_chars_message
+        -%}
+        {%- assign message_label_rendered = 'recipient.form.message_label' | t -%}
+        <div class="field">
+          <label class="form-label field-label" for="recipient-message-{{ section.id }}">
+            {{ message_label_rendered }}
+          </label>
+          <textarea
+            rows="6"
+            id="recipient-message-{{ section.id }}"
+            class="text-area field-input"
+            name="properties[Message]"
+            maxlength="{{ max_chars_message }}"
+            placeholder="{{ 'recipient.form.message' | t }}"
+            aria-label="{{ message_label_rendered }} {{ max_chars_message_rendered }}"
+            {% if form.errors contains 'message' %}
+              aria-invalid="true"
+              aria-describedby="RecipientForm-message-error-{{ section.id }}"
+            {% endif %}
+          >{{ form.message }}</textarea>
+        </div>
+
+        <span class="form-label recipient-form-field-label recipient-form-field-label-note">
+          <span>{{ max_chars_message_rendered }}</span>
+        </span>
+
+        <div
+          id="RecipientForm-message-error-{{ section.id }}"
+          class="form-message{% unless form.errors contains 'message' %} hidden{% endunless %}"
+        >
+          {% render 'icons', icon: 'warning' %}
+          <span class="error-message">
+            {%- if form.errors contains 'message' -%}
+              {% comment %}This translated_fields line has been removed in trunk. Test and remove? {% endcomment %}
+              {{ form.errors.translated_fields.message | capitalize }}
+              {{ form.errors.messages.message }}.
+            {%- endif -%}
+          </span>
+        </div>
+      </div>
+
+      <div class="recipient-fields-field">
+        <div class="field">
+          <label class="form-label field-label" for="Recipient-send-on-{{ section.id }}">
+            {{ 'recipient.form.send_on_label' | t }}
+          </label>
+          <input
+            class="field-input"
+            autocomplete="send_on"
+            type="date"
+            id="Recipient-send-on-{{ section.id }}"
+            name="properties[Send on]"
+            placeholder="{{ 'recipient.form.send_on' | t }}"
+            pattern="\d{4}-\d{2}-\d{2}"
+            value="{{ form.send_on }}"
+            {% if form.errors contains 'send_on' %}
+              aria-invalid="true"
+              aria-describedby="RecipientForm-send_on-error-{{ section.id }}"
+            {% endif %}
+          >
+        </div>
+
+        <div
+          id="RecipientForm-send_on-error-{{ section.id }}"
+          class="form-message{% unless form.errors contains 'send_on' %} hidden{% endunless %}"
+        >
+          {{- 'icon-error.svg' | inline_asset_content -}}
+          <span class="error-message">
+            {%- if form.errors contains 'send_on' -%}
+              {{ form.errors.messages.send_on }}.
+            {%- endif -%}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <input
+      type="hidden"
+      name="{{ gift_card_recipient_control_flag }}"
+      value="if_present"
+      id="recipient-control-{{ section.id }}"
+    >
+    <input
+      type="hidden"
+      name="properties[__shopify_offset]"
+      value=""
+      id="recipient-timezone-offset-{{ section.id }}"
+      disabled
+    >
+  </recipient-form>
+</div>

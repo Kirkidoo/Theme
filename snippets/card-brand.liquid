@@ -1,0 +1,108 @@
+{% comment %}
+  Renders a brand card for a given brand collection.
+
+  Accepts:
+  - collection: {Object} Collection object.
+  - show_title: {Boolean} Whether to show the title. Optional.
+  - title: {String} Optional. Override the collection's title with a custom one.
+  - new_window: {Boolean} Whether to open the link in a new window. Optional.
+  - image: {Object} Image object. Optional. If present, overrides the collection's image.
+  - class: {String} Extra CSS classes. Optional.
+  - aspect: {String} Adapt, Portrait, Square, or Contain. Optional.
+  - link: {String} Optional. Override the collection's link with a custom one.
+
+  Usage:
+  {% render 'card-brand' collection: collection, image: image, class: 'custom-class', aspect: 'portrait' %}
+{% endcomment %}
+
+{% liquid
+  assign target_image = collection.featured_image
+  if image != blank
+    assign target_image = image
+  endif
+
+  assign ratio = 1
+  if target_image and aspect == 'portrait'
+    assign ratio = 0.8
+  elsif target_image and aspect == 'landscape'
+    assign ratio = 1.77
+  elsif target_image and aspect == 'adapt'
+    assign ratio = target_image.aspect_ratio
+  endif
+  if ratio == 0 or ratio == null
+    assign ratio = 1
+  endif
+
+  assign target_title = collection.title
+  if title != blank
+    assign target_title = title
+  endif
+
+  assign url = collection.url
+  if link != blank
+    assign url = link
+  endif
+%}
+
+<div class="card-simple {{ class }}">
+  <div class="card card-small card-simple-media color-background-1">
+    <figure class="card-media {% if aspect == 'contain' %}card-media-contain{% endif %}">
+      {% if url != blank %}
+        <a
+          href="{{ url }}"
+          {% if collection != blank %}
+            aria-label="{{ collection.title }}"
+          {% endif %}
+          {% if new_window %}
+            target="_blank"
+          {% endif %}
+        >
+      {% endif %}
+      {% if target_image != blank %}
+        {% if ratio != 0 %}
+          <div
+            class="aspect-ratio"
+            style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+          >
+        {% endif %}
+        {{
+          target_image
+          | image_url: width: 950
+          | image_tag:
+            sizes: '(min-width: 1200px) 420px, (min-width: 990px) calc((100vw - 4rem - 3rem) / 3), calc(100vw - 3rem - 1rem)',
+            widths: '250, 420, 650, 750, 950'
+        }}
+        {% if ratio != 0 %}
+          </div>
+        {% endif %}
+
+      {% else %}
+        {{ 'collection-1' | strip | placeholder_svg_tag }}
+      {% endif %}
+      {% if url != blank %}
+        </a>
+      {% endif %}
+    </figure>
+  </div>
+
+  {%- if show_title -%}
+    <h3 class="card-simple-title">
+      {% if target_title != blank %}
+        {% if url != blank %}
+          <a
+            href="{{ url }}"
+            {% if new_window %}
+              target="_blank"
+            {% endif %}
+          >
+        {% endif %}
+        {{ target_title }}
+        {% if url != blank %}
+          </a>
+        {% endif %}
+      {% else %}
+        {{ 'onboarding.collection_title' | t }}
+      {% endif %}
+    </h3>
+  {%- endif -%}
+</div>

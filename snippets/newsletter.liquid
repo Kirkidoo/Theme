@@ -1,0 +1,137 @@
+{% comment %}
+  Renders a newsletter section.
+
+  Accepts:
+  - section: {Object} Section object
+
+  Usage:
+  {% render 'newsletter' section: section %}
+{% endcomment %}
+
+{{ 'section-newsletter.css' | asset_url | stylesheet_tag }}
+
+{% liquid
+  assign color_scheme_string = section.settings.color_scheme | append: ''
+  assign section_content_class = 'section-content'
+  unless color_scheme_string == 'background-1'
+    assign section_content_class = section_content_class | append: ' section-content-padded'
+  endunless
+%}
+
+<style>
+  #shopify-section-{{ section.id }} .section-content {
+  	margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+  	margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+  }
+
+  #shopify-section-{{ section.id }} .section-content-padded {
+  	margin-top: 0;
+  	margin-bottom: 0;
+  	padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+  	padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+  }
+
+  @media (min-width: 990px) {
+  	#shopify-section-{{ section.id }} .section-content {
+  		margin-top: {{ section.settings.spacing_top }}px;
+  		margin-bottom: {{ section.settings.spacing_bottom }}px;
+  	}
+
+  	#shopify-section-{{ section.id }} .section-content-padded {
+  		margin-top: 0;
+  		margin-bottom: 0;
+  		padding-top: {{ section.settings.spacing_top }}px;
+  		padding-bottom: {{ section.settings.spacing_bottom }}px;
+  	}
+  }
+</style>
+
+{%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+{%- assign visibility_classes = visibility_classes | strip -%}
+
+<div class="{{ visibility_classes }}">
+  <div class="newsletter-wrapper color-{{ section.settings.color_scheme }} {% if section.settings.remove_borders %}border-none{% endif %}">
+    <div class="container">
+      <div class="{{ section_content_class }}">
+        <div class="newsletter">
+          <div class="newsletter-content">
+            <span class="newsletter-icon">
+              {% render 'icons', icon: 'email' %}
+            </span>
+            {% if section.settings.title != blank or section.settings.text != blank %}
+              <div>
+                {% if section.settings.title != blank %}
+                  <{{ section.settings.heading_tag }} class="newsletter-title h3">
+                    {{- section.settings.title -}}
+                  </{{ section.settings.heading_tag }}>
+                {% endif %}
+
+                {% if section.settings.text != blank %}
+                  <div class="rte">
+                    <p>{{ section.settings.text }}</p>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+
+          {%- form 'customer', class: 'newsletter-form' -%}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+
+            <div class="newsletter-form-input-wrap">
+              <label for="form-newsletter-email-{{ section.id }}" class="visually-hidden">
+                {{- 'sections.newsletter.email' | t -}}
+              </label>
+              <input
+                type="email"
+                pattern=".+@.+\.(.+\.?)+"
+                name="contact[email]"
+                id="form-newsletter-email-{{ section.id }}"
+                placeholder="{{ 'sections.newsletter.email' | t }}"
+                autocorrect="off"
+                autocapitalize="off"
+                autocomplete="email"
+                value="{{ form.email }}"
+                required
+                {% if form.errors %}
+                  autofocus
+                  aria-invalid="true"
+                  aria-describedby="ContactFooter-error"
+                {% elsif form.posted_successfully? %}
+                  aria-describedby="ContactFooter-success"
+                {% endif %}
+              >
+              <button type="submit" class="button">
+                {{ 'sections.newsletter.submit' | t }}
+              </button>
+            </div>
+
+            {% if section.settings.consent_checkbox and section.settings.consent_text %}
+              <label
+                class="checkbox-newsletter-consent"
+                for="form-newsletter-consent-{{ section.id }}"
+              >
+                <input type="checkbox" id="form-newsletter-consent-{{ section.id }}" required>
+                <span class="rte">{{ section.settings.consent_text }}</span>
+              </label>
+            {% endif %}
+
+            {%- if form.errors -%}
+              <small class="newsletter-form-error field-error">
+                {{- form.errors.translated_fields.email | capitalize }}
+                {{ form.errors.messages.email -}}
+              </small>
+            {%- endif -%}
+            {%- if form.posted_successfully? -%}
+              <div class="form-status form-status-success" tabindex="-1" autofocus>
+                <h5 class="newsletter-form-success-title form-status-title">
+                  {{ 'sections.newsletter.success' | t }}
+                </h5>
+              </div>
+            {%- endif -%}
+          {% endform %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

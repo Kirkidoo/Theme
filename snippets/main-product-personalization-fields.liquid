@@ -1,0 +1,227 @@
+{% comment %}
+  Renders the product's custom properties
+
+  Accepts:
+  - product: {Object} The product.
+  - block: {Object} The
+  - settings: {Object} The settings.
+  - product_form_id: {String} The associated product's form ID. Required.
+
+  Usage:
+  {% render 'main-product-personalization-fields', product: product, block: block, position: 'right' %}
+{% endcomment %}
+
+{% liquid
+  assign duplicate_name = false
+  for _block in section.blocks
+    if block.settings.name == _block.settings.name and block.id != _block.id
+      assign duplicate_name = true
+    endif
+  endfor
+%}
+{% if duplicate_name and request.design_mode %}
+  <div class="product-block-editor-hidden-note">
+    {{ 'products.product.personalization_text.duplicate_name_note' | t }}
+  </div>
+{% endif %}
+
+{% liquid
+  assign input_id = 'product-property-' | append: section.id | append: '-' | append: block.id
+%}
+
+<div
+  class="product-custom-property-block color-{{ settings.color_scheme }}"
+>
+  <div
+    class="
+      product-custom-property
+      product-custom-property-{{ block.settings.type }}
+      product-custom-property-{{ section.id }}-{{ block.id }}
+      product-{{ block.type }}
+      {% if product.selected_or_first_available_variant == null %}visually-hidden{% endif %}
+    "
+  >
+    {% if settings.name %}
+      {% case block.settings.type %}
+        {% when 'text', 'number' %}
+          {% if settings.title %}
+            <label class="field-label" for="{{ input_id }}">{{ settings.title }}</label>
+          {% else %}
+            <label for="{{ input_id }}" class="visually-hidden">{{ settings.name }}</label>
+          {% endif %}
+
+          <input
+            type="{{ settings.type }}"
+            id="{{ input_id }}"
+            name="properties[{{ settings.name | escape }}]"
+            class="product-custom-property-field property-{{ settings.type }}"
+            placeholder="{{ settings.placeholder | escape }}"
+            form="{{ product_form_id }}"
+            {% if settings.default_value %}
+              value="{{ settings.default_value | escape }}"
+            {% endif %}
+            {% if settings.maxlength > 0 %}
+              maxlength="{{ settings.maxlength }}"
+            {% endif %}
+            {% if settings.type == 'number' %}
+              {% if settings.min > 0 %}
+                min="{{ settings.min }}"
+              {% endif %}
+              {% if settings.max > 0 %}
+                min="{{ settings.max }}"
+              {% endif %}
+            {% endif %}
+          >
+
+          {% if settings.description != blank %}
+            <div class="product-custom-property-description rte">
+              <p>{{ settings.description }}</p>
+            </div>
+          {% endif %}
+
+        {% when 'date' %}
+          {% if settings.title %}
+            <label class="field-label" for="{{ input_id }}">{{ settings.title }}</label>
+          {% else %}
+            <label for="{{ input_id }}" class="visually-hidden">{{ settings.name }}</label>
+          {% endif %}
+
+          <input
+            type="{{ settings.type }}"
+            id="{{ input_id }}"
+            name="properties[{{ settings.name | escape }}]"
+            class="product-custom-property-field property-{{ settings.type }}"
+            placeholder="{{ settings.placeholder | escape }}"
+            form="{{ product_form_id }}"
+            {% if settings.default_value %}
+              value="{{ settings.default_value | escape }}"
+            {% endif %}
+            {% if settings.min_date != blank %}
+              min="{{ settings.min_date | escape }}"
+            {% endif %}
+            {% if settings.max_date != blank %}
+              max="{{ settings.max_date | escape }}"
+            {% endif %}
+          >
+
+          {% if settings.description != blank %}
+            <div class="product-custom-property-description rte">
+              <p>{{ settings.description }}</p>
+            </div>
+          {% endif %}
+
+        {% when 'textarea' %}
+          {% if settings.title %}
+            <label class="field-label" for="{{ input_id }}">{{ settings.title }}</label>
+          {% else %}
+            <label for="{{ input_id }}" class="visually-hidden">{{ settings.name }}</label>
+          {% endif %}
+
+          <textarea
+            rows="5"
+            id="{{ input_id }}"
+            name="properties[{{ settings.name | escape }}]"
+            class="product-custom-property-field property-{{ settings.type }}"
+            placeholder="{{ settings.placeholder | escape }}"
+            form="{{ product_form_id }}"
+            {% if settings.maxlength > 0 %}
+              maxlength="{{ settings.maxlength }}"
+            {% endif %}
+          >{% if settings.default_value %}{{ settings.default_value | escape }}{% endif %}</textarea>
+
+          {% if settings.description != blank %}
+            <div class="product-custom-property-description rte">
+              <p>{{ settings.description }}</p>
+            </div>
+          {% endif %}
+
+        {% when 'dropdown' %}
+          {% assign options = settings.dropdown_options
+            | newline_to_br
+            | strip_newlines
+            | split: '<br />'
+          %}
+
+          {% if settings.title %}
+            <label class="field-label" for="{{ input_id }}">{{ settings.title }}</label>
+          {% else %}
+            <label for="{{ input_id }}" class="visually-hidden">{{ settings.name }}</label>
+          {% endif %}
+
+          <select
+            id="{{ input_id }}"
+            name="properties[{{ settings.name | escape }}]"
+            class="product-custom-property-field property-{{ settings.type }}"
+            form="{{ product_form_id }}"
+          >
+            <option
+              value=""
+              {% if settings.default_value == blank %}
+                selected
+              {% endif %}
+            >
+              {{ settings.placeholder }}
+            </option>
+
+            {% for option in options %}
+              {% liquid
+                if option == blank
+                  continue
+                endif
+              %}
+              <option
+                value="{{ option | escape }}"
+                {% if option == settings.default_value %}
+                  selected
+                {% endif %}
+              >
+                {{ option }}
+              </option>
+            {% endfor %}
+          </select>
+
+          {% if settings.description != blank %}
+            <div class="product-custom-property-description rte">
+              <p>{{ settings.description }}</p>
+            </div>
+          {% endif %}
+
+        {% when 'checkbox' %}
+          <div class="product-custom-property-fields">
+            {% if settings.checbox_unchecked_value != blank %}
+              <input
+                type="hidden"
+                name="properties[{{ settings.name | escape }}]"
+                form="{{ product_form_id }}"
+                value="{{ settings.checbox_unchecked_value | escape }}"
+              >
+            {% endif %}
+
+            <input
+              type="checkbox"
+              id="{{ input_id }}"
+              name="properties[{{ settings.name | escape }}]"
+              class="product-custom-property-field property-{{ settings.type }}"
+              form="{{ product_form_id }}"
+              value="{{ settings.checbox_checked_value | escape }}"
+              {% if settings.checbox_checked_value == settings.default_value %}
+                checked
+              {% endif %}
+            >
+
+            {% if settings.title %}
+              <label class="field-label" for="{{ input_id }}">{{ settings.title }}</label>
+            {% else %}
+              <label for="{{ input_id }}" class="visually-hidden">{{ settings.name }}</label>
+            {% endif %}
+          </div>
+
+          {% if settings.description != blank %}
+            <div class="product-custom-property-description rte">
+              <p>{{ settings.description }}</p>
+            </div>
+          {% endif %}
+      {% endcase %}
+    {% endif %}
+  </div>
+</div>

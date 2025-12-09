@@ -1,0 +1,63 @@
+{% comment %}
+  Renders a product's metafields
+
+  Accepts:
+  - product: {Object} Product object
+  - metafields_list: {String} Newline-separated list of title:metafield pairs.
+
+  Usage:
+  {% render 'product-metafields', product: product, metafields: block.settings.metafields %}
+{% endcomment %}
+
+{% liquid
+  assign card_product_metafields = metafields_list | newline_to_br | strip_newlines | split: '<br />'
+  assign titles = ''
+  assign metafields = ''
+  for line in card_product_metafields
+    assign title_metafield = line | split: ':'
+    assign title = title_metafield[0] | strip
+    assign metafield = title_metafield[1] | strip
+    assign titles = titles | append: '|' | append: title
+    assign metafields = metafields | append: '|' | append: metafield
+  endfor
+  assign titles = titles | replace_first: '|', '' | split: '|' | compact
+  assign metafields = metafields | replace_first: '|', '' | split: '|' | compact
+%}
+
+{% for metafield in metafields %}
+  {% liquid
+    assign title = titles[forloop.index0] | strip
+    assign fields = metafield | strip | split: '.'
+    assign field_source = fields[-3]
+    assign field_ns = fields[-2]
+    assign field_key = fields[-1]
+
+    if field_source == 'variant'
+      assign metafield_object = product.selected_or_first_available_variant.metafields[field_ns][field_key]
+    else
+      assign metafield_object = product.metafields[field_ns][field_key]
+    endif
+  %}
+  {% capture text %}
+		{%- case metafield_object.type -%}
+			{%- when 'url' -%}
+				<a href="{{ metafield_object.value }}" target="_blank" rel="noopener">{{ 'products.product.details.link' | t }}</a>
+			{%- when 'file_reference' -%}
+				<a href="{{ metafield_object | file_url }}" target="_blank" rel="noopener">
+					<span class="product-info-details-item-icon-download">
+						{% render 'icons', icon: 'download' %}
+					</span>
+					{{ 'products.product.details.download' | t }}
+				</a>
+			{%- else -%}
+				{{ metafield_object | metafield_text }}
+		{%- endcase -%}
+	{% endcapture %}
+
+  {% if text != blank %}
+    <li class="product-info-details-item {% if field_source == 'variant' %}product-info-details-variant-field{% endif %}">
+      <span class="product-info-details-item-label">{{ title }}</span>
+      <span class="product-info-details-item-value">{{ text }}</span>
+    </li>
+  {% endif %}
+{% endfor %}

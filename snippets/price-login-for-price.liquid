@@ -1,0 +1,11 @@
+<div class="price">
+  <div class="price-container">
+    {% if no_link %}
+      <p class="price-requires-login-message">{{ 'products.product.price.login_for_price' | t }}</p>
+    {% else %}
+      <p class="price-requires-login-message">
+        {{ 'products.product.price.login_for_price_html' | t: link: routes.account_login_url }}
+      </p>
+    {% endif %}
+  </div>
+</div>

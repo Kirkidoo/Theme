@@ -1,0 +1,143 @@
+{{ 'section-sticky-cart.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sticky-cart.js' | asset_url }}" defer="defer"></script>
+
+{%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+{%- assign visibility_classes = visibility_classes | strip -%}
+
+{%- capture login_for_price -%}{%- render 'price-get-login-for-price', product: product -%}{%- endcapture -%}
+{%- assign login_for_price = login_for_price | strip -%}
+
+<div class="{{ visibility_classes }}">
+  <sticky-cart
+    id="StickyCart-{{ section.id }}"
+    class="sticky-cart color-{{ section.settings.color_scheme }}"
+    data-section-id="{{ section.id }}"
+    data-trigger-type="{{ section.settings.trigger_type }}"
+    data-trigger-offset="{{ section.settings.trigger_offset }}"
+    data-show-image="{{ section.settings.show_product_image }}"
+    data-select-options-text="{{ 'products.product.select_options' | t | escape }}"
+    data-login-for-price="{{ login_for_price }}"
+  >
+    <div class="sticky-cart__container">
+      <div class="sticky-cart__error" data-sticky-cart-error></div>
+
+      <div class="sticky-cart__main-content">
+        {% if section.settings.show_product_image %}
+          <div class="sticky-cart__image-wrapper">
+            <div class="sticky-cart__image" data-sticky-cart-image></div>
+          </div>
+        {% endif %}
+
+        <div class="sticky-cart__content">
+          <div class="sticky-cart__info">
+            <div class="sticky-cart__title" data-sticky-cart-title></div>
+          </div>
+
+          <div class="sticky-cart__price" data-sticky-cart-price></div>
+
+          <div class="sticky-cart__actions">
+            <div class="sticky-cart__quantity" data-sticky-cart-quantity></div>
+            <div class="sticky-cart__button" data-sticky-cart-button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sticky-cart>
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.sticky_cart.name",
+    "enabled_on": {
+      "groups": ["custom.overlays"]
+    },
+    "limit": 1,
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "t:sections.sticky_cart.settings.paragraph_1.content"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_sticky_cart",
+        "label": "t:sections.sticky_cart.settings.enable_sticky_cart.label",
+        "default": true
+      },
+      {
+        "type": "header",
+        "content": "t:sections.sticky_cart.settings.header_trigger.content"
+      },
+      {
+        "type": "select",
+        "id": "trigger_type",
+        "label": "t:sections.sticky_cart.settings.trigger_type.label",
+        "info": "t:sections.sticky_cart.settings.trigger_type.info",
+        "default": "scroll_past_button",
+        "options": [
+          {
+            "value": "scroll_past_button",
+            "label": "t:sections.sticky_cart.settings.trigger_type.options.label_past_button"
+          },
+          {
+            "value": "scroll_distance",
+            "label": "t:sections.sticky_cart.settings.trigger_type.options.label_distance"
+          }
+        ]
+      },
+      {
+        "type": "range",
+        "id": "trigger_offset",
+        "label": "t:sections.sticky_cart.settings.trigger_offset.label",
+        "info": "t:sections.sticky_cart.settings.trigger_offset.info",
+        "min": 100,
+        "max": 2000,
+        "step": 100,
+        "default": 500,
+        "unit": "px",
+        "visible_if": "{{ section.settings.trigger_type == 'scroll_distance' }}"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.sticky_cart.settings.header_1.content"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_product_image",
+        "label": "t:sections.sticky_cart.settings.show_product_image.label",
+        "info": "t:sections.sticky_cart.settings.show_product_image.info",
+        "default": true
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.sticky_cart.name"
+      }
+    ]
+  }
+{% endschema %}

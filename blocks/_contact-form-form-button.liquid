@@ -1,0 +1,29 @@
+{% if block.settings.title != blank %}
+  <div class="flexi-block field flexi-button">
+    <button type="submit" class="button">
+      {{ block.settings.title }}
+      {% render 'angle', direction: 'right' %}
+    </button>
+  </div>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._contact_form_form_button.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "t:theme_blocks._contact_form_form_button.settings.title.label",
+        "default": "Button Text"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._contact_form_form_button.name",
+        "category": "t:theme_blocks.categories.form"
+      }
+    ]
+  }
+{% endschema %}

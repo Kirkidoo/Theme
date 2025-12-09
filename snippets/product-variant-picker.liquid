@@ -1,0 +1,221 @@
+{% comment %}
+  Renders a product's variants picker block.
+
+  Accepts:
+  - section: {Object} Section object
+  - block: {Object} Block object
+  - product: {Object} Product object
+  - product_form_id: {String} Product form ID
+  - equal_width: {Boolean} Whether elements should be equally spaced. Only applied on 'button' mode. Default false.
+  - update_url: {Boolean} Whether to update the URL when switching variants. Default false. Suggested: True for single product page, false otherwise.
+
+  Usage:
+  {% render 'product-variant-picker', section: section, block: block, product: product, product_form_id: product_form_id, update_url: false %}
+{% endcomment %}
+{% liquid
+  assign swatches_colors = settings.color_swatches | newline_to_br | strip_newlines | split: '<br />'
+  assign swatches_options = settings.option_swatches | split: ',' | uniq
+  assign words = ''
+  assign colors = ''
+  for line in swatches_colors
+    assign word_color = line | split: ':'
+    assign word = word_color[0] | strip
+    assign color = word_color[1] | strip
+    assign words = words | append: '|' | append: word
+    assign colors = colors | append: '|' | append: color
+  endfor
+  assign words = words | replace_first: '|', '' | split: '|' | compact
+  assign colors = colors | replace_first: '|', '' | split: '|' | compact
+%}
+
+<div
+  class="product-block product-block-variants product-variants variants-hidden {% if block.settings.show_bottom_divider %}has-divider{% endif %}"
+  {{ block.shopify_attributes }}
+>
+  {%- unless product.has_only_default_variant -%}
+    {%- if block.settings.picker_type == 'button' -%}
+      <variant-radios
+        data-section="{{ section.id }}"
+        data-url="{{ product.url }}"
+        data-update-url="{{ update_url }}"
+        data-hide-single="{{ block.settings.hide_single_variant }}"
+        data-variants-visibility="{{ block.settings.out_of_stock_variants }}"
+        data-hide-variants="{{ section.settings.hide_variants }}"
+      >
+        <script type="application/json" data-id="product-options-with-values">
+          {{ product.options_with_values | json }}
+        </script>
+
+        {%- for option in product.options_with_values -%}
+          {% liquid
+            assign swatch_count = option.values | map: 'swatch' | compact | size
+            assign is_swatch = false
+            if swatches_options contains option.name or swatch_count > 0
+              assign is_swatch = true
+            endif
+
+            assign add_equal_width_class = false
+            if equal_width
+              assign add_equal_width_class = true
+              if is_swatch and settings.swatches_on_products
+                assign add_equal_width_class = false
+              endif
+            endif
+          %}
+          <fieldset
+            class="js product-form-input {% if is_swatch %}color-swatch{% endif %}"
+            data-option-name="{{ option.name }}"
+            data-option-position="{{ option.position }}"
+          >
+            <legend>{{ option.name }}</legend>
+
+            <div class="{% if add_equal_width_class %} product-form-input-values-equal-width{% endif %}">
+              {%- for option_value in option.values -%}
+                {% liquid
+                  assign is_disabled = false
+                  if option_value.available == false and block.settings.out_of_stock_variants != 'show'
+                    if block.settings.out_of_stock_variants == 'hide' and option.selected_value != option_value
+                      continue
+                    endif
+                    assign is_disabled = true
+                  endif
+
+                  assign swatch_color = blank
+                  assign swatch_image = blank
+                  if swatches_options contains option.name and words contains option_value
+                    assign position = 0
+                    for word in words
+                      if word == option_value
+                        assign position = forloop.index0
+                      endif
+                    endfor
+
+                    assign color = colors[position]
+                    if images[color] != blank
+                      assign swatch_image = images[color] | image_url: width: 80
+                    else
+                      assign swatch_color = color
+                    endif
+                  endif
+
+                  if option_value.swatch.image != blank
+                    assign swatch_image = option_value.swatch.image | image_url: width: 80
+                  endif
+
+                  if option_value.swatch.color != blank
+                    assign swatch_color = option_value.swatch.color
+                  endif
+                %}
+
+                <input
+                  type="radio"
+                  id="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
+                  name="{{ option.name }}"
+                  value="{{ option_value | escape }}"
+                  form="{{ product_form_id }}"
+                  data-product-url="{{ option_value.product_url }}"
+                  data-variant-id="{{ option_value.variant.id }}"
+                  data-variant-available="{{ option_value.variant.available }}"
+                  data-option-value-id="{{ option_value.id }}"
+                  {% if option_value.selected %}
+                    checked
+                  {% endif %}
+                  class="{% if option_value.selected %}checked{% endif %} {% if is_disabled %}disabled{% endif %}"
+                >
+                <label
+                  for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
+                  {% if settings.swatches_on_products %}
+                    {% if swatch_image != blank %}
+                      data-image="{{ swatch_image }}"
+                      data-tooltip="{{ option_value | escape }}"
+                      style="background-image: url({{ swatch_image }});"
+                    {% elsif swatch_color != blank %}
+                      data-color="{{ swatch_color }}"
+                      data-tooltip="{{ option_value | escape }}"
+                      {% if swatch_color.rgb != blank %}
+                        style="background-color: rgb({{ swatch_color.rgb }});"
+                      {% else %}
+                        style="background-color: {{ swatch_color }};"
+                      {% endif %}
+                    {% endif %}
+                  {% endif %}
+                >
+                  {{ option_value }}
+                </label>
+                <script
+                  type="application/json"
+                  data-resource="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
+                >
+                  {{ option_value.variant | json }}
+                </script>
+              {%- endfor -%}
+            </div>
+          </fieldset>
+        {%- endfor -%}
+      </variant-radios>
+    {%- else -%}
+      <variant-selects
+        data-section="{{ section.id }}"
+        data-url="{{ product.url }}"
+        data-update-url="{{ update_url }}"
+        data-hide-single="{{ block.settings.hide_single_variant }}"
+        data-variants-visibility="{{ block.settings.out_of_stock_variants }}"
+        data-hide-variants="{{ section.settings.hide_variants }}"
+      >
+        <script type="application/json" data-id="product-options-with-values">
+          {{ product.options_with_values | json }}
+        </script>
+
+        {%- for option in product.options_with_values -%}
+          <div class="product-form-input product-form-input-dropdown">
+            <label for="Option-{{ section.id }}-{{ forloop.index0 }}">
+              {{ option.name }}
+            </label>
+            <select
+              id="Option-{{ section.id }}-{{ forloop.index0 }}"
+              name="options[{{ option.name | escape }}]"
+              form="{{ product_form_id }}"
+              data-option-position="{{ option.position }}"
+            >
+              {%- for option_value in option.values -%}
+                {% liquid
+                  assign is_disabled = false
+                  if option_value.available == false and block.settings.out_of_stock_variants != 'show'
+                    if block.settings.out_of_stock_variants == 'hide' and option.selected_value != option_value
+                      continue
+                    endif
+                    assign is_disabled = true
+                  endif
+                %}
+
+                <option
+                  value="{{ option_value | escape }}"
+                  id="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
+                  {% if option_value.selected %}
+                    selected="selected"
+                  {% endif %}
+                  data-product-url="{{ option_value.product_url }}"
+                  data-variant-id="{{ option_value.variant.id }}"
+                  data-variant-available="{{ option_value.variant.available }}"
+                  data-option-value-id="{{ option_value.id }}"
+                >
+                  {% if is_disabled %}
+                    {{ 'products.product.value_unavailable' | t: option_value: option_value }}
+                  {% else %}
+                    {{ option_value }}
+                  {% endif %}
+                </option>
+                <script
+                  type="application/json"
+                  data-resource="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
+                >
+                  {{ option_value.variant | json }}
+                </script>
+              {%- endfor -%}
+            </select>
+          </div>
+        {%- endfor -%}
+      </variant-selects>
+    {%- endif -%}
+  {%- endunless -%}
+</div>

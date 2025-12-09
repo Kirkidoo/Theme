@@ -1,0 +1,22 @@
+{% comment %}
+  Returns a lists of visibility classes (needs to be captured) based on the section's settings.
+
+  Accepts:
+  - section: {Object} Section object
+
+  Usage:
+  {%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+  {%- assign visibility_classes = visibility_classes | strip -%}
+{% endcomment %}
+{%- liquid
+  assign visibility_classes = ''
+
+  unless section.settings.show_on_desktop
+    assign visibility_classes = visibility_classes | append: ' hide-on-desktop'
+  endunless
+
+  unless section.settings.show_on_mobile
+    assign visibility_classes = visibility_classes | append: ' hide-on-mobile'
+  endunless
+-%}
+{{- visibility_classes -}}

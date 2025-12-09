@@ -1,0 +1,228 @@
+{% comment %}
+  Renders a customizable banner card.
+
+  Accepts:
+  - image: {Object} Optional. Image object.
+  - mobile_image: {Object} Optional. Mobile image object.
+  - title: {String} Optional. The title.
+  - description: {String} Optional. The description.
+  - button_link: {String} Optional. Button link.
+  - button_text: {String} Optional. Button text.
+  - new_window: {Boolean} Whether to open the link in a new window. Optional.
+  - show_title: {Boolean} Show title when true. Default true.
+  - show_description: {Boolean} Show description when true. Default true.
+  - show_button: {Boolean} Show button when true. Default true.
+  - overlay: {Boolean} Show overlay when true. Default true.
+  - class: {String} Optional. CSS class.
+  - ratio: {Number} Optional. The ratio to display the card at.
+  - columns {Number} Optional. The number of columns the card is rendered in.
+  - id: {String} Optional. HTML id.
+  - card_clickable_desktop: {Boolean} Optional. Whether the card should be clickable on desktop.
+  - settings: {Object} Optional. The card settings.
+  - settings.box_align: {String} Content alignment for desktop.
+  - settings.mobile_box_align: {String} Content alignment for mobile.
+  - settings.heading_size: {String} Title size for desktop.
+  - settings.mobile_heading_size: {String} Title size for mobile.
+  - settings.text_color: {String} Text color.
+  - lazyload: {Boolean} Whether to lazy load the main thumbnail.
+
+  Usage:
+  {% render 'card-banner' title: title, image: image %}
+{% endcomment %}
+
+{% liquid
+  assign has_video = false
+  if settings.custom_video != blank or settings.video_url != blank
+    assign has_video = true
+  endif
+
+  assign video_type = settings.video_url.type
+  if settings.custom_video != blank
+    assign video_type = 'self-hosted'
+  endif
+%}
+
+<div
+  {% if id != blank %}
+    id="{{ id }}"
+  {% endif %}
+  class="card-overlay {% unless overlay == false %}card-overlay-on{% else %}card-overlay-off{% endunless %} {% if mobile_image %}card-overlay-with-mobile-media{% endif %} {% if card_clickable_desktop %}card-pointer-all{% endif %} {{ class }}"
+  {% unless ratio == null or ratio == 0 %}
+    style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+  {% endunless %}
+  {{ block.shopify_attributes }}
+>
+  {% if button_link %}
+    <a
+      href="{{ button_link }}"
+      {% if new_window %}
+        target="_blank"
+      {% endif %}
+    >
+  {% endif %}
+
+  {% if image != blank %}
+    {%- capture image_sizes -%}
+			{% if columns == 1 %}
+				(min-width: 1420px) 1420px, calc(100vw - 3rem)
+			{% else %}
+				(min-width: 1200px) calc((100vw - 6rem) / 2), (min-width: 990px) calc((100vw - 6rem) * 0.6), (min-width: 750px) calc(100vw - 4rem), calc(100vw - 3rem)
+			{% endif %}
+		{%- endcapture -%}
+
+    <picture>
+      {% if mobile_image %}
+        <source
+          srcset="
+            {% if mobile_image.width >= 375 %}{{ mobile_image | image_url: width: 165 }} 165w,{% endif %}
+            {% if mobile_image.width >= 440 %}{{ mobile_image | image_url: width: 440 }} 440w,{% endif %}
+            {% if mobile_image.width >= 650 %}{{ mobile_image | image_url: width: 650 }} 650w,{% endif %}
+            {% if mobile_image.width >= 850 %}{{ mobile_image | image_url: width: 850 }} 850w,{% endif %}
+            {% if mobile_image.width >= 1100 %}{{ mobile_image | image_url: width: 1100 }} 1100w,{% endif %}
+            {% if mobile_image.width >= 1200 %}{{ mobile_image | image_url: width: 1200 }} 1200w,{% endif %}
+            {% if mobile_image.width >= 1420 %}{{ mobile_image | image_url: width: 1420 }} 1420w,{% endif %}
+            {{ mobile_image | image_url }} {{ mobile_image.width }}w
+          "
+          sizes="{{ image_sizes }}"
+          {% if mobile_image != blank %}
+            media="(max-width: 749px)"
+          {% endif %}
+        >
+      {% endif %}
+
+      <source
+        srcset="
+          {% if image.width >= 375 %}{{ image | image_url: width: 375 }} 375w,{% endif %}
+          {% if image.width >= 440 %}{{ image | image_url: width: 440 }} 440w,{% endif %}
+          {% if image.width >= 650 %}{{ image | image_url: width: 650 }} 650w,{% endif %}
+          {% if image.width >= 850 %}{{ image | image_url: width: 850 }} 850w,{% endif %}
+          {% if image.width >= 1100 %}{{ image | image_url: width: 1100 }} 1100w,{% endif %}
+          {% if image.width >= 1200 %}{{ image | image_url: width: 1200 }} 1200w,{% endif %}
+          {% if image.width >= 1420 %}{{ image | image_url: width: 1420 }} 1420w,{% endif %}
+          {% if image.width >= 2840 %}{{ image | image_url: width: 2840 }} 2840w,{% endif %}
+          {{ image | image_url }} {{ image.width }}w
+        "
+        sizes="{{ image_sizes }}"
+        {% if mobile_image != blank %}
+          media="(min-width: 750px)"
+        {% endif %}
+      >
+
+      {{
+        image
+        | image_url: width: 2840
+        | image_tag:
+          class: 'card-overlay-media',
+          loading: lazyload,
+          fetchpriority: fetch_priority,
+          sizes: image_sizes,
+          widths: '165, 440, 650, 850, 1100, 1200, 1420, 2840'
+      }}
+    </picture>
+
+  {% else %}
+    {% if has_video == false %}
+      {{ 'collection-1' | strip | placeholder_svg_tag: 'card-overlay-media' }}
+    {% endif %}
+  {% endif %}
+
+  {% unless title == blank %}
+    <span class="visually-hidden">{{ title }}</span>
+  {% endunless %}
+
+  {% if button_link %}
+    </a>
+  {% endif %}
+
+  <div
+    class="card-overlay-info content-align-{{ settings.mobile_box_align }} content-align-desktop-{{ settings.box_align }}"
+    style="color: {{ settings.text_color }}"
+  >
+    {%- unless show_title == false or title == blank -%}
+      <h3 class="card-overlay-heading card-overlay-heading-{{ settings.mobile_heading_size }} card-overlay-heading-desktop-{{ settings.heading_size }}">
+        {%- if button_link -%}
+          <a
+            href="{{ button_link }}"
+            {% if new_window %}
+              target="_blank"
+            {% endif %}
+          >
+        {%- endif -%}
+        {{ title }}
+        {%- if button_link -%}
+          </a>
+        {%- endif -%}
+      </h3>
+    {%- endunless -%}
+
+    {%- unless show_description == false or description == blank -%}
+      <div class="card-overlay-caption">
+        {{ description }}
+      </div>
+    {%- endunless -%}
+
+    {%- unless show_button == false or button_text == blank or button_link == blank -%}
+      <a
+        href="{{ button_link }}"
+        {% if new_window %}
+          target="_blank"
+        {% endif %}
+        class="{% if settings.button_type_link %}button-text-link{% else %}button color-button-{{ settings.button_color_scheme }}{% endif %}"
+      >
+        {{ button_text }}
+      </a>
+    {%- endunless -%}
+  </div>
+
+  {% if settings.badge_overlay_line_1_text != blank
+    or settings.badge_overlay_line_2_text != blank
+    or settings.badge_overlay_line_3_text != blank
+  %}
+    <div
+      class="card-badge-overlay card-badge-overlay-position-{{ settings.badge_overlay_position }}"
+      style="color: {{ settings.badge_overlay_colors_text }}; background-color: {{ settings.badge_overlay_colors_background }};"
+    >
+      {% if settings.badge_overlay_line_1_text != blank %}
+        <span class="card-badge-overlay-text card-badge-overlay-text-1 card-badge-overlay-text-{{ settings.badge_overlay_line_1_font_size }}">
+          {{ settings.badge_overlay_line_1_text }}
+        </span>
+      {% endif %}
+      {% if settings.badge_overlay_line_2_text != blank %}
+        <span class="card-badge-overlay-text card-badge-overlay-text-2 card-badge-overlay-text-{{ settings.badge_overlay_line_2_font_size }}">
+          {{ settings.badge_overlay_line_2_text }}
+        </span>
+      {% endif %}
+      {% if settings.badge_overlay_line_3_text != blank %}
+        <span class="card-badge-overlay-text card-badge-overlay-text-3 card-badge-overlay-text-{{ settings.badge_overlay_line_3_font_size }}">
+          {{ settings.badge_overlay_line_3_text }}
+        </span>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if has_video %}
+    <video-background
+      data-section-id="{{ id }}"
+      data-type="{{ video_type }}"
+      data-video-id="{{ settings.video_url.id }}"
+      class="card-overlay-video-background"
+    >
+      <div class="video-background-loader"></div>
+      <div class="video-background-player">
+        {%- if settings.custom_video != blank -%}
+          <video muted playsinline preload="none" loop>
+            {% for source in settings.custom_video.sources %}
+              <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
+            {% endfor %}
+          </video>
+        {%- else -%}
+          <div id="{{ id }}-video-player"></div>
+        {%- endif -%}
+
+        {% if settings.video_description != blank %}
+          <span class="visually-hidden">{{ settings.video_description }}</span>
+        {% endif %}
+      </div>
+    </video-background>
+  {% endif %}
+</div>

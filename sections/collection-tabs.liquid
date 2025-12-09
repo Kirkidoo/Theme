@@ -1,0 +1,561 @@
+{% liquid
+  assign is_empty = true
+  for block in section.blocks
+    if block.settings.collection != blank
+      assign is_empty = false
+    endif
+  endfor
+
+  assign hide_because_empty = false
+  if request.design_mode == false and section.settings.hide_if_empty and is_empty
+    assign hide_because_empty = true
+  endif
+%}
+{%- unless hide_because_empty -%}
+  {{ 'component-card.css' | asset_url | stylesheet_tag }}
+  {{ 'component-price.css' | asset_url | stylesheet_tag }}
+  {{ 'component-pills.css' | asset_url | stylesheet_tag }}
+  {{ 'component-scroller.css' | asset_url | stylesheet_tag }}
+  {{ 'component-rating.css' | asset_url | stylesheet_tag }}
+
+  {%- if section.settings.layout == 'slider' -%}
+    {{ 'flickity.css' | asset_url | stylesheet_tag }}
+    <script src="{{ 'flickity.pkgd.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'carousel-slider.js' | asset_url }}" defer="defer"></script>
+  {%- endif -%}
+
+  {% liquid
+    assign columns = section.settings.columns | at_most: 5
+    assign layout_classes = 'grid-3-col-tablet'
+
+    if columns >= 5
+      assign layout_classes = layout_classes | append: ' grid-compact grid-5-col-desktop'
+    endif
+
+    if columns == 4
+      assign layout_classes = layout_classes | append: ' grid-4-col-desktop'
+    endif
+
+    if section.settings.layout == 'slider'
+      assign layout_classes = layout_classes | append: ' grid-carousel'
+    endif
+
+    assign mobile_two_columns = false
+    if section.settings.mobile_columns == '2'
+      assign layout_classes = layout_classes | prepend: 'product-grid grid grid-2-col '
+      assign mobile_two_columns = true
+    else
+      assign layout_classes = layout_classes | prepend: 'grid grid-1-col '
+    endif
+
+    assign color_scheme_string = section.settings.color_scheme | append: ''
+    assign section_content_class = 'section-content'
+    unless color_scheme_string == 'background-1'
+      assign section_content_class = section_content_class | append: ' section-content-padded'
+    endunless
+  %}
+
+  <style>
+    #shopify-section-{{ section.id }} .section-content {
+    	margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+    	margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    #shopify-section-{{ section.id }} .section-content-padded {
+    	margin-top: 0;
+    	margin-bottom: 0;
+    	padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+    	padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    @media (min-width: 990px) {
+    	#shopify-section-{{ section.id }} .section-content {
+    		margin-top: {{ section.settings.spacing_top }}px;
+    		margin-bottom: {{ section.settings.spacing_bottom }}px;
+    	}
+
+    	#shopify-section-{{ section.id }} .section-content-padded {
+    		margin-top: 0;
+    		margin-bottom: 0;
+    		padding-top: {{ section.settings.spacing_top }}px;
+    		padding-bottom: {{ section.settings.spacing_bottom }}px;
+    	}
+    }
+  </style>
+
+  {%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+  {%- assign visibility_classes = visibility_classes | strip -%}
+
+  <div class="{{ visibility_classes }}">
+    <div class="color-{{ section.settings.color_scheme }}">
+      <div class="container">
+        <div class="{{ section_content_class }}">
+          <div class="block-pill-nav-slider">
+            {% if section.settings.heading != blank
+              or section.settings.subheading != blank
+              or section.blocks.size > 1
+            %}
+              <div class="section-headings {% if section.settings.subheading != blank %}with-subheading{% endif %} {% if section.settings.headings_alignment == 'center' %}section-headings-center{% endif %}">
+                {% if section.settings.heading != blank or section.settings.subheading != blank %}
+                  <div class="section-headings-content{% if section.settings.headings_alignment == 'center' %} center-aligned{% endif %}">
+                    {% if section.settings.heading != blank %}
+                      <{{ section.settings.heading_tag }} class="section-heading heading-size-{{ section.settings.heading_size }}">
+                        {{- section.settings.heading -}}
+                      </{{ section.settings.heading_tag }}>
+                    {% endif %}
+                    {% if section.settings.subheading != blank %}
+                      <p class="section-subheading">{{ section.settings.subheading }}</p>
+                    {% endif %}
+                  </div>
+                {% endif %}
+
+                {% if section.blocks.size > 1 %}
+                  <div class="section-headings-actions">
+                    <tabs-navigation for="TabComponent-{{ section.id }}">
+                      <div class="pill-nav">
+                        {% for block in section.blocks %}
+                          {% assign collection = block.settings.collection %}
+                          <a
+                            href="{{ collection.url }}"
+                            class="pill-nav-item {% if forloop.index0 == 0 %}is-active{% endif %}"
+                            data-handle="{{ block.settings.collection.handle }}-{{ forloop.index0 }}"
+                            {{ block.shopify_attributes }}
+                          >
+                            {% if block.settings.collection_tab_label != blank %}
+                              {{ block.settings.collection_tab_label }}
+                            {% elsif collection.title %}
+                              {{ collection.title }}
+                            {% else %}
+                              {{ 'onboarding.collection_title' | t }}
+                            {% endif %}
+                          </a>
+                        {% endfor %}
+                      </div>
+                    </tabs-navigation>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <div class="collection">
+              <tabs-component id="TabComponent-{{ section.id }}" class="tabs-component">
+                {% for block in section.blocks %}
+                  <div
+                    class="tabs-component-content"
+                    data-handle="{{ block.settings.collection.handle }}-{{ forloop.index0 }}"
+                    aria-hidden="{% if forloop.index0 != 0 %}true{% else %}false{% endif %}"
+                  >
+                    {% liquid
+                      assign lazyload = false
+                      if forloop.index0 > 0
+                        assign lazyload = true
+                      endif
+                    %}
+
+                    {%- if section.settings.layout == 'slider' -%}
+                      <carousel-slider id="Carousel-{{ section.id }}-{{ forloop.index0 }}">
+                    {%- endif -%}
+
+                    {%- unless section.settings.stack_on_mobile -%}
+                      <div class="scroller">
+                        <div class="scroller-inner">
+                    {%- endunless -%}
+
+                    <div class="{{ layout_classes }}">
+                      {% for product in block.settings.products %}
+                        {% liquid
+                          if forloop.index > 2
+                            assign lazyload = true
+                          endif
+                        %}
+                        <div class="grid-item">
+                          {% render 'card-product',
+                            card_product: product,
+                            show_vendor: section.settings.show_vendor,
+                            show_stock: section.settings.show_stock,
+                            show_rating: section.settings.show_rating,
+                            show_sku: section.settings.show_sku,
+                            show_add_to_cart: settings.products_show_add_to_cart,
+                            mobile_two_columns: mobile_two_columns,
+                            event_context: 'CollectionTabsSection',
+                            lazyload: lazyload
+                          %}
+                        </div>
+                      {% else %}
+                        {% for product in block.settings.collection.products
+                          limit: section.settings.products_to_show
+                        %}
+                          {% liquid
+                            if forloop.index > 2
+                              assign lazyload = true
+                            endif
+                          %}
+                          <div class="grid-item">
+                            {% render 'card-product',
+                              card_product: product,
+                              show_vendor: section.settings.show_vendor,
+                              show_stock: section.settings.show_stock,
+                              show_rating: section.settings.show_rating,
+                              show_sku: section.settings.show_sku,
+                              show_add_to_cart: settings.products_show_add_to_cart,
+                              mobile_two_columns: mobile_two_columns,
+                              event_context: 'CollectionTabsSection',
+                              lazyload: lazyload,
+                              collection: block.settings.collection
+                            %}
+                          </div>
+                        {% else %}
+                          {% for i in (1..4) %}
+                            <div class="grid-item">
+                              {% render 'card-product',
+                                card_product: null,
+                                show_vendor: section.settings.show_vendor,
+                                show_stock: section.settings.show_stock,
+                                show_rating: section.settings.show_rating,
+                                show_sku: section.settings.show_sku,
+                                show_add_to_cart: settings.products_show_add_to_cart,
+                                mobile_two_columns: mobile_two_columns,
+                                event_context: 'CollectionTabsSection',
+                                lazyload: lazyload
+                              %}
+                            </div>
+                          {% endfor %}
+                        {% endfor %}
+                      {% endfor %}
+                    </div>
+
+                    {%- unless section.settings.stack_on_mobile -%}
+                      </div>
+                      </div>
+                    {%- endunless -%}
+
+                    {%- if section.settings.layout == 'slider' -%}
+                      <carousel-navigation for="Carousel-{{ section.id }}-{{ forloop.index0 }}">
+                        <div class="visible-tablet-up">
+                          <div class="pill-nav pill-nav-slider pill-nav-slider-inline-nav">
+                            <button
+                              class="pill-nav-item pill-nav-item-prev pill-nav-item-disabled focus-none js-prev"
+                              aria-disabled="true"
+                            >
+                              <span class="visually-hidden">
+                                {{- 'sections.slideshow.previous_slide' | t -}}
+                              </span>
+                              {% render 'angle', direction: 'left' %}
+                            </button>
+                            <button
+                              class="pill-nav-item pill-nav-item-next js-next"
+                              aria-disabled="false"
+                            >
+                              <span class="visually-hidden">
+                                {{- 'sections.slideshow.next_slide' | t -}}
+                              </span>
+                              {% render 'angle', direction: 'right' %}
+                            </button>
+                          </div>
+                        </div>
+                      </carousel-navigation>
+                      </carousel-slider>
+                    {%- endif -%}
+                  </div>
+                {% endfor %}
+              </tabs-component>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endunless -%}
+{% schema %}
+  {
+    "name": "t:sections.collection_tabs.name",
+    "tag": "section",
+    "class": "section-collection-tabs",
+    "disabled_on": {
+      "groups": ["header", "footer", "custom.overlays"]
+    },
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:sections.all.section_content.heading"
+      },
+      {
+        "type": "inline_richtext",
+        "id": "heading",
+        "label": "t:sections.collection_tabs.settings.heading.label",
+        "default": "Collection Tabs"
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:sections.all.heading_size.label",
+        "default": "md",
+        "options": [
+          {
+            "value": "sm",
+            "label": "t:sections.all.heading_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.heading_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.heading_size.options.label_lg"
+          },
+          {
+            "value": "xl",
+            "label": "t:sections.all.heading_size.options.label_xl"
+          },
+          {
+            "value": "xxl",
+            "label": "t:sections.all.heading_size.options.label_xxl"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "headings_alignment",
+        "label": "t:sections.all.headings_alignment.label",
+        "default": "left",
+        "options": [
+          {
+            "value": "left",
+            "label": "t:sections.all.headings_alignment.options.label_left"
+          },
+          {
+            "value": "center",
+            "label": "t:sections.all.headings_alignment.options.label_center"
+          }
+        ]
+      },
+      {
+        "type": "inline_richtext",
+        "id": "subheading",
+        "label": "t:sections.collection_tabs.settings.subheading.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.collection_tabs.settings.header_1.content"
+      },
+      {
+        "type": "range",
+        "id": "products_to_show",
+        "min": 3,
+        "max": 12,
+        "step": 1,
+        "default": 4,
+        "label": "t:sections.collection_tabs.settings.products_to_show.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_vendor",
+        "default": true,
+        "label": "t:sections.all.product.show_vendor.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_sku",
+        "default": false,
+        "label": "t:sections.all.product.show_sku.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_stock",
+        "default": true,
+        "label": "t:sections.all.product.show_stock.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_rating",
+        "default": false,
+        "label": "t:sections.all.product.show_rating.label",
+        "info": "t:sections.all.product.show_rating.info"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.layout.heading"
+      },
+      {
+        "type": "select",
+        "id": "layout",
+        "label": "t:sections.all.layout.layout.label",
+        "default": "grid",
+        "options": [
+          {
+            "value": "grid",
+            "label": "t:sections.all.layout.layout.options.label_grid"
+          },
+          {
+            "value": "slider",
+            "label": "t:sections.all.layout.layout.options.label_slider"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "columns",
+        "label": "t:sections.all.layout.desktop_columns.label",
+        "default": "4",
+        "options": [
+          {
+            "value": "3",
+            "label": "3"
+          },
+          {
+            "value": "4",
+            "label": "4"
+          },
+          {
+            "value": "5",
+            "label": "5"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "mobile_columns",
+        "label": "t:sections.all.layout.mobile_columns.label",
+        "default": "1",
+        "options": [
+          {
+            "value": "1",
+            "label": "1"
+          },
+          {
+            "value": "2",
+            "label": "2"
+          }
+        ]
+      },
+      {
+        "type": "checkbox",
+        "id": "stack_on_mobile",
+        "default": false,
+        "label": "t:sections.all.layout.stack_on_mobile.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.seo_heading.label"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "default": "h2",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "hide_if_empty",
+        "default": false,
+        "label": "t:sections.collection_tabs.settings.hide_if_empty.label",
+        "info": "t:sections.all.advanced.hide_if_empty.info"
+      }
+    ],
+    "max_blocks": 5,
+    "blocks": [
+      {
+        "type": "collection",
+        "name": "t:sections.collection_tabs.blocks.collection.name",
+        "settings": [
+          {
+            "type": "collection",
+            "id": "collection",
+            "label": "t:sections.collection_tabs.blocks.collection.settings.collection.label"
+          },
+          {
+            "type": "text",
+            "id": "collection_tab_label",
+            "label": "t:sections.collection_tabs.blocks.collection.settings.collection_tab_label.label",
+            "info": "t:sections.collection_tabs.blocks.collection.settings.collection_tab_label.info"
+          },
+          {
+            "type": "product_list",
+            "id": "products",
+            "label": "t:sections.collection_tabs.blocks.collection.settings.products.label",
+            "info": "t:sections.collection_tabs.blocks.collection.settings.products.info"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.collection_tabs.preset.name",
+        "category": "t:sections.all.preset_category.products",
+        "blocks": [
+          {
+            "type": "collection"
+          },
+          {
+            "type": "collection"
+          },
+          {
+            "type": "collection"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

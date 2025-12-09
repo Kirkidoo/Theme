@@ -1,0 +1,38 @@
+{% if block.settings.link_url != blank %}
+  <a
+    href="{{ block.settings.link_url }}"
+    class="flexi-block flexi-link-index-link"
+    {% if section.settings.links_new_window %}
+      target="_blank"
+    {% endif %}
+  >
+{% endif %}
+{{ block.settings.text }}
+{% if block.settings.link_url != blank %}
+  </a>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._link.name",
+    "class": "flexi-block flexi-link",
+    "settings": [
+      {
+        "type": "text",
+        "id": "text",
+        "label": "t:theme_blocks._link.settings.text.label",
+        "default": "Link Text"
+      },
+      {
+        "type": "url",
+        "id": "link_url",
+        "label": "t:theme_blocks._link.settings.link_url.label"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._link.presets.name"
+      }
+    ]
+  }
+{% endschema %}

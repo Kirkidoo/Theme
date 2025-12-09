@@ -1,0 +1,376 @@
+{% liquid
+  assign expiration_date = collection.metafields.custom.countdown | date: '%s'
+  assign now = 'now' | date: '%s'
+  assign countdown_visible = false
+
+  if expiration_date > now
+    assign countdown_visible = true
+  endif
+
+  assign color_scheme_string = section.settings.color_scheme | append: ''
+  assign section_content_class = 'section-content'
+  unless color_scheme_string == 'background-1'
+    assign section_content_class = section_content_class | append: ' section-content-padded'
+  endunless
+
+  # theme-check-disable-next-line VariableName
+  assign brandSuffixArray = template.suffix | split: 'brand-'
+  # theme-check-disable-next-line VariableName
+  assign isBrandTemplate = false
+  if template.suffix != blank and brandSuffixArray[0] == blank or template.suffix == 'brand'
+    # theme-check-disable-next-line VariableName
+    assign isBrandTemplate = true
+  endif
+%}
+
+{% unless collection.handle == 'all' and settings.all_products_hero_disabled == true %}
+  <style>
+    #shopify-section-{{ section.id }} .collection-hero-banner::after {
+    	background: linear-gradient(180deg, rgba(0, 0, 0, 0) -30%, rgba(0, 0, 0, {{ section.settings.overlay_opacity | divided_by: 100.0 }}) 100%);
+    }
+
+    #shopify-section-{{ section.id }} .collection-description {
+      	overflow: hidden;
+      	transition: height 0.3s ease-in-out;
+    	}
+
+    {% if section.settings.description_lines_to_show > 0 %}
+    	#shopify-section-{{ section.id }} .collection-description.expanded {
+    		height: auto;
+    	}
+
+    	#shopify-section-{{ section.id }} .collection-description.collapsed {
+    		height: {{ section.settings.description_max_height }}px;
+    	}
+
+    	#shopify-section-{{ section.id }} .collection-description-read-more {
+    		margin-top: 1rem;
+    	}
+
+    	#shopify-section-{{ section.id }} .collection-description-read-more[hidden] {
+    		display: none;
+    	}
+
+    	#shopify-section-{{ section.id }} .collection-description-read-more .button-text-link {
+    		padding: 0.5rem 0;
+    		color: currentColor;
+    	}
+    	{% endif %}
+  </style>
+
+  {% capture collection_description_more %}
+		{% if section.settings.description_lines_to_show > 0 %}
+			<div class="collection-description-read-more" data-lines-to-show="{{ section.settings.description_lines_to_show }}">
+        <collection-description-read-more>
+          <button class="button-text-link" data-read-more="{{ 'general.button_show_more' | t }}" data-read-less="{{ 'general.button_show_less' | t }}">
+            {{ 'general.button_show_more' | t }}
+          </button>
+        </collection-description-read-more>
+			</div>
+		{% endif %}
+	{% endcapture %}
+
+  <div class="color-{{ section.settings.color_scheme }}">
+    <div class="container">
+      <div class="{{ section_content_class }}">
+        {% if isBrandTemplate %}
+          <div class="page-hero page-hero-image-right">
+            <div class="page-hero-content {% if section.settings.collection_description_fullwidth %}page-hero-content-fullwidth{% endif %}">
+              {%- if section.settings.show_collection_title -%}
+                <h1 class="page-hero-heading">
+                  {{ collection.title | escape }}
+                </h1>
+              {%- endif -%}
+
+              {%- if section.settings.show_collection_description
+                and collection.description != blank
+              -%}
+                <div
+                  class="page-hero-caption collection-description rte"
+                  data-lines-to-show="{{ section.settings.description_lines_to_show }}"
+                >
+                  {{ collection.description }}
+                </div>
+                {{ collection_description_more }}
+              {%- endif -%}
+            </div>
+
+            {% if section.settings.show_collection_image and collection.image %}
+              <div class="page-hero-side-image">
+                <div class="card card-small color-background-1">
+                  {{
+                    collection.image
+                    | image_url: width: 600
+                    | image_tag:
+                      class: 'page-hero-side-image-media',
+                      widths: '160, 200, 400, 600',
+                      sizes: '(min-width: 750px) 200px, 160px'
+                  }}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          {% if section.settings.show_collection_image and collection.image %}
+            <div class="collection-hero-banner color-background-1">
+              {{
+                collection.image
+                | image_url: width: 2000
+                | image_tag:
+                  class: 'collection-hero-banner-media',
+                  widths: '520, 720, 1020, 1200, 1420, 2000',
+                  sizes: '(min-width: 1200px) 1420px, (min-width: 750px) calc(100vw - 4rem), calc(100vw - 3rem)',
+                  fetchpriority: 'high'
+              }}
+
+              <div
+                class="
+                  collection-hero-banner-info
+                  {% if section.settings.collection_description_fullwidth %}description-fullwidth{% endif %}
+                "
+              >
+                {%- if section.settings.show_collection_title -%}
+                  <h1 class="collection-hero-banner-heading">
+                    {{ collection.title | escape }}
+                  </h1>
+                {%- endif -%}
+
+                {%- if section.settings.show_collection_description
+                  and collection.description != blank
+                -%}
+                  <div
+                    class="collection-hero-banner-caption collection-description"
+                    data-lines-to-show="{{ section.settings.description_lines_to_show }}"
+                  >
+                    {{ collection.description }}
+                  </div>
+                  {{ collection_description_more }}
+                {%- endif -%}
+
+                {% if countdown_visible %}
+                  <div class="collection-hero-banner-countdown">
+                    {% render 'main-collection-banner-countdown',
+                      expiration_date: expiration_date
+                    %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% else %}
+            <div class="page-hero {% if section.settings.collection_description_fullwidth %}page-hero-content-fullwidth{% endif %}">
+              {%- if section.settings.show_collection_title -%}
+                <h1 class="page-hero-heading">
+                  {{ collection.title | escape }}
+                </h1>
+              {%- endif -%}
+
+              {%- if section.settings.show_collection_description
+                and collection.description != blank
+              -%}
+                <div
+                  class="page-hero-caption collection-description rte"
+                  data-lines-to-show="{{ section.settings.description_lines_to_show }}"
+                >
+                  {{ collection.description }}
+                </div>
+                {{ collection_description_more }}
+              {%- endif -%}
+
+              {% if collection.handle == 'all'
+                and settings.all_products_hero_description != blank
+              %}
+                <div
+                  class="page-hero-caption collection-description rte"
+                  data-lines-to-show="{{ section.settings.description_lines_to_show }}"
+                >
+                  {{ settings.all_products_hero_description }}
+                </div>
+                {{ collection_description_more }}
+              {% endif %}
+
+              {% if countdown_visible %}
+                <div class="collection-hero-banner-countdown">
+                  {% render 'main-collection-banner-countdown', expiration_date: expiration_date %}
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endunless %}
+
+{% if section.settings.description_lines_to_show > 0
+  and section.settings.show_collection_description
+  or request.design_mode
+%}
+  <script>
+    (function () {
+      const CollectionDescription = {
+        init() {
+          this.description = document.querySelector('.collection-description');
+          this.readMoreButtonWrapper = document.querySelector('.collection-description-read-more');
+          this.readMoreButton = this.readMoreButtonWrapper?.querySelector('button');
+          if (!this.description || !this.readMoreButtonWrapper || !this.readMoreButton) {
+            return;
+          }
+          this.linesToShow = parseInt(this.readMoreButtonWrapper.dataset.linesToShow, 10);
+          this.readMoreText = this.readMoreButton.dataset.readMore;
+          this.readLessText = this.readMoreButton.dataset.readLess;
+          this.bindEvents();
+          this.updateDescription();
+        },
+        calculateVisibleHeight(element, linesToShow) {
+          if (linesToShow === 0) {
+            return 'auto';
+          }
+          const computedStyle = window.getComputedStyle(element);
+          const lineHeight = parseFloat(computedStyle.lineHeight);
+          const paddingTop = parseFloat(computedStyle.paddingTop);
+          const paddingBottom = parseFloat(computedStyle.paddingBottom);
+          return lineHeight * linesToShow + paddingTop + paddingBottom;
+        },
+        updateDescription() {
+          const initialHeight = this.calculateVisibleHeight(this.description, this.linesToShow);
+          const contentHeight = this.description.scrollHeight;
+          const roundedInitialHeight = Math.round(initialHeight);
+          const roundedContentHeight = Math.round(contentHeight);
+          if (this.linesToShow === 0 || roundedContentHeight <= roundedInitialHeight) {
+            this.description.style.height = 'auto';
+            this.readMoreButtonWrapper.hidden = true;
+          } else {
+            this.description.style.height = roundedInitialHeight + 'px';
+            this.readMoreButtonWrapper.hidden = false;
+          }
+        },
+        handleReadMoreClick() {
+          const isExpanded = this.description.classList.contains('expanded');
+          if (isExpanded) {
+            const startHeight = this.description.offsetHeight;
+            this.description.style.height = startHeight + 'px';
+            this.description.offsetHeight; // Force reflow
+            this.description.style.height =
+              this.calculateVisibleHeight(this.description, this.linesToShow) + 'px';
+            this.description.classList.remove('expanded');
+            this.readMoreButton.textContent = this.readMoreText;
+          } else {
+            this.description.classList.add('expanded');
+            const fullHeight = this.description.scrollHeight;
+            this.description.style.height =
+              this.calculateVisibleHeight(this.description, this.linesToShow) + 'px';
+            this.description.offsetHeight;
+            this.description.style.height = fullHeight + 'px';
+            this.readMoreButton.textContent = this.readLessText;
+          }
+        },
+        debounce(func, wait) {
+          let timeout;
+          return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+          };
+        },
+        bindEvents() {
+          this.readMoreButton.addEventListener('click', () => this.handleReadMoreClick());
+          window.addEventListener(
+            'resize',
+            this.debounce(() => this.updateDescription(), 100),
+          );
+        },
+      };
+
+      if (!customElements.get('collection-description-read-more')) {
+        customElements.define(
+          'collection-description-read-more',
+          class CollectionDescriptionReadMore extends HTMLElement {
+            constructor() {
+              super();
+            }
+
+            connectedCallback() {
+              CollectionDescription.init();
+            }
+          },
+        );
+      }
+    })();
+  </script>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:sections.main_collection_banner.name",
+    "tag": "section",
+    "class": "section section-main-collection-banner",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "t:sections.main_collection_banner.settings.paragraph_1.content"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_collection_title",
+        "default": true,
+        "label": "t:sections.main_collection_banner.settings.show_collection_title.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_collection_description",
+        "default": true,
+        "label": "t:sections.main_collection_banner.settings.show_collection_description.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "collection_description_fullwidth",
+        "default": false,
+        "label": "t:sections.main_collection_banner.settings.collection_description_fullwidth.label",
+        "info": "t:sections.main_collection_banner.settings.collection_description_fullwidth.info",
+        "visible_if": "{{ section.settings.show_collection_description == true }}"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_collection_image",
+        "default": true,
+        "label": "t:sections.main_collection_banner.settings.show_collection_image.label",
+        "info": "t:sections.main_collection_banner.settings.show_collection_image.info"
+      },
+
+      {
+        "type": "number",
+        "id": "description_lines_to_show",
+        "default": 0,
+        "label": "t:sections.main_collection_banner.settings.description_lines_to_show.label",
+        "info": "t:sections.main_collection_banner.settings.description_lines_to_show.info"
+      },
+      {
+        "type": "range",
+        "id": "overlay_opacity",
+        "min": 0,
+        "max": 100,
+        "step": 10,
+        "unit": "%",
+        "label": "t:sections.all.gradient.overlay_opacity.label",
+        "default": 80
+      },
+      {
+        "type": "header",
+        "content": "t:sections.main_collection_banner.settings.countdown.label"
+      },
+      {
+        "type": "paragraph",
+        "content": "t:sections.main_collection_banner.settings.countdown.info"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      }
+    ]
+  }
+{% endschema %}

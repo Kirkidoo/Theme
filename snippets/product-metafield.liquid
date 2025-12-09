@@ -1,0 +1,44 @@
+{% comment %}
+  Renders a product's metafields
+
+  Accepts:
+  - product: {Object} Product object
+  - metafield: {String} A metafield namespace.key path.
+
+  Usage:
+  {% render 'product-metafield', product: product, metafield: block.settings.metafield %}
+{% endcomment %}
+
+{% liquid
+  assign fields = metafield | strip | split: '.'
+  assign field_source = fields[-3]
+  assign field_ns = fields[-2]
+  assign field_key = fields[-1]
+
+  if field_source == 'variant'
+    assign metafield_object = product.selected_or_first_available_variant.metafields[field_ns][field_key]
+  else
+    assign metafield_object = product.metafields[field_ns][field_key]
+  endif
+%}
+{% capture text %}
+  {%- case metafield_object.type -%}
+    {%- when 'url' -%}
+      <a href="{{ metafield_object.value }}" target="_blank" rel="noopener">{{ 'products.product.details.link' | t }}</a>
+    {%- when 'file_reference' -%}
+      <a href="{{ metafield_object | file_url }}" target="_blank" rel="noopener">
+        <span class="product-info-details-item-icon-download">
+          {% render 'icons', icon: 'download' %}
+        </span>
+        {{ 'products.product.details.download' | t }}
+      </a>
+    {%- else -%}
+      {{ metafield_object | metafield_text }}
+  {%- endcase -%}
+{% endcapture %}
+
+{% if text != blank %}
+  <span class="product-info-single-metafield-value {% if field_source == 'variant' %}product-info-single-variant-metafield{% endif %}">
+    {{ text }}
+  </span>
+{% endif %}

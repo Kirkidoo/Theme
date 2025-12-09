@@ -1,0 +1,30 @@
+{% comment %}
+  Returns a string 'true' or 'false' (needs to be captured, becomes string when captured) depending on whether the product should show the "call for pricing" button.
+
+  You can call this snippet with `product: variant, use_variant: false` parameters, to decide based on a given variant.
+  Variants don't have a variant property, so product.variants.size == null passes the check.
+
+  Accepts:
+  - product: {Object} Product Liquid object
+  - use_variant: {Boolean} Wether to consider the main product or the first or currently selected variant. Default false.
+
+  Usage:
+    {%- capture show_call_for_pricing -%}{%- render 'price-get-call-for-pricing', product: card_product, use_variant: true -%}{%- endcapture -%}{%- assign show_call_for_pricing = show_call_for_pricing | strip -%}
+    {% if show_call_for_pricing == 'true' %}
+    {% if show_call_for_pricing == 'false' %}
+{% endcomment %}
+{%- liquid
+  if use_variant
+    assign target = product.selected_or_first_available_variant
+  else
+    assign target = product
+  endif
+
+  assign show_call_for_pricing = false
+  if target.price == 0 and settings.zero_price_mode == 'call'
+    if use_variant == true or use_variant == blank and product.variants.size <= 1 or product.variants.size == null
+      assign show_call_for_pricing = true
+    endif
+  endif
+-%}
+{{- show_call_for_pricing -}}

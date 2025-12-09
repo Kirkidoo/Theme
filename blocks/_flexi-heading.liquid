@@ -1,0 +1,82 @@
+{% if block.settings.text != blank %}
+  <{{ block.settings.heading_tag }}
+    class="flexi-block flexi-heading heading-size-{{ block.settings.heading_size }}"
+    {{ block.shopify_attributes }}
+  >
+    {{ block.settings.text }}
+  </{{ block.settings.heading_tag }}>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._flexi-heading.name",
+    "tag": null,
+    "class": "flexi-block flexi-heading",
+    "settings": [
+      {
+        "type": "text",
+        "id": "text",
+        "label": "t:theme_blocks._flexi-heading.settings.text.label",
+        "default": "Heading"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "info": "t:sections.all.advanced.heading_tag.info",
+        "default": "h3",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          },
+          {
+            "value": "h4",
+            "label": "H4"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:sections.all.heading_size.label",
+        "default": "md",
+        "options": [
+          {
+            "value": "sm",
+            "label": "t:sections.all.heading_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.heading_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.heading_size.options.label_lg"
+          },
+          {
+            "value": "xl",
+            "label": "t:sections.all.heading_size.options.label_xl"
+          },
+          {
+            "value": "xxl",
+            "label": "t:sections.all.heading_size.options.label_xxl"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._flexi-heading.name"
+      }
+    ]
+  }
+{% endschema %}

@@ -1,0 +1,63 @@
+{% comment %}
+  Renders a mega menu entry.
+
+  Accepts:
+  - block: {Object} Block object
+  - color_scheme: {String} Submenu color scheme.
+
+  Usage:
+  {% render 'header-main-menu-megamenu-featured-content', block: mega_block, color_scheme: 'background-1' %}
+{% endcomment %}
+<div class="navigation-sub-menu mega-menu color-{{ color_scheme }}">
+  <div class="container">
+    <div
+      class="mega-menu-grid"
+      style="--mega-menu-grid-columns: {{ block.settings.columns }}"
+    >
+      {% if block.settings.content_type == 'products' and block.settings.product_list.count > 0 %}
+        {% for product in block.settings.product_list limit: block.settings.item_limit %}
+          {%- assign featured_media = product.featured_media
+            | default: settings.product_placeholder_image
+          -%}
+          <div class="mega-menu-grid-item">
+            {% if featured_media %}
+              <a href="{{ product.url }}" title="{{ product.title }}">
+                <div class="mega-menu-grid-item-image mega-menu-grid-item-image--{{ block.settings.image_ratio }}">
+                  {{ featured_media | image_url: width: 600 | image_tag: loading: 'lazy' }}
+                </div>
+              </a>
+            {% endif %}
+            <div class="mega-menu-grid-item-title mega-menu-grid-item-title--{{ block.settings.text_alignment }}">
+              <a href="{{ product.url }}" title="{{ product.title }}">
+                {{ product.title }}
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      {% elsif block.settings.content_type == 'collections'
+        and block.settings.collection_list.count > 0
+      %}
+        {% for collection in block.settings.collection_list limit: block.settings.item_limit %}
+          <div class="mega-menu-grid-item">
+            {% if collection.featured_image %}
+              <a href="{{ collection.url }}" title="{{ collection.title }}">
+                <div class="mega-menu-grid-item-image mega-menu-grid-item-image--{{ block.settings.image_ratio }}">
+                  {{
+                    collection.featured_image
+                    | image_url: width: 600
+                    | image_tag: loading: 'lazy'
+                  }}
+                </div>
+              </a>
+            {% endif %}
+            <div class="mega-menu-grid-item-title mega-menu-grid-item-title--{{ block.settings.text_alignment }}">
+              <a href="{{ collection.url }}" title="{{ collection.title }}">
+                {{ collection.title }}
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</div>

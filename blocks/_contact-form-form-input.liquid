@@ -1,0 +1,133 @@
+{% liquid
+  assign form_id = section.settings.form_id | handleize | default: 'flexi-contact-form'
+  assign field_name = block.settings.title | handleize
+  assign field_id = form_id | append: '-' | append: field_name | append: '-' | append: block.id
+  assign field_classes = 'flexi-block field field-input'
+  if block.settings.field_width == 'half'
+    assign field_classes = field_classes | append: ' field-half-width'
+  endif
+%}
+
+{% if block.settings.title != blank %}
+  <div class="{{ field_classes }}" {{ block.shopify_attributes }}>
+    <label class="field-label" for="{{ field_id }}">
+      {{ block.settings.title }}
+      {% if block.settings.required -%}
+        <span aria-hidden="true">*</span>
+      {%- endif %}
+    </label>
+
+    <input
+      type="{{ block.settings.input_type }}"
+      id="{{ field_id }}"
+      name="contact[{{ field_name }}]"
+      class="field-input"
+      {% if block.settings.placeholder != blank %}
+        placeholder="{{ block.settings.placeholder | escape }}"
+      {% endif %}
+      {% if block.settings.required %}
+        required="required"
+        aria-required="true"
+      {% endif %}
+      {% if block.settings.input_type == 'email' %}
+        autocomplete="email"
+        spellcheck="false"
+        autocapitalize="off"
+      {% elsif block.settings.input_type == 'text' and field_name contains 'name' %}
+        autocomplete="name"
+      {% elsif block.settings.input_type == 'phone' %}
+        autocomplete="tel"
+      {% endif %}
+      {% if customer and field_name == 'email' %}
+        value="{{ customer.email }}"
+      {% elsif customer and field_name contains 'name' %}
+        value="{{ customer.name }}"
+      {% endif %}
+    >
+
+    {% if block.settings.help_text != blank %}
+      <small class="field-help-text">{{ block.settings.help_text }}</small>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._contact_form_form_input.name",
+    "tag": null,
+    "class": "flexi-block flexi-input",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "t:theme_blocks._contact_form_form_input.settings.title.label",
+        "info": "t:theme_blocks._contact_form_form_input.settings.title.info",
+        "default": "Field name"
+      },
+      {
+        "type": "select",
+        "id": "input_type",
+        "label": "t:theme_blocks._contact_form_form_input.settings.input_type.label",
+        "default": "text",
+        "options": [
+          {
+            "value": "text",
+            "label": "t:theme_blocks._contact_form_form_input.settings.input_type.options.label_text"
+          },
+          {
+            "value": "email",
+            "label": "t:theme_blocks._contact_form_form_input.settings.input_type.options.label_email"
+          },
+          {
+            "value": "url",
+            "label": "t:theme_blocks._contact_form_form_input.settings.input_type.options.label_url"
+          },
+          {
+            "value": "tel",
+            "label": "t:theme_blocks._contact_form_form_input.settings.input_type.options.label_phone"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "id": "placeholder",
+        "label": "t:theme_blocks._contact_form_form_input.settings.placeholder.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "required",
+        "label": "t:theme_blocks._contact_form_form_input.settings.required.label",
+        "info": "t:theme_blocks._contact_form_form_input.settings.required.info",
+        "default": false
+      },
+      {
+        "type": "inline_richtext",
+        "id": "help_text",
+        "label": "t:theme_blocks._contact_form_form_input.settings.help_text.label"
+      },
+      {
+        "type": "select",
+        "id": "field_width",
+        "label": "t:theme_blocks._contact_form_form_input.settings.field_width.label",
+        "info": "t:theme_blocks._contact_form_form_input.settings.field_width.info",
+        "default": "full",
+        "options": [
+          {
+            "value": "full",
+            "label": "t:theme_blocks._contact_form_form_input.settings.field_width.options.label_full"
+          },
+          {
+            "value": "half",
+            "label": "t:theme_blocks._contact_form_form_input.settings.field_width.options.label_half"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._contact_form_form_input.name",
+        "category": "t:theme_blocks.categories.form"
+      }
+    ]
+  }
+{% endschema %}

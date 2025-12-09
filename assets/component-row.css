@@ -1,0 +1,212 @@
+/* Component - Product row
+=================================== */
+.product-rows {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.product-row {
+  border-bottom: solid 1px rgba(var(--color-border));
+  padding: 0.5rem; /* This is the "compact" density. In main-collection-product-grid.liquid, we set a "comfortable" density.*/
+  transition: background-color 0.2s ease;
+  justify-content: space-between;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 3.6rem;
+}
+
+@media (min-width: 750px) {
+  .product-row {
+    align-items: center;
+  }
+}
+
+.product-row:hover {
+  background-color: var(--color-product-row-highlight);
+}
+
+.product-row .row-content {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  flex: auto;
+}
+
+@media (min-width: 750px) {
+  .product-row .row-content {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .product-row .card-product-compare-actions {
+    position: relative;
+    opacity: 0;
+    visibility: hidden;
+    max-width: 0;
+    max-height: 4.5rem;
+    margin: 0;
+    transition:
+      opacity 0.2s ease-in-out,
+      max-width 0.2s ease-in-out,
+      margin 0.2s ease-in-out,
+      visibility 0s linear 0.2s;
+    display: block;
+  }
+
+  .product-row .card-product-compare-label [type="checkbox"] {
+    margin: 0;
+  }
+
+  .product-row .card-product-compare-label span {
+    display: none;
+  }
+
+  body.product-compare-toggled-on .product-row .card-product-compare-actions {
+    opacity: 1;
+    visibility: visible;
+    max-width: 3rem;
+    max-height: none;
+    transition:
+      opacity 0.2s ease-in-out,
+      max-width 0.2s ease-in-out,
+      margin 0.2s ease-in-out,
+      visibility 0s linear 0s;
+    display: block;
+    margin-bottom: 0;
+    margin-inline-end: 1rem;
+  }
+}
+
+.product-row .card-product-compare-alert {
+  position: absolute;
+  padding: 0.9rem 1.4rem;
+  left: 0;
+  top: 100%;
+  margin-top: 0.5rem;
+  border-radius: var(--border-radius-base);
+  z-index: 20;
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  white-space: nowrap;
+}
+
+.product-row .card-product-compare-alert.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.product-row .card-product-compare-alert a {
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.product-row .row-heading {
+  font-size: calc(var(--font-heading-scale) * 1.4rem);
+  font-weight: 400;
+  color: rgba(var(--color-foreground-alt));
+  margin: 0;
+}
+
+@media (max-width: 749px) {
+  .product-row .row-heading {
+    padding-block-end: 0.5rem;
+  }
+
+  .product-row .row-content {
+    margin-inline-start: 0;
+    padding-inline-end: 0;
+  }
+
+  .product-row .card-product-compare-label {
+    border-radius: var(--border-radius-base);
+    font-size: calc(var(--font-body-scale) * 1.3rem);
+    padding-bottom: 0.25rem;
+  }
+}
+
+.product-row .row-heading a {
+  color: currentColor;
+  text-decoration-color: transparent;
+}
+
+.product-row .row-price {
+  flex: none;
+}
+
+@media (min-width: 750px) {
+  .product-row .row-price {
+    margin-inline-start: auto;
+    padding-inline-start: 1.5rem;
+  }
+}
+
+.product-row .badge {
+  padding: 0.2rem 0.6rem;
+  font-size: calc(var(--font-body-scale) * 1.1rem);
+}
+
+.product-row .row-price .price-item {
+  font-size: calc(var(--font-heading-scale) * 1.4rem);
+}
+
+.product-row .row-price .price-sale {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.product-row .row-price .price-sale s {
+  margin: 0;
+}
+
+.product-row .row-actions {
+  flex: none;
+  max-width: 12rem;
+}
+
+.product-row .card-product-actions {
+  margin: 0;
+}
+
+.product-row .row-actions .product-actions .button {
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+@media (min-width: 750px) {
+  .product-row .row-actions .product-actions .button {
+    padding: 0.4rem 0.5rem;
+  }
+}
+
+.product-row .row-actions .product-actions .button-outline {
+  background-color: rgba(var(--color-background));
+}
+
+.product-row .quantity-input {
+  width: 12rem;
+}
+
+@media (min-width: 750px) {
+  .product-row .quantity-input {
+    height: 3rem;
+  }
+}
+
+.product-row .quantity-input .quantity-input-field {
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+.product-row .row-price .button-call-for-pricing {
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+@media (min-width: 750px) {
+  .product-row .row-price .button-call-for-pricing {
+    padding: 0.4rem 0.5rem;
+  }
+}

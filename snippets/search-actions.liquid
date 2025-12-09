@@ -1,0 +1,167 @@
+{% comment %}
+  Renders the search actions (active filters and sorting)
+
+  Accepts:
+  - results: {Object} Search object
+  - enable_sorting: {Boolean} Show sorting. Default: false
+  - enable_filters: {Boolean} Show filters. Default: false
+  - enable_product_count: {Boolean} Show product count. Default: false
+  - color_scheme: {String} The color scheme of the filters bar.
+  - sticky: {Boolean} Whether the actions should be sticky on mobile.
+
+  Usage:
+  {% render 'search-actions', results: search, enable_sorting: true, enable_filters: true %}
+{% endcomment %}
+
+{%- liquid
+  assign sort_by = results.sort_by | default: results.default_sort_by
+  if results.url
+    assign results_url = results.url
+  else
+    assign terms = results.terms | escape
+    assign results_url = '?q=' | append: terms | append: '&options%5Bprefix%5D=last&sort_by=' | append: sort_by
+  endif
+
+  assign total_active_values = 0
+  for filter in results.filters
+    for value in filter.active_values
+      assign total_active_values = total_active_values | plus: 1
+    endfor
+    if filter.min_value.value != null or filter.max_value.value != null
+      assign total_active_values = total_active_values | plus: 1
+    endif
+  endfor
+
+  assign container_classes = 'collection-actions-wrapper color-' | append: color_scheme
+  if total_active_values > 0
+    assign container_classes = container_classes | append: ' has-active-filters'
+  endif
+
+  unless enable_product_count or total_active_values > 0 or settings.product_compare_enabled or enable_sorting and results.results_count > 1
+    assign container_classes = container_classes | append: ' hidden-tablet-up'
+  endunless
+
+  unless enable_filters or enable_product_count or total_active_values > 0 or settings.product_compare_enabled or enable_sorting and results.results_count > 1
+    assign container_classes = container_classes | append: ' hidden'
+  endunless
+
+  if settings.product_compare_enabled
+    assign container_classes = container_classes | append: ' collection-actions-product-compare-enabled'
+  endif
+-%}
+
+{% if sticky %}
+  <sticky-collection-actions>
+{% endif %}
+<div id="CollectionActions" class="{{ container_classes }}">
+  {% if enable_filters or enable_sorting and results.results_count > 1 %}
+    <div class="collection-actions-main {% if results.results_count <= 1 or enable_sorting == false %} hidden-tablet-up{% endif %}">
+      {% if enable_filters %}
+        <button
+          type="button"
+          class="button button-form-input icon-left button-sidebar-drawer-open"
+          form="FacetsFilterForm"
+        >
+          {% render 'icons', icon: 'settings' %}
+          {{ 'products.facets.filters_label' | t }}
+        </button>
+      {% endif %}
+
+      {% if enable_sorting and results.results_count > 1 %}
+        <label for="collection-sort-order">{{ 'products.facets.sort_by_label' | t }}</label>
+        <select
+          name="sort_by"
+          id="collection-sort-order"
+          form="FacetsFilterForm"
+        >
+          {%- for option in results.sort_options -%}
+            <option
+              value="{{ option.value | escape }}"
+              {% if option.value == sort_by %}
+                selected="selected"
+              {% endif %}
+            >
+              {{ option.name | escape }}
+            </option>
+          {%- endfor -%}
+        </select>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="collection-actions-secondary">
+    <div class="collection-actions-filters-container">
+      {% if enable_product_count %}
+        <p id="ProductCount" class="collection-actions-secondary-heading h5">
+          {{
+            'templates.search.results_with_count_and_term'
+            | t: terms: results.terms, count: results.results_count
+          }}
+        </p>
+      {% endif %}
+
+      <div class="collection-actions-filters">
+        {%- if total_active_values > 0 -%}
+          {%- for filter in results.filters -%}
+            {% liquid
+              if settings.catalog_enabled
+                if filter.param_name == 'filter.v.price' or filter.param_name == 'filter.v.availability'
+                  continue
+                endif
+              endif
+
+              if settings.login_for_price_enabled and customer == blank and filter.param_name == 'filter.v.price'
+                continue
+              endif
+            %}
+
+            {%- for value in filter.active_values -%}
+              <facet-remove>
+                <a
+                  href="{{ value.url_to_remove }}"
+                  class="collection-filter-button color-background-1"
+                >
+                  <span>{{ value.label | escape }}</span>
+                  <span class="collection-filter-dismiss">&times;</span>
+                </a>
+              </facet-remove>
+            {%- endfor -%}
+
+            {%- if filter.type == 'price_range' -%}
+              {%- if filter.min_value.value != null or filter.max_value.value != null -%}
+                <facet-remove>
+                  <a
+                    href="{{ filter.url_to_remove }}"
+                    class="collection-filter-button color-background-1"
+                  >
+                    <span>
+                      {%- assign min_value = filter.min_value.value | default: 0 -%}
+                      {%- assign max_value = filter.max_value.value | default: filter.range_max -%}
+                      {{ min_value | money }} - {{ max_value | money }}
+                    </span>
+                    <span class="collection-filter-dismiss">&times;</span>
+                  </a>
+                </facet-remove>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+          <facet-remove>
+            <a href="{{ results_url }}" class="button-text-link">
+              {{ 'products.facets.clear_filters' | t }}
+            </a>
+          </facet-remove>
+        {%- endif -%}
+      </div>
+    </div>
+
+    {% liquid
+      if settings.product_compare_enabled
+        render 'product-compare-buttons'
+      endif
+    %}
+  </div>
+</div>
+{% if sticky %}
+  </sticky-collection-actions>
+{% endif %}

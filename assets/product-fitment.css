@@ -1,0 +1,208 @@
+/* --- Product Fitment Apex Theme Styles --- */
+
+:root {
+  /* Pulling colors from your settings_data.json Apex Preset */
+  --fitment-accent-orange: #df472e;
+  --fitment-accent-blue: #183f7b;
+  --fitment-text: #515151;
+  --fitment-border: #e1e1e1;
+  --fitment-bg-alt: #f4f6f8;
+}
+
+.product-fitment-section {
+  margin: 40px 0;
+  font-family: var(--font-body-family, system-ui, sans-serif);
+  color: var(--fitment-text);
+}
+
+.product-fitment-container {
+  border: 1px solid var(--fitment-border);
+  background: #fff;
+  /* Apex uses square buttons/shapes, so we use 0px radius */
+  border-radius: 0px; 
+}
+
+/* --- Header --- */
+.product-fitment__header {
+  background-color: var(--fitment-accent-blue);
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--fitment-accent-blue);
+}
+
+.product-fitment__title {
+  margin: 0;
+  font-family: var(--font-heading-family, sans-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+.product-fitment__content {
+  padding: 20px;
+}
+
+/* --- Controls / Search --- */
+.product-fitment__controls {
+  margin-bottom: 20px;
+}
+
+.product-fitment__search-wrapper {
+  position: relative;
+  max-width: 100%;
+}
+
+.product-fitment__filter-input {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border: 1px solid var(--fitment-border);
+  border-radius: 0; /* Square for Apex */
+  font-size: 1rem;
+  color: var(--fitment-text);
+  background-color: #fff;
+  transition: border-color 0.3s ease;
+}
+
+.product-fitment__filter-input:focus {
+  border-color: var(--fitment-accent-orange); /* Orange focus ring */
+  outline: none;
+}
+
+.product-fitment__search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: #999;
+}
+
+/* --- Data "Table" Headers --- */
+.product-fitment__table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px;
+  gap: 15px;
+  padding: 10px 15px;
+  background-color: #f9f9f9;
+  border-bottom: 2px solid var(--fitment-border);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: var(--fitment-accent-blue);
+}
+
+/* --- Results List --- */
+.product-fitment__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--fitment-border);
+  border-top: none;
+}
+
+/* Scrollbar Styling */
+.product-fitment__list::-webkit-scrollbar {
+  width: 6px;
+}
+.product-fitment__list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.product-fitment__list::-webkit-scrollbar-thumb {
+  background: var(--fitment-accent-blue);
+}
+
+.product-fitment__list-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px;
+  gap: 15px;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--fitment-border);
+  transition: background-color 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.product-fitment__list-item:last-child {
+  border-bottom: none;
+}
+
+/* Zebra Striping */
+.product-fitment__list-item:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.product-fitment__list-item:hover {
+  background-color: rgba(223, 71, 46, 0.05); /* Very light orange tint */
+}
+
+.product-fitment__make {
+  font-weight: 700;
+  color: var(--fitment-accent-blue);
+}
+
+/* --- Mobile Response --- */
+@media (max-width: 749px) {
+  .product-fitment__table-header {
+    display: none; /* Hide headers on mobile */
+  }
+
+  .product-fitment__list-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .product-fitment__make {
+    font-size: 1rem;
+  }
+  
+  .product-fitment__years {
+    font-size: 0.9rem;
+    color: var(--fitment-accent-orange);
+    font-weight: 600;
+  }
+}
+
+/* --- Loading & Messages --- */
+.product-fitment__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 15px;
+  color: var(--fitment-accent-blue);
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(24, 63, 123, 0.2);
+  border-top-color: var(--fitment-accent-orange);
+  border-radius: 50%;
+  animation: fitment-spin 0.8s linear infinite;
+}
+
+@keyframes fitment-spin {
+  to { transform: rotate(360deg); }
+}
+
+.product-fitment__results--empty,
+.product-fitment__results--no-match,
+.product-fitment__error-message {
+  text-align: center;
+  padding: 30px;
+  background-color: #fff4f4;
+  color: var(--fitment-accent-orange);
+  border: 1px solid #ffdcd6;
+  margin-top: 10px;
+}
+
+.product-fitment__results--empty {
+  background-color: #f8f9fa;
+  color: #666;
+  border-color: #eee;
+}

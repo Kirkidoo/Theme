@@ -1,0 +1,222 @@
+{%- assign api_token = settings.gamma_api_token -%}
+{%- assign api_base = settings.gamma_api_base_url | default: 'https://api.gammapowersports.com' -%}
+
+{{ 'product-finder.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-finder.js' | asset_url }}" defer="defer"></script>
+
+<div class="product-finder-section page-width pf-closed" 
+     data-section-id="{{ section.id }}"
+     data-api-token="{{ api_token }}"
+     data-api-base="{{ api_base }}"
+     style="background-color: {{ section.settings.bg_color }}; padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;">
+
+  <div class="pf-container">
+    
+    <!-- Header Row: Always Visible & Clickable -->
+    <div class="pf-header-row">
+      <h2 class="pf-heading {{ section.settings.heading_size }}">
+        {{ section.settings.heading }}
+      </h2>
+      <div class="pf-toggle-icon">
+        <svg class="icon-plus" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <svg class="icon-minus" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </div>
+    </div>
+
+    <!-- Body: Collapsible -->
+    <div class="pf-body" style="display: none; overflow: hidden; transition: max-height 0.3s ease-out;">
+      <div class="pf-controls-wrapper">
+        <!-- Type Select -->
+        <div class="pf-control-group">
+          <label for="pf-type-{{ section.id }}">{{ section.settings.label_type }}</label>
+          <select id="pf-type-{{ section.id }}" class="pf-select" disabled>
+            <option value="">{{ section.settings.placeholder_type }}</option>
+          </select>
+        </div>
+
+        <!-- Year Select -->
+        <div class="pf-control-group">
+          <label for="pf-year-{{ section.id }}">{{ section.settings.label_year }}</label>
+          <select id="pf-year-{{ section.id }}" class="pf-select" disabled>
+            <option value="">{{ section.settings.placeholder_year }}</option>
+          </select>
+        </div>
+
+        <!-- Make Select -->
+        <div class="pf-control-group">
+          <label for="pf-make-{{ section.id }}">{{ section.settings.label_make }}</label>
+          <select id="pf-make-{{ section.id }}" class="pf-select" disabled>
+            <option value="">{{ section.settings.placeholder_make }}</option>
+          </select>
+        </div>
+
+        <!-- Model Select -->
+        <div class="pf-control-group">
+          <label for="pf-model-{{ section.id }}">{{ section.settings.label_model }}</label>
+          <select id="pf-model-{{ section.id }}" class="pf-select" disabled>
+            <option value="">{{ section.settings.placeholder_model }}</option>
+          </select>
+        </div>
+
+        <!-- Buttons -->
+        <div class="pf-control-group pf-btn-group">
+          <button id="pf-submit-{{ section.id }}" class="pf-button button button--primary" disabled>
+            <span class="pf-btn-text">{{ section.settings.btn_text }}</span>
+            <span class="pf-btn-loading hidden">Loading...</span>
+          </button>
+          <button id="pf-reset-{{ section.id }}" class="pf-reset-link" type="button">
+            {{ section.settings.reset_btn_text }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Sub-Category Filter -->
+      <div id="pf-filter-wrapper-{{ section.id }}" class="pf-filter-wrapper hidden">
+        <label for="pf-filter-{{ section.id }}">Filter by Sub-Category:</label>
+        <select id="pf-filter-{{ section.id }}" class="pf-select pf-filter-select">
+          <option value="all">All Categories</option>
+        </select>
+      </div>
+
+      <!-- Error Message Container -->
+      <div id="pf-error-{{ section.id }}" class="pf-error hidden"></div>
+
+      <!-- Results Status -->
+      <div id="pf-status-{{ section.id }}" class="pf-status hidden"></div>
+
+      <!-- Results Container -->
+      <div id="pf-results-{{ section.id }}" class="pf-results-grid hidden"></div>
+    </div>
+
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Product Finder",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Find Parts for Your Vehicle"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        { "value": "h2", "label": "Small" },
+        { "value": "h1", "label": "Medium" },
+        { "value": "h0", "label": "Large" }
+      ],
+      "default": "h1",
+      "label": "Heading Size"
+    },
+    {
+      "type": "header",
+      "content": "Labels"
+    },
+    {
+      "type": "text",
+      "id": "label_type",
+      "label": "Type Label",
+      "default": "Type"
+    },
+    {
+      "type": "text",
+      "id": "label_year",
+      "label": "Year Label",
+      "default": "Year"
+    },
+    {
+      "type": "text",
+      "id": "label_make",
+      "label": "Make Label",
+      "default": "Make"
+    },
+    {
+      "type": "text",
+      "id": "label_model",
+      "label": "Model Label",
+      "default": "Model"
+    },
+    {
+      "type": "header",
+      "content": "Placeholders"
+    },
+    {
+      "type": "text",
+      "id": "placeholder_type",
+      "label": "Type Placeholder",
+      "default": "Select Type"
+    },
+    {
+      "type": "text",
+      "id": "placeholder_year",
+      "label": "Year Placeholder",
+      "default": "Select Year"
+    },
+    {
+      "type": "text",
+      "id": "placeholder_make",
+      "label": "Make Placeholder",
+      "default": "Select Make"
+    },
+    {
+      "type": "text",
+      "id": "placeholder_model",
+      "label": "Model Placeholder",
+      "default": "Select Model"
+    },
+    {
+      "type": "text",
+      "id": "btn_text",
+      "label": "Button Text",
+      "default": "Find Parts"
+    },
+    {
+      "type": "text",
+      "id": "reset_btn_text",
+      "label": "Reset Button Text",
+      "default": "Reset Search"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background Color",
+      "default": "#f4f4f4"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding Top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding Bottom",
+      "default": 36
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Finder"
+    }
+  ]
+}
+{% endschema %}

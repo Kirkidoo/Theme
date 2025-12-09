@@ -1,0 +1,50 @@
+/* Component - Countdown
+=================================== */
+countdown-timer {
+  display: inline-block;
+}
+
+.countdown {
+  display: flex;
+  align-items: center;
+  grid-gap: 1rem;
+  direction: ltr;
+}
+
+.countdown-item {
+  text-align: center;
+}
+
+.countdown-value-pair {
+  display: flex;
+  align-items: center;
+  min-width: 6.2rem;
+  height: 3.6rem;
+  grid-gap: 0.1rem;
+}
+
+.countdown-value {
+  background: rgba(var(--color-aux-background));
+  color: rgba(var(--color-aux-foreground));
+  line-height: 1;
+  font-size: calc(var(--font-body-scale) * 2rem);
+  font-weight: var(--font-bolder-weight);
+  width: 50%;
+  min-width: 3rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: max(calc(var(--border-radius-base) / 2), 0.2rem);
+  box-shadow: inset 0 0 0 0.1rem rgba(var(--color-aux-border));
+}
+
+.countdown-value:empty {
+  display: none;
+}
+
+.countdown-item-label {
+  color: currentColor;
+  opacity: 0.75;
+  font-size: calc(var(--font-body-scale) * 1.2rem);
+}

@@ -1,0 +1,74 @@
+{% comment %}
+  Renders the product's "Stock bar" block.
+
+  Accepts:
+  - product: {Object} The product.
+  - block: {Object} The block.
+  - block_settings: {Object} The block's block_settings.
+
+  Usage:
+  {% render 'main-product-stock-bar', product: product, block_settings: block.settings, block: block %}
+{% endcomment %}
+
+{% liquid
+  assign variant = product.selected_or_first_available_variant
+
+  # theme-check-disable-next-line VariableName
+  assign preorderSuffixArray = product.template_suffix | split: 'pre-order-'
+  assign is_pre_order = false
+  if product.template_suffix != blank and preorderSuffixArray[0] == blank or product.template_suffix == 'pre-order'
+    assign is_pre_order = true
+  endif
+
+  assign stock_status = 'in'
+  assign stock_message = block_settings.text_in_stock
+
+  if is_pre_order and variant.inventory_policy == 'continue' or variant.inventory_management == null
+    assign stock_status = 'preorder'
+    assign stock_message = block_settings.text_preorder
+  elsif variant.inventory_policy == 'continue' and variant.inventory_quantity <= 0 and variant.inventory_management != null
+    assign stock_status = 'backorder'
+    assign stock_message = block_settings.text_on_backorder
+  elsif variant.inventory_policy == 'continue' and variant.inventory_quantity > 0
+    assign stock_status = 'in'
+    assign stock_message = block_settings.text_in_stock
+  elsif variant.inventory_policy == 'continue' or variant.inventory_management == null
+    assign stock_status = 'in'
+    assign stock_message = block_settings.text_in_stock
+  else
+    if variant.available == false
+      assign stock_status = 'out'
+      assign stock_message = block_settings.text_out_of_stock
+    else
+      if settings.only_x_left >= 1 and variant.inventory_quantity <= settings.only_x_left
+        assign stock_status = 'warning'
+        assign stock_message = block_settings.text_low_inventory
+      else
+        assign stock_status = 'in'
+        assign stock_message = block_settings.text_in_stock
+      endif
+    endif
+  endif
+%}
+
+<div
+  id="ProductStockBar-{{ section.id }}"
+  class="product-stock-bar-block"
+>
+  <div class="stock-bar stock-bar-status-{{ stock_status }}">
+    <div class="stock-bar-status-wrap">
+      <div class="stock-bar-status">
+        {% render 'product-availability', product: product %}
+      </div>
+      {% if stock_message != blank %}
+        <div class="stock-bar-status-caption">
+          {{ stock_message }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="stock-bar-progress-bar">
+      <div class="stock-bar-progress"></div>
+    </div>
+  </div>
+</div>

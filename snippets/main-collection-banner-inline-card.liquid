@@ -1,0 +1,79 @@
+{% comment %}
+  Renders a customizable inline collection banner.
+
+  Accepts:
+  - section: {Object} Required. The section object.
+  - block: {Object} Required. The block object.
+  - lazyload: {Boolean} Whether the image should be lazy loaded or not.
+{% endcomment %}
+
+{% liquid
+  assign loading = 'eager'
+  if lazyload == true
+    assign loading = 'lazy'
+  endif
+%}
+
+{% if block.settings.overlay_background != blank %}
+  <style>
+    #shopify-section-{{ section.id }} .collection-banner-inline-card-{{ block.id }}::after {
+    	background: {{ block.settings.overlay_background }};
+    }
+  </style>
+{% endif %}
+
+{% capture image_sizes %}
+	{% if settings.products_two_column_mobile %}
+		(min-width: 1200px) 720px, (min-width: 750px) calc((100vw - 4rem - 3rem) / 3), calc((100vw - 3rem - 1rem) / 2)
+	{% else %}
+		(min-width: 1200px) 720px, (min-width: 750px) calc((100vw - 4rem - 3rem) / 3), calc(100vw - 3rem - 1rem)
+	{% endif %}
+{% endcapture %}
+
+<div
+  class="collection-banner-inline-card collection-banner-inline-card-{{ block.id }} color-{{ block.settings.color_scheme }}"
+  {{ block.shopify_attributes }}
+>
+  {% if block.settings.heading != empty
+    or block.settings.text != empty
+    or block.settings.link_title != empty
+  %}
+    <div class="collection-banner-inline-card-content">
+      {% if block.settings.heading != empty %}
+        <h3 class="collection-banner-inline-card-heading">
+          {{ block.settings.heading }}
+        </h3>
+      {% endif %}
+
+      {% if block.settings.text != empty %}
+        <div class="collection-banner-inline-card-caption">
+          {{ block.settings.text }}
+        </div>
+      {% endif %}
+
+      {% if block.settings.link_title != empty %}
+        <a
+          href="{{ block.settings.link_url }}"
+          class="button"
+          {% if block.settings.link_url == blank %}
+            aria-disabled="true"
+          {% endif %}
+        >
+          {{- block.settings.link_title -}}
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if block.settings.image %}
+    {{
+      block.settings.image
+      | image_url: width: 1440
+      | image_tag:
+        class: 'collection-banner-inline-card-media',
+        widths: '550, 720, 1100, 1240, 1440',
+        sizes: image_sizes,
+        loading: loading
+    }}
+  {% endif %}
+</div>

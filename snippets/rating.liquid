@@ -1,0 +1,71 @@
+{% comment %}
+  Renders the product's star rating.
+
+  Accepts:
+  - product: {Object} Product object
+  - new_window: {Boolean} Optional. Opens the link in a new window.
+
+  Usage:
+  {% render 'rating' product: product %}
+{% endcomment %}
+
+{% liquid
+  assign reviews = product.metafields.reviews
+  assign rating_integer = reviews.rating.value.rating | floor
+  assign decimal = reviews.rating.value.rating | modulo: 1
+  assign rating_decimal = 0
+  if decimal >= 0.3 and decimal <= 0.7
+    assign rating_decimal = 0.5
+  elsif decimal > 0.7
+    assign rating_decimal = 1
+  endif
+%}
+
+<a
+  href="{{ product.url }}#product-reviews"
+  class="product-info-meta-review-link star-rating-link star-rating-badge"
+  data-average-rating="{% if reviews.rating.value.rating %}{{ reviews.rating.value.rating }}{% else %}0.0{% endif %}"
+  {% if new_window == true %}
+    target="_blank"
+  {% endif %}
+>
+  <div class="rating">
+    <div
+      class="rating-stars"
+      role="img"
+      aria-label="{{ 'accessibility.star_reviews_info' | t: rating_value: reviews.rating.value.rating, rating_max: reviews.rating.value.scale_max }}"
+    >
+      {% liquid
+        if reviews.rating.value.rating
+          for full in (reviews.rating.value.scale_min..rating_integer)
+            render 'rating-star-full'
+          endfor
+          assign rating_integer = rating_integer | plus: 1
+
+          if rating_decimal == 0.5
+            render 'rating-star-half'
+            assign rating_integer = rating_integer | plus: 1
+          elsif rating_decimal == 1
+            render 'rating-star-full'
+            assign rating_integer = rating_integer | plus: 1
+          endif
+
+          for star_empty in (rating_integer..reviews.rating.value.scale_max)
+            render 'rating-star-empty'
+          endfor
+        else
+          for empty in (1..5)
+            render 'rating-star-empty'
+          endfor
+        endif
+      %}
+    </div>
+    <span class="rating-caption">
+      {% if reviews.rating_count %}
+        ({{ reviews.rating_count }})
+      {% else %}
+        (0)
+      {% endif %}
+    </span>
+  </div>
+</a>

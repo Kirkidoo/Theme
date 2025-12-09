@@ -1,0 +1,142 @@
+/* Section - Newsletter
+=================================== */
+.newsletter-wrapper {
+  background-color: rgba(var(--color-background));
+  color: rgba(var(--color-foreground));
+  border-top: 0.1rem solid rgba(var(--color-border));
+  border-bottom: 0.1rem solid rgba(var(--color-border));
+}
+
+.newsletter {
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 990px) {
+  .newsletter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0;
+  }
+}
+
+.newsletter-content {
+  text-align: center;
+}
+
+@media (min-width: 990px) {
+  .newsletter-content {
+    display: flex;
+    align-items: flex-start;
+    text-align: start;
+    line-height: normal;
+    margin-inline-end: 4rem;
+    max-width: 50%;
+  }
+}
+
+.newsletter-content p {
+  margin: 0 0 1rem;
+}
+
+.newsletter-content p:last-child {
+  margin-bottom: 0;
+}
+
+.newsletter-title {
+  color: rgba(var(--color-foreground-alt));
+  margin: 0;
+}
+
+.newsletter-icon {
+  width: 5.2rem;
+  height: 5.2rem;
+  display: block;
+  margin: auto;
+  position: relative;
+}
+
+.newsletter-icon svg {
+  width: 100%;
+  height: 100%;
+  color: rgba(var(--color-accent-2));
+}
+
+@media (min-width: 990px) {
+  .newsletter-icon {
+    flex: none;
+    margin-block: 0;
+    margin-inline-end: 1rem;
+    margin-inline-start: 0;
+    top: -0.2rem;
+  }
+}
+
+.newsletter-form {
+  position: relative;
+  margin: 1rem auto 0;
+  flex: none;
+}
+
+.newsletter-form [type="email"] {
+  height: 4.7rem;
+}
+
+.newsletter-form [type="email"],
+.newsletter-form [type="email"]:focus,
+.newsletter-form [type="email"]:hover {
+  box-shadow: none;
+  border-radius: var(--border-radius-base);
+}
+
+.newsletter-form [type="submit"] {
+  position: absolute;
+  inset-inline-end: 4px;
+  inset-block-start: 4px;
+  height: calc(100% - 8px);
+  min-height: 0;
+  min-width: 0;
+  border-radius: calc(var(--border-radius-base) - 2px);
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+}
+
+.newsletter-form .form-status {
+  margin: 1rem 0 0;
+}
+
+@media (min-width: 990px) {
+  .newsletter-form {
+    margin: 0;
+    flex: auto;
+  }
+}
+
+@media (min-width: 750px) {
+  .newsletter-form {
+    flex: auto;
+    max-width: 40rem;
+  }
+}
+
+.newsletter-form-input-wrap {
+  position: relative;
+  border-radius: var(--border-radius-base);
+}
+
+.checkbox-newsletter-consent {
+  margin: 1rem 0 0;
+  display: flex;
+  gap: 0.5em;
+}
+
+.checkbox-newsletter-consent [type="checkbox"] {
+  margin: 0;
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  accent-color: auto;
+}
+
+.newsletter-form-success-title {
+  margin: 0;
+}

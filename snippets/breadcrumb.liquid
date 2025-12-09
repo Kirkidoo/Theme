@@ -1,0 +1,207 @@
+{% doc %}
+  Renders the breadcrumbs.
+  @param {boolean} separator - Default: '&raquo;'.
+  @param {boolean} show_product_collection - Whether single products should show a collection breadcrumb. Default: false.
+  @param {boolean} show_preview_note - Whether to display the preview note in design mode. Default: false.
+  @example
+  {% render 'breadcrumb', separator: '→' %}
+{% enddoc %}
+{% liquid
+  if separator == blank
+    assign separator = '&raquo;'
+  endif
+
+  if show_product_collection == null
+    assign show_product_collection = false
+  endif
+%}
+{{ 'component-breadcrumb.css' | asset_url | stylesheet_tag }}
+
+{% if template == 'index'
+  or template == 'cart'
+  or template == 'list-collections'
+  or template == '404'
+  or template == 'password'
+%}
+  {% if request.design_mode and show_preview_note %}
+    <div class="breadcrumb">
+      <div class="container">
+        <span class="section-breadcrumbs-editor-hidden-note-preview">
+          {{ 'sections.breadcrumbs.hidden_note_preview_breadcrumbs' | t }}
+        </span>
+      </div>
+    </div>
+  {% endif %}
+{% else %}
+  <div class="breadcrumb">
+    <div class="container">
+      <a href="{{ routes.root_url }}">{{ 'templates.home.title' | t }}</a>
+      {% case template.name %}
+        {% when 'product' %}
+          {% if show_product_collection == true %}
+            {% if collection.url %}
+              <span class="breadcrumb-separator">{{ separator }}</span>
+              <span class="breadcrumb-item">{{ collection.title | link_to: collection.url }}</span>
+            {% elsif product.collections.first.url %}
+              <span class="breadcrumb-separator">{{ separator }}</span>
+              <span class="breadcrumb-item">
+                {{- product.collections.first.title | link_to: product.collections.first.url -}}
+              </span>
+            {% endif %}
+          {% endif %}
+
+          <span class="breadcrumb-separator">{{ separator }}</span>
+          <span class="breadcrumb-item">{{ product.title }}</span>
+        {%- when 'page' -%}
+          <span class="breadcrumb-separator">{{ separator }}</span>
+          <span class="breadcrumb-item">{{ page.title }}</span>
+        {%- when 'collection' -%}
+          <span class="breadcrumb-separator">{{ separator }}</span>
+          <span class="breadcrumb-item">{{ collection.title | link_to: collection.url }}</span>
+          {%- if current_tags -%}
+            <span class="breadcrumb-separator">{{ separator }}</span>
+            {%- capture tag_url -%}{{ collection.url }}/{{ current_tags | join: "+" }}{%- endcapture -%}
+            <span class="breadcrumb-item">
+              <a href="{{ tag_url }}">
+                {{- current_tags | join: ' + ' | replace: '-', ' ' | capitalize -}}
+              </a>
+            </span>
+          {%- endif -%}
+        {%- when 'blog' -%}
+          {%- if current_tags -%}
+            <span class="breadcrumb-separator">{{ separator }}</span>
+            <span class="breadcrumb-item">{{ blog.title | link_to: blog.url }}</span>
+
+            <span class="breadcrumb-separator">{{ separator }}</span>
+            {%- capture tag_url -%}{{ blog.url }}/tagged/{{ current_tags | join: "+" }}{%- endcapture -%}
+            <span class="breadcrumb-item">
+              <a href="{{ tag_url }}">
+                {{- current_tags | join: ' + ' | replace: '-', ' ' | capitalize -}}
+              </a>
+            </span>
+          {%- else -%}
+            <span class="breadcrumb-separator">{{ separator }}</span>
+            <span class="breadcrumb-item">{{ blog.title }}</span>
+          {%- endif -%}
+        {%- when 'article' -%}
+          <span class="breadcrumb-separator">{{ separator }}</span>
+          <span class="breadcrumb-item">{{ blog.title | link_to: blog.url }}</span>
+
+          <span class="breadcrumb-separator">{{ separator }}</span>
+          <span class="breadcrumb-item">{{ article.title }}</span>
+        {%- when 'search' -%}
+          <span class="breadcrumb-separator">{{ separator }}</span>
+          <span class="breadcrumb-item">{{ 'templates.search.title' | t }}</span>
+        {%- else -%}
+          <span class="breadcrumb-separator">{{ separator }}</span>
+          <span class="breadcrumb-item">{{ page_title }}</span>
+      {% endcase %}
+    </div>
+  </div>
+  <script type="application/ld+json">
+      {
+      	"@context": "https://schema.org",
+      	"@type": "BreadcrumbList",
+      	"itemListElement": [
+      		{
+      			"@type": "ListItem",
+      			"position": 1,
+      			"name": {{ 'templates.home.title' | t | json }},
+      			"item": {{ shop.url | append: routes.root_url | json }}
+      },
+      {% case template.name %}
+        {% when 'product' %}
+          {% if collection.url %}
+      					{
+      						"@type": "ListItem",
+      						"position": 2,
+      						"name": {{ collection.title | json }},
+      						"item": {{ shop.url | append: collection.url | json }}
+      					},
+      					{
+      						"@type": "ListItem",
+      						"position": 3,
+      						"name": {{ product.title | json }}
+      					}
+      				{% else %}
+      					{
+      						"@type": "ListItem",
+      						"position": 2,
+      						"name": {{ product.title | json }}
+      					}
+      				{% endif %}
+        {%- when 'page' -%}
+      				{
+      					"@type": "ListItem",
+      					"position": 2,
+      					"name": {{ page.title | json }}
+      				}
+      			{%- when 'collection' -%}
+        {%- if current_tags -%}
+      					{
+      						"@type": "ListItem",
+      						"position": 2,
+      						"name": {{ collection.title | json }},
+      						"item": {{ shop.url | append: collection.url | json }}
+      					},
+      					{
+      						"@type": "ListItem",
+      						"position": 3,
+      						"name": {{ current_tags | join: " + " | replace: '-', ' ' | capitalize | json }}
+      					}
+      				{%- else -%}
+      					{
+      						"@type": "ListItem",
+      						"position": 2,
+      						"name": {{ collection.title | json }}
+      					}
+      				{%- endif -%}
+        {%- when 'blog' -%}
+          {%- if current_tags -%}
+      					{
+      						"@type": "ListItem",
+      						"position": 2,
+      						"name": {{ blog.title | json }},
+      						"item": {{ shop.url | append: blog.url | json }}
+      					},
+      					{
+      						"@type": "ListItem",
+      						"position": 3,
+      						"name": {{ current_tags | join: " + " | replace: '-', ' ' | capitalize | json }}
+      					}
+      				{%- else -%}
+      					{
+      						"@type": "ListItem",
+      						"position": 2,
+      						"name": {{ blog.title | json }}
+      					}
+      				{%- endif -%}
+        {%- when 'article' -%}
+      				{
+      					"@type": "ListItem",
+      					"position": 2,
+      					"name": {{ blog.title | json }},
+      					"item": {{ shop.url | append: blog.url | json }}
+      				},
+      				{
+      					"@type": "ListItem",
+      					"position": 3,
+      					"name": {{ article.title | json }}
+      				}
+      			{%- when 'search' -%}
+      				{
+      					"@type": "ListItem",
+      					"position": 2,
+      					"name": {{ 'templates.search.title' | t | json }}
+      				}
+      			{%- else -%}
+      				{
+      					"@type": "ListItem",
+      					"position": 2,
+      					"name": {{ page_title | json }}
+      				}
+      		{% endcase %}
+      ]
+    }
+  </script>
+{% endif %}

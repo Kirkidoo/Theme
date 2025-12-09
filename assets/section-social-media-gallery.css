@@ -1,0 +1,48 @@
+/* Section - Social media gallery
+========================================= */
+
+.card-social-image {
+  position: relative;
+  background-color: color-mix(in srgb, rgba(var(--color-foreground)), transparent 95%);
+  border-radius: var(--border-radius-base);
+}
+
+.card-social-image a {
+  display: block;
+}
+
+.card-social-image img {
+  border-radius: var(--border-radius-base);
+}
+
+.card-social-image .placeholder-svg {
+  fill: currentColor;
+}
+
+.card-social-image-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  width: 4.8rem;
+  height: 4.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.card-social-image:hover .card-social-image-icon {
+  opacity: 1;
+}
+
+.card-social-image-icon svg {
+  width: 3.2rem;
+  height: 3.2rem;
+  color: var(--color-base-white);
+}

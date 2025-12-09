@@ -1,0 +1,431 @@
+{{ 'section-footer.css' | asset_url | stylesheet_tag }}
+
+{% if section.settings.background_image != blank %}
+  <style>
+    .footer-background-image {
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-image: url({{ section.settings.background_image | image_url: width: 1920 }});
+    }
+
+    {% liquid
+      assign color_scheme = section.settings.color_scheme
+      assign color_scheme_settings = color_scheme.settings
+      assign background_color = color_scheme_settings.background
+      assign background_color_red = background_color.red
+      assign background_color_green = background_color.green
+      assign background_color_blue = background_color.blue
+      assign background_overlay_opacity = section.settings.background_overlay_opacity | divided_by: 100.0
+    %}
+
+    .footer-background-image .color-{{ section.settings.color_scheme }} {
+      background-color: rgba({{ background_color_red }} {{ background_color_green }} {{ background_color_blue }} / {{ background_overlay_opacity }});
+    }
+  </style>
+{% endif %}
+
+{% if settings.button_top_enabled %}
+  <script src="{{ 'button-top.js' | asset_url }}" defer="defer"></script>
+  <link
+    rel="stylesheet"
+    href="{{ 'component-button-top.css' | asset_url }}"
+    media="print"
+    onload="this.media='all'"
+  >
+{% endif %}
+
+{% if section.settings.background_image != blank %}
+  <div class="footer-background-image">
+{% endif %}
+
+{% if section.blocks %}
+  <div class="color-{{ section.settings.color_scheme }}">
+    <div class="container">
+      <div class="footer-blocks-wrapper grid grid-1-col grid-{{ section.blocks.size }}-col-tablet">
+        {% for block in section.blocks %}
+          <div class="grid-item" {{ block.shopify_attributes }}>
+            {% if block.settings.title != blank %}
+              <h3 class="widget-title">{{ block.settings.title | escape }}</h3>
+            {% endif %}
+
+            {%- case block.type -%}
+              {% when 'menu' %}
+                {%- if block.settings.menu != blank -%}
+                  <ul class="list-unstyled">
+                    {%- for link in block.settings.menu.links -%}
+                      <li>
+                        <a
+                          href="{{ link.url }}"
+                          class="link-text {% if link.current %} current {% endif %}"
+                          {% if link.current %}
+                            aria-current="page"
+                          {% endif %}
+                        >
+                          {{ link.title | escape }}
+                        </a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              {% when 'text' %}
+                {% if block.settings.image != blank %}
+                  {%- assign image_size = block.settings.image_width -%}
+                  {%- assign image_size2 = block.settings.image_width | times: 2 -%}
+                  <style>
+                    .widget-media-{{ block.id }} { max-width: {{ block.settings.image_width }}px; }
+                  </style>
+                  <figure class="widget-media widget-media-{{ block.id }}">
+                    {% if block.settings.link %}
+                      <a href="{{ block.settings.link }}">
+                    {% endif %}
+                    <img
+                      src="{{ block.settings.image | image_url: width: image_size }}"
+                      alt="{{ block.settings.image.alt | escape }}"
+                      width="{{ block.settings.image.width }}"
+                      height="{{ block.settings.image.height }}"
+                      srcset="{{ block.settings.image | image_url: width: image_size }} 1x, {{ block.settings.image | image_url: width: image_size2 }} 2x"
+                      loading="lazy"
+                    >
+                    {% if block.settings.link %}
+                      </a>
+                    {% endif %}
+                  </figure>
+                {% endif %}
+
+                {% if block.settings.text != blank %}
+                  <div class="rte">
+                    {{ block.settings.text }}
+                  </div>
+                {% endif %}
+
+              {%- when 'custom_liquid' -%}
+                <div {{ block.shopify_attributes }}>
+                  {{ block.settings.custom_liquid }}
+                </div>
+            {% endcase %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% liquid
+  assign show_pre_info = false
+  if section.settings.show_social
+    assign show_pre_info = true
+  endif
+
+  if section.settings.enable_language_selector and localization.available_languages.size > 1
+    assign show_pre_info = true
+  endif
+  if section.settings.enable_country_selector and localization.available_countries.size > 1
+    assign show_pre_info = true
+  endif
+
+  assign should_center = false
+  unless section.settings.show_social
+    assign should_center = true
+  endunless
+
+  unless section.settings.enable_language_selector or section.settings.enable_country_selector
+    assign should_center = true
+  endunless
+%}
+
+{%- if show_pre_info -%}
+  <div class="footer-pre-info-wrapper color-{{ section.settings.color_scheme }}">
+    <div class="container">
+      <div class="footer-pre-info-content{% if should_center %} footer-pre-info-content-centered{% endif %}">
+        {% if section.settings.show_social %}
+          <div class="footer-social-links-wrap">
+            {% render 'social-media-icons', colored: section.settings.show_colored_icons %}
+          </div>
+        {% endif %}
+
+        <div class="footer-lang-region">
+          {%- if section.settings.enable_language_selector
+            and localization.available_languages.size > 1
+          -%}
+            <div>
+              {%- render 'dropdown-language',
+                classname: 'dropdown-right dropdown-up',
+                id: 'Footer'
+              -%}
+            </div>
+          {%- endif -%}
+
+          {%- if section.settings.enable_country_selector
+            and localization.available_countries.size > 1
+          -%}
+            <div>
+              {%- render 'dropdown-region',
+                classname: 'dropdown-right dropdown-up',
+                id: 'Footer'
+              -%}
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+<div class="footer-info-wrapper color-{{ section.settings.color_scheme }}">
+  <div class="container">
+    <div class="footer-info">
+      <div class="footer-info-start">
+        &copy; {{ 'now' | date: '%Y' }}, {{ shop.name | link_to: routes.root_url }} -
+        {{ powered_by_link }}
+
+        {% if section.settings.footer_links != blank %}
+          <ul class="footer-info-links">
+            {% for link in section.settings.footer_links.links %}
+              <li>
+                <a href="{{ link.url }}" title="{{ link.title }}">{{ link.title }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      {%- if section.settings.payment_enable -%}
+        <div class="footer-info-end">
+          <span class="visually-hidden">{{ 'sections.footer.payment' | t }}</span>
+          <ul class="list-inline-menu list-payment" role="list">
+            {%- for type in shop.enabled_payment_types -%}
+              <li class="list-payment-item">
+                {{ type | payment_type_svg_tag: class: 'icon' }}
+              </li>
+            {%- endfor -%}
+          </ul>
+
+          {%- if shop.features.follow_on_shop? and section.settings.enable_follow_on_shop -%}
+            <div class="footer-follow-on-shop">
+              {{ shop | login_button: action: 'follow' }}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{% if section.settings.background_image != blank %}
+  </div>
+{% endif %}
+
+{% if settings.button_top_enabled %}
+  <button-top>
+    <button
+      id="ButtonBackToTop"
+      type="button"
+      class="button-top color-background-1"
+      aria-label="{{ 'general.button_top' | t }}"
+    >
+      {% render 'icons', icon: 'arrow-up' %}
+      <span class="visually-hidden">{{ 'general.button_top' | t }}</span>
+    </button>
+  </button-top>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:sections.footer.name",
+    "class": "section-footer",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "payment_enable",
+        "default": true,
+        "label": "t:sections.footer.settings.payment_enable.label"
+      },
+      {
+        "type": "link_list",
+        "id": "footer_links",
+        "label": "t:sections.footer.settings.footer_links.label",
+        "info": "t:sections.footer.settings.footer_links.info"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.localization_forms.header_language_selector.content",
+        "info": "t:sections.all.localization_forms.header_language_selector.info"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_language_selector",
+        "default": false,
+        "label": "t:sections.all.localization_forms.enable_language_selector.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.localization_forms.header_country_selector.content",
+        "info": "t:sections.all.localization_forms.header_country_selector.info"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_country_selector",
+        "default": false,
+        "label": "t:sections.all.localization_forms.enable_country_selector.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_country_selector_flag",
+        "default": false,
+        "label": "t:sections.all.localization_forms.enable_country_selector_flag.label",
+        "visible_if": "{{ section.settings.enable_country_selector }}"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.social_media_icons.heading.content",
+        "info": "t:sections.all.social_media_icons.heading.info"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_social",
+        "default": false,
+        "label": "t:sections.all.social_media_icons.show_social.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_colored_icons",
+        "default": false,
+        "label": "t:sections.footer.settings.show_colored_icons.label",
+        "info": "t:sections.footer.settings.show_colored_icons.info",
+        "visible_if": "{{ section.settings.show_social }}"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.footer.settings.header_1.content",
+        "info": "t:sections.footer.settings.header_1.info"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_follow_on_shop",
+        "default": true,
+        "label": "t:sections.footer.settings.enable_follow_on_shop.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-2"
+      },
+      {
+        "type": "image_picker",
+        "id": "background_image",
+        "label": "t:sections.footer.settings.background_image.label"
+      },
+      {
+        "type": "range",
+        "id": "background_overlay_opacity",
+        "min": 0,
+        "max": 100,
+        "step": 5,
+        "default": 80,
+        "unit": "%",
+        "label": "t:sections.footer.settings.background_overlay_opacity.label",
+        "info": "t:sections.footer.settings.background_overlay_opacity.info",
+        "visible_if": "{{ section.settings.background_image }}"
+      }
+    ],
+    "max_blocks": 4,
+    "blocks": [
+      {
+        "type": "menu",
+        "name": "t:sections.footer.blocks.menu.name",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "t:sections.footer.blocks.menu.settings.title.label",
+            "default": "Optional title"
+          },
+          {
+            "type": "link_list",
+            "id": "menu",
+            "label": "t:sections.footer.blocks.menu.settings.menu.label",
+            "default": "footer"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "name": "t:sections.footer.blocks.text.name",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "t:sections.footer.blocks.text.settings.title.label",
+            "default": "Optional title"
+          },
+          {
+            "id": "image",
+            "label": "t:sections.footer.blocks.text.settings.image.label",
+            "type": "image_picker"
+          },
+          {
+            "type": "url",
+            "id": "link",
+            "label": "t:sections.footer.blocks.text.settings.link.label"
+          },
+          {
+            "type": "range",
+            "id": "image_width",
+            "min": 50,
+            "max": 340,
+            "step": 10,
+            "default": 340,
+            "unit": "px",
+            "label": "t:sections.footer.blocks.text.settings.image_width.label"
+          },
+          {
+            "type": "richtext",
+            "id": "text",
+            "label": "t:sections.footer.blocks.text.settings.text.label",
+            "default": "<p>Share information such as the store's physical address, contact details, opening hours, etc.</p>"
+          }
+        ]
+      },
+      {
+        "type": "custom_liquid",
+        "name": "t:sections.all.custom_liquid.name",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "t:sections.footer.blocks.custom_liquid.settings.title.label",
+            "default": "Optional title"
+          },
+          {
+            "type": "liquid",
+            "id": "custom_liquid",
+            "label": "t:sections.all.custom_liquid.custom_liquid.label",
+            "info": "t:sections.all.custom_liquid.custom_liquid.info"
+          }
+        ]
+      }
+    ],
+    "default": {
+      "blocks": [
+        {
+          "type": "text"
+        },
+        {
+          "type": "menu"
+        },
+        {
+          "type": "menu"
+        },
+        {
+          "type": "text"
+        }
+      ]
+    }
+  }
+{% endschema %}

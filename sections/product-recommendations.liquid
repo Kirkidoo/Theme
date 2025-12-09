@@ -1,0 +1,320 @@
+<link
+  rel="stylesheet"
+  href="{{ 'component-card.css' | asset_url }}"
+  media="print"
+  onload="this.media='all'"
+>
+<link
+  rel="stylesheet"
+  href="{{ 'component-price.css' | asset_url }}"
+  media="print"
+  onload="this.media='all'"
+>
+<link
+  rel="stylesheet"
+  href="{{ 'component-scroller.css' | asset_url }}"
+  media="print"
+  onload="this.media='all'"
+>
+<link
+  rel="stylesheet"
+  href="{{ 'component-rating.css' | asset_url }}"
+  media="print"
+  onload="this.media='all'"
+>
+
+<script src="{{ 'product-recommendations.js' | asset_url }}" defer="defer"></script>
+
+{% if section.settings.show %}
+  {% liquid
+    assign color_scheme_string = section.settings.color_scheme | append: ''
+    assign section_content_class = 'section-content'
+    unless color_scheme_string == 'background-1'
+      assign section_content_class = section_content_class | append: ' section-content-padded'
+    endunless
+
+    assign mobile_two_columns = false
+    if section.settings.mobile_columns == '2'
+      assign mobile_two_columns = true
+    endif
+
+    assign layout_classes = 'grid'
+
+    if mobile_two_columns
+      assign layout_classes = layout_classes | append: ' product-grid grid-2-col'
+    endif
+
+    case recommendations.products_count
+      when 1
+        assign layout_classes = layout_classes | append: ' grid-1-col grid-2-col-tablet grid-4-col-desktop'
+      when 2
+        assign layout_classes = layout_classes | append: ' grid-2-col-tablet grid-4-col-desktop'
+      when 3
+        assign layout_classes = layout_classes | append: ' grid-3-col-tablet grid-3-col-desktop'
+      when 4
+        assign layout_classes = layout_classes | append: ' grid-3-col-tablet grid-4-col-desktop'
+      when 5
+        assign layout_classes = layout_classes | append: ' grid-3-col-tablet grid-5-col-desktop grid-compact'
+    endcase
+  %}
+
+  <style>
+    #shopify-section-{{ section.id }} .section-content {
+      margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+      margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    #shopify-section-{{ section.id }} .section-content-padded {
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+      padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    @media (min-width: 990px) {
+      #shopify-section-{{ section.id }} .section-content {
+        margin-top: {{ section.settings.spacing_top }}px;
+        margin-bottom: {{ section.settings.spacing_bottom }}px;
+      }
+
+      #shopify-section-{{ section.id }} .section-content-padded {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: {{ section.settings.spacing_top }}px;
+        padding-bottom: {{ section.settings.spacing_bottom }}px;
+      }
+    }
+  </style>
+
+  <div class="color-{{ section.settings.color_scheme }}">
+    <div class="container">
+      <div class="{{ section_content_class }}">
+        <product-recommendations
+          class="product-recommendations"
+          data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ section.settings.count }}"
+        >
+          {% if recommendations.performed and recommendations.products_count > 0 %}
+            {% if section.settings.title != blank %}
+              <div class="section-headings">
+                <div class="section-headings-content{% if section.settings.headings_alignment == 'center' %} center-aligned{% endif %}">
+                  <{{ section.settings.heading_tag }} class="section-heading heading-size-{{ section.settings.heading_size }}">
+                    {{- section.settings.title -}}
+                  </{{ section.settings.heading_tag }}>
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="scroller">
+              <div class="scroller-inner">
+                <ul class="{{ layout_classes }}">
+                  {%- for recommendation in recommendations.products -%}
+                    <li class="grid-item">
+                      {% render 'card-product',
+                        card_product: recommendation,
+                        show_vendor: section.settings.show_vendor,
+                        show_stock: section.settings.show_stock,
+                        show_rating: section.settings.show_rating,
+                        show_sku: section.settings.show_sku,
+                        show_add_to_cart: settings.products_show_add_to_cart,
+                        event_context: 'ProductRecommendations',
+                        lazyload: true,
+                        mobile_two_columns: mobile_two_columns
+                      %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          {% endif %}
+        </product-recommendations>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:sections.product_recommendations.name",
+    "tag": "section",
+    "class": "product-info-recommendations",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show",
+        "label": "t:sections.product_recommendations.settings.show.label",
+        "default": true
+      },
+      {
+        "type": "inline_richtext",
+        "id": "title",
+        "label": "t:sections.product_recommendations.settings.title.label",
+        "default": "Related products"
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:sections.all.heading_size.label",
+        "default": "md",
+        "options": [
+          {
+            "value": "sm",
+            "label": "t:sections.all.heading_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.heading_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.heading_size.options.label_lg"
+          },
+          {
+            "value": "xl",
+            "label": "t:sections.all.heading_size.options.label_xl"
+          },
+          {
+            "value": "xxl",
+            "label": "t:sections.all.heading_size.options.label_xxl"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "headings_alignment",
+        "label": "t:sections.all.headings_alignment.label",
+        "default": "left",
+        "options": [
+          {
+            "value": "left",
+            "label": "t:sections.all.headings_alignment.options.label_left"
+          },
+          {
+            "value": "center",
+            "label": "t:sections.all.headings_alignment.options.label_center"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "count",
+        "label": "t:sections.product_recommendations.settings.count.label",
+        "default": "4",
+        "options": [
+          {
+            "label": "3",
+            "value": "3"
+          },
+          {
+            "label": "4",
+            "value": "4"
+          },
+          {
+            "label": "5",
+            "value": "5"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "mobile_columns",
+        "label": "t:sections.all.layout.mobile_columns.label",
+        "default": "1",
+        "options": [
+          {
+            "value": "1",
+            "label": "1"
+          },
+          {
+            "value": "2",
+            "label": "2"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.product_recommendations.settings.header_1.content"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_vendor",
+        "default": true,
+        "label": "t:sections.all.product.show_vendor.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_sku",
+        "default": false,
+        "label": "t:sections.all.product.show_sku.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_stock",
+        "default": true,
+        "label": "t:sections.all.product.show_stock.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_rating",
+        "default": false,
+        "label": "t:sections.all.product.show_rating.label",
+        "info": "t:sections.all.product.show_rating.info"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.seo_heading.label"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "default": "h2",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

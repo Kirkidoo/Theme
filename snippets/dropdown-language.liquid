@@ -1,0 +1,51 @@
+{% comment %}
+  Renders the language dropdown
+
+  Accepts:
+  - id: {String} Form id suffix. Optional
+  - classname: {String} Additional dropdown classes. Optional
+
+  Usage:
+  {% render 'collection-language' %}
+{% endcomment %}
+
+{{ 'component-dropdown.css' | asset_url | stylesheet_tag }}
+
+<localization-form>
+  {%- assign form_id = 'HeaderLanguageForm' | append: id -%}
+  {%- form 'localization', id: form_id, class: 'localization-form' -%}
+    <div class="dropdown {{ classname }}">
+      <h2 class="visually-hidden" id="HeaderLanguageLabel{{ id }}">
+        {{ 'localization.language_label' | t }}
+      </h2>
+      <button
+        class="dropdown-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="HeaderLanguageList{{ id }}"
+        aria-describedby="HeaderLanguageLabel{{ id }}"
+      >
+        <span class="dropdown-toggle-label">{{ localization.language.iso_code }}</span>
+        {% render 'angle', direction: 'down' %}
+      </button>
+
+      <div class="dropdown-list-wrap color-background-1" aria-hidden="true">
+        <ul class="dropdown-list" id="HeaderLanguageList{{ id }}" role="list">
+          {%- for language in localization.available_languages -%}
+            <li class="dropdown-list-item">
+              <a
+                class="dropdown-list-option"
+                href="#"
+                data-value="{{ language.iso_code }}"
+              >
+                {{ language.endonym_name | capitalize }}
+              </a>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+
+      <input type="hidden" name="locale_code" value="{{ localization.language.iso_code }}">
+    </div>
+  {%- endform -%}
+</localization-form>

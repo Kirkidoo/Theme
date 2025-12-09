@@ -1,0 +1,144 @@
+{% comment %}
+  Renders a list of product's price (regular, sale)
+
+  Accepts:
+  - variant: {Object} Variant Liquid object (required)
+  - price_class: {String} Adds a price class to the price element (optional)
+  - compact_row: {Boolean} Renders a compact row price (optional)
+
+  Usage:
+  {% render 'price', product: product %}
+{% endcomment %}
+
+{%- liquid
+  assign compare_at_price = variant.compare_at_price
+  assign price = variant.price | default: 1999
+  assign available = variant.available | default: false
+  assign money_price = price | money
+  if settings.currency_code_enabled
+    assign money_price = price | money_with_currency
+  endif
+
+  assign cart_qty = cart | item_count_for_variant: variant.id
+
+  assign show_free = false
+  if price == 0 and settings.zero_price_mode == 'free' and variant.quantity_price_breaks.size == 0
+    assign show_free = true
+  endif
+-%}
+{% comment %}We use the `product: variant, use_variant: false` workaround here. See snippet for more info.{% endcomment %}
+{%- capture show_call_for_pricing -%}{%- render 'price-get-call-for-pricing', product: variant, use_variant: false -%}{%- endcapture -%}
+{%- assign show_call_for_pricing = show_call_for_pricing | strip -%}
+
+{% capture price_html %}
+  {% if variant.quantity_price_breaks.size > 0 %}
+    {% assign volume_pricing_array = variant.quantity_price_breaks
+      | sort: 'quantity'
+      | reverse
+    %}
+    <price-per-item
+      id="Price-Per-Item-{{ variant.id }}"
+      data-variant-id="{{ variant.id }}"
+    >
+      <div class="price-per-item">
+        {% if cart_qty < volume_pricing_array.last.minimum_quantity %}
+          <span class="price-per-item--current price">
+            {{ money_price }}
+          </span>
+        {% else %}
+          {% for price_break in volume_pricing_array %}
+            {% if cart_qty >= price_break.minimum_quantity %}
+              {% assign price_break_price = price_break.price | money %}
+              <span class="price-per-item--current price">
+                {{ price_break_price }}
+              </span>
+              {% break %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      </div>
+    </price-per-item>
+  {% else %}
+    {% if show_free %}
+      {{ settings.zero_price_free_text }}
+    {% else %}
+      {{ money_price }}
+    {% endif %}
+  {% endif %}
+{% endcapture %}
+
+{% if show_call_for_pricing == 'true' %}
+  <a
+    href="{{ settings.zero_price_call_link | escape }}"
+    class="button button-primary button-{{ settings.products_add_to_cart_style }} button-call-for-pricing {{ price_class | escape }}"
+  >
+    {{ settings.zero_price_call_text }}
+  </a>
+{% else %}
+  <div
+    class="
+      price
+      {%- if price_class %} {{ price_class }}{% endif -%}
+      {%- if available == false %} price-sold-out {% endif -%}
+      {%- if compare_at_price > price %} price-on-sale {% endif -%}
+    "
+  >
+    <div class="price-container">
+      <div class="price-regular">
+        <span class="visually-hidden">{{ 'products.product.price.regular_price' | t }}</span>
+        <span class="price-item price-item-regular">
+          {{ price_html }}
+
+          {% if show_free == false %}
+            {% if settings.price_tax_suffix and cart.taxes_included %}
+              <span class="sup">{{ settings.price_tax_suffix }}</span>
+            {% endif %}
+          {% endif %}
+        </span>
+      </div>
+
+      {% if compare_at_price > price %}
+        <div class="price-sale">
+          {% unless product.price_varies == false and product.compare_at_price_varies %}
+            <span class="visually-hidden">{{ 'products.product.price.regular_price' | t }}</span>
+            <span>
+              <s class="price-item price-item-regular">
+                {% if settings.currency_code_enabled %}
+                  {{ compare_at_price | money_with_currency }}
+                {% else %}
+                  {{ compare_at_price | money }}
+                {% endif %}
+              </s>
+            </span>
+          {% endunless %}
+
+          <span class="visually-hidden">{{ 'products.product.price.sale_price' | t }}</span>
+          <span class="price-item price-item-sale price-item-last">
+            {{ price_html }}
+
+            {% if show_free == false %}
+              {% if settings.price_tax_suffix and cart.taxes_included %}
+                <span class="sup">{{ settings.price_tax_suffix }}</span>
+              {% endif %}
+            {% endif %}
+          </span>
+        </div>
+      {% endif %}
+    </div>
+
+    {% unless variant.unit_price_measurement == null %}
+      <div class="unit-price">
+        <span class="visually-hidden">{{ 'products.product.price.unit_price' | t }}</span>
+        {{ variant.unit_price | money }}
+        <span aria-hidden="true">/</span>
+        <span class="visually-hidden">
+          &nbsp;{{ 'accessibility.unit_price_separator' | t }}&nbsp;
+        </span>
+        {%- if variant.unit_price_measurement.reference_value != 1 -%}
+          {{- variant.unit_price_measurement.reference_value -}}
+        {%- endif -%}
+        {{ variant.unit_price_measurement.reference_unit }}
+      </div>
+    {% endunless %}
+  </div>
+{% endif %}

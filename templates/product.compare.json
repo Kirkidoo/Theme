@@ -1,0 +1,32 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product-compare",
+      "blocks": {
+        "price": {
+          "type": "price",
+          "settings": {}
+        },
+        "vendor": {
+          "type": "vendor",
+          "settings": {}
+        },
+        "rating": {
+          "type": "rating",
+          "settings": {}
+        },
+        "stock_availability": {
+          "type": "stock_availability",
+          "settings": {}
+        },
+        "sku": {
+          "type": "sku",
+          "settings": {}
+        }
+      },
+      "block_order": ["price", "vendor", "rating", "sku", "stock_availability"],
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

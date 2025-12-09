@@ -1,0 +1,29 @@
+/* Component - Discounts
+================================ */
+.discounts-discount {
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+  display: flex;
+  align-items: center;
+  line-height: normal;
+  padding: 0;
+}
+
+.discounts-discount svg {
+  margin-right: 0.5rem;
+  width: 1.8rem;
+  color: rgba(var(--color-accent-2));
+}
+
+.discounts-discount-position {
+  justify-content: center;
+}
+
+.mini-cart-footer .discounts-discount-position {
+  justify-content: flex-end;
+}
+
+@media (min-width: 750px) {
+  .discounts-discount-position {
+    justify-content: flex-end;
+  }
+}

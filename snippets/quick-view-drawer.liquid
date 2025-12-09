@@ -1,0 +1,139 @@
+{{ 'component-drawer.css' | asset_url | stylesheet_tag }}
+
+<style>
+  .quick-view-drawer {
+    z-index: 1000;
+  }
+
+  .quick-view-drawer-open .quick-view-drawer,
+  [dir='rtl'] .quick-view-drawer-open .quick-view-drawer {
+    transform: translateX(0);
+  }
+
+  .quick-view-drawer {
+    width: 95vw;
+    max-width: 50rem;
+  }
+
+  .quick-view-drawer-content-inner .spinner {
+    position: absolute;
+    top: calc(50% - 16px);
+    left: calc(50% - 16px);
+  }
+
+  .product-quick-view-header {
+    display: flex;
+    gap: 1.5rem;
+    margin: 0 0 2.5rem;
+    border-bottom: 1px solid rgba(var(--color-border));
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .product-quick-view-header .product-media-wrapper {
+    margin: 0;
+    padding: 0;
+    width: 10rem;
+    flex: none;
+  }
+
+  .product-quick-view-header .product-media-main-wrapper {
+    padding: 0.5rem;
+  }
+
+  .product-quick-view-header .product-media-icon-enlarge {
+    display: none;
+  }
+
+  .product-quick-view-header .product-media-toggle {
+    cursor: auto;
+  }
+
+  .product-quick-view-header .product-info-view-more {
+    margin-top: 1.5rem;
+  }
+
+  .product-quick-view-header .product-info-view-more .button-text-link {
+    font-size: calc(var(--font-body-scale) * 1.4rem);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .product-quick-view-header .product-info-view-more .angle {
+    width: 0.75em;
+    height: 0.75em;
+  }
+
+  .product-quick-view-header .product-info-main {
+    padding: 0;
+    margin: 0;
+    border: 0;
+  }
+
+  .product-quick-view-header .product-info-heading {
+    font-size: calc(var(--font-heading-scale) * 1.8rem);
+  }
+
+  .quick-view-drawer .product-block-product-form {
+    margin: 0;
+  }
+
+  .quick-view-drawer-footer {
+    margin-top: 0;
+  }
+
+  .quick-view-drawer-footer:empty {
+    display: none;
+  }
+
+  .quick-view-drawer-header.drawer-header:focus {
+    outline-offset: 0;
+    box-shadow: none;
+  }
+
+  @media (min-width: 750px) {
+    .quick-view-drawer .product-block-product-form {
+      padding-bottom: 0;
+    }
+
+    .quick-view-drawer .product-actions,
+    .quick-view-drawer .product-variants {
+      width: 100%;
+    }
+  }
+</style>
+
+<quick-view-drawer
+  id="QuickViewDrawer"
+  role="dialog"
+  aria-modal="true"
+  class="quick-view-drawer"
+  body-class="quick-view-drawer-open"
+  data-event-prefix="quick-view-drawer"
+>
+  <div class="quick-view-drawer drawer">
+    <div class="drawer-inner">
+      <div class="quick-view-drawer-header drawer-header" tabindex="-1">
+        <drawer-toggle for="QuickViewDrawer" tabindex="-1">
+          <button
+            type="button"
+            class="button button-tertiary button-drawer-header-dismiss quick-view-drawer-button"
+            aria-label="{{ 'accessibility.close' | t }}"
+          >
+            &times;
+          </button>
+        </drawer-toggle>
+      </div>
+
+      <div class="drawer-content quick-view-drawer-content">
+        <div class="drawer-content-inner quick-view-drawer-content-inner">
+          <span class="spinner spinner-lg"></span>
+        </div>
+      </div>
+      <div class="drawer-footer quick-view-drawer-footer"></div>
+    </div>
+  </div>
+</quick-view-drawer>
+
+<script src="{{ 'quick-view-drawer.js' | asset_url }}" defer="defer"></script>

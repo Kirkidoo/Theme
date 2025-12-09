@@ -1,0 +1,28 @@
+{% comment %}
+  Renders the "Call for pricing" button.
+
+  Accepts:
+  - product: {Object} Product Liquid object
+  - use_variant: {Boolean} Wether to consider the main product or the first or currently selected variant. Default false.
+  - no_link: {Boolean} Disables outputing links to avoid nested link issues (optional)
+  - class: {String} Additional classes (optional)
+
+  Usage:
+  {% render 'price-call-for-pricing', product: product, use_variant: true %}
+{% endcomment %}
+{%- capture show_call_for_pricing -%}{%- render 'price-get-call-for-pricing', product: product, use_variant: use_variant -%}{%- endcapture -%}
+{%- assign show_call_for_pricing = show_call_for_pricing | strip -%}
+{% if show_call_for_pricing == 'true' %}
+  {% if no_link %}
+    <div class="price-call-for-pricing {{ class }}">
+      {{ settings.zero_price_call_text }}
+    </div>
+  {% else %}
+    <a
+      href="{{ settings.zero_price_call_link | escape }}"
+      class="button button-primary button-{{ settings.products_add_to_cart_style }} button-call-for-pricing {{ class }}"
+    >
+      {{ settings.zero_price_call_text }}
+    </a>
+  {% endif %}
+{% endif %}

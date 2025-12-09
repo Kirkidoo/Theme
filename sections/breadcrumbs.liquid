@@ -1,0 +1,147 @@
+{% if settings.breadcrumbs_enabled and request.design_mode %}
+  <div class="container">
+    <style>
+      .section-breadcrumbs-editor-hidden-note {
+        padding: 1rem;
+        background: var(--color-error-background);
+        color: var(--color-error);
+        font-size: calc(var(--font-body-scale) * 1.3rem);
+        opacity: 0.85;
+        border-radius: var(--border-radius);
+        z-index: 5;
+      }
+    </style>
+    <div class="section-breadcrumbs-editor-hidden-note">
+      {{ 'sections.breadcrumbs.hidden_note_disable_breadcrumbs' | t }}
+    </div>
+  </div>
+
+{% elsif settings.breadcrumbs_enabled == false %}
+  {% liquid
+    assign color_scheme_string = section.settings.color_scheme | append: ''
+    assign section_content_class = 'section-content'
+    unless color_scheme_string == 'background-1'
+      assign section_content_class = section_content_class | append: ' section-content-padded'
+    endunless
+  %}
+
+  <style>
+    #shopify-section-{{ section.id }} .section-content {
+    	margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+    	margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    #shopify-section-{{ section.id }} .section-content-padded {
+    	margin-top: 0;
+    	margin-bottom: 0;
+    	padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+    	padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    @media (min-width: 990px) {
+    	#shopify-section-{{ section.id }} .section-content {
+    		margin-top: {{ section.settings.spacing_top }}px;
+    		margin-bottom: {{ section.settings.spacing_bottom }}px;
+    	}
+
+    	#shopify-section-{{ section.id }} .section-content-padded {
+    		margin-top: 0;
+    		margin-bottom: 0;
+    		padding-top: {{ section.settings.spacing_top }}px;
+    		padding-bottom: {{ section.settings.spacing_bottom }}px;
+    	}
+    }
+  </style>
+
+  {%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+  {%- assign visibility_classes = visibility_classes | strip -%}
+
+  <div class="section-breadcrumbs-wrapper {{ visibility_classes }}">
+    <div class="{{ section_content_class }} color-{{ color_scheme_string }}">
+      {% render 'breadcrumb',
+        separator: section.settings.separator,
+        show_product_collection: section.settings.show_product_collection,
+        show_preview_note: true
+      %}
+    </div>
+  </div>
+{% endif %}
+{% schema %}
+  {
+    "name": "t:sections.breadcrumbs.name",
+    "tag": "section",
+    "class": "section-breadcrumbs",
+    "enabled_on": {
+      "groups": ["header"]
+    },
+    "settings": [
+      {
+        "type": "text",
+        "id": "separator",
+        "label": "t:sections.breadcrumbs.settings.separator.label",
+        "default": "&raquo;"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_product_collection",
+        "label": "t:sections.breadcrumbs.settings.show_product_collection.label",
+        "info": "t:sections.breadcrumbs.settings.show_product_collection.info",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 0,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 0,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.breadcrumbs.name",
+        "category": "t:sections.all.preset_category.navigation"
+      }
+    ]
+  }
+{% endschema %}

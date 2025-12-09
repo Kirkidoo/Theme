@@ -1,0 +1,25 @@
+{% comment %}
+  Renders the product comparison modal.
+
+  Usage:
+  {% render 'product-compare-modal' %}
+{% endcomment %}
+
+<product-compare-modal
+  id="ProductCompareModal"
+  class="modal-dialog-component product-compare-modal"
+  data-url=""
+>
+  <div class="modal-dialog-wrap product-compare-modal-dialog-wrap">
+    <div class="modal-dialog product-compare-modal-dialog color-background-1">
+      <button id="ModalClose-ProductCompareModal" class="modal-dismiss-button">&times;</button>
+      <div class="modal-dialog-inner product-compare-dialog-inner">
+        <div role="dialog" class="modal-dialog-content-wrap">
+          <div class="modal-dialog-content product-compare-modal-dialog-content">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</product-compare-modal>

@@ -1,0 +1,28 @@
+/* Theme editor assets
+=================================== */
+.product-media-modal {
+  background-color: rgba(var(--color-background));
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  visibility: hidden;
+  opacity: 0;
+  z-index: 130;
+  cursor: zoom-out;
+  transition:
+    opacity 0.3s ease-in-out,
+    visibility 0s linear 0.3s;
+  pointer-events: none;
+}
+
+.product-media-modal[open] {
+  visibility: visible;
+  opacity: 1;
+  z-index: 130;
+  transition:
+    opacity 0.3s ease-in-out,
+    visibility 0s linear 0s;
+  pointer-events: auto;
+}

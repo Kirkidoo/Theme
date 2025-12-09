@@ -1,0 +1,298 @@
+{% comment %}
+  Section: Product Arrival Dates
+
+  Displays estimated arrival dates for the current product variant using the Gamma Powersports API.
+  Requires the associated JavaScript ('product-arrival-dates.js' or similar) to be loaded.
+  Reads API configuration from theme settings.
+
+  Usage:
+  - Add this section to your product template (e.g., main-product.liquid).
+  - Ensure the API Token is set in Theme Settings -> API Integrations.
+  - Ensure the product variants have SKUs.
+{% endcomment %}
+
+{%- liquid
+  # --- Section Settings ---
+  assign enabled = section.settings.enable_arrival_dates
+  # Get token from global theme settings
+  assign api_token = settings.gamma_api_token
+  # Get base URL or use default
+  assign api_base_url = settings.gamma_api_base_url | default: "https://api.gammapowersports.com"
+  # Check even if variant is available?
+  assign force_check = section.settings.force_check
+  assign use_compact_layout = section.settings.use_compact_layout
+
+  # --- Labels & Text (from section settings, with defaults) ---
+  assign title_standard = section.settings.title_standard | default: "Estimated Arrival Dates"
+  assign note_standard = section.settings.note_standard | default: "<strong>Note:</strong> Confirmed dates are based on shipping information, while estimated dates are based on purchase orders and subject to change."
+  assign title_compact = section.settings.title_compact | default: "Expected Arrival:"
+  assign note_compact = section.settings.note_compact | default: "Confirmed = In Transit, Estimated = On Order. Dates subject to change."
+  assign label_cargo = section.settings.label_cargo | default: "Confirmed"
+  assign label_po = section.settings.label_po | default: "Estimated"
+  assign label_show_more = section.settings.label_show_more | default: "Show {count} more date{s}"
+  assign label_show_less = section.settings.label_show_less | default: "Hide extra dates"
+  assign max_visible_compact = section.settings.max_visible_compact | default: 2
+
+  # --- Product Data ---
+  # Use 'product' object passed to the section or default to global 'product'
+  assign current_product = product | default: product
+  assign current_variant = current_product.selected_or_first_available_variant
+
+  # --- Conditions to Render ---
+  # Only render if enabled, API token exists, product exists, and current variant has an SKU
+  assign render_block = false
+  if enabled and api_token != blank and current_product and current_variant.sku != blank
+    assign render_block = true
+  endif
+-%}
+
+{% comment %} Add a wrapper div with section ID for styling and targeting {% endcomment %}
+<div id="product-arrival-section-{{ section.id }}" class="product-arrival-section-wrapper">
+  {%- if render_block -%}
+    {% comment %}
+      Main container for the arrival dates component.
+      The JS script targets this ID ('product-arrival-dates').
+      We add the section ID to make it unique if used multiple times (though unlikely for this).
+      The data-product-sku attribute can be used by the JS as an initial SKU source.
+    {% endcomment %}
+    <div id="product-arrival-dates"
+         class="product-arrival-dates-container {% if use_compact_layout %}product-arrival-dates--compact{% else %}product-arrival-dates--standard{% endif %}"
+         data-section-id="{{ section.id }}"
+         data-product-sku="{{ current_variant.sku | escape }}"
+         style="display: none;" {% comment %} Initially hidden, JS will show it {% endcomment %}>
+
+      {% comment %} Loading State Indicator {% endcomment %}
+      <div id="arrival-dates-loading" class="arrival-dates-state arrival-dates-loading" style="display: none; justify-content: center; align-items: center; min-height: 40px; color: #555;">
+        <div class="lds-dual-ring"></div>
+        <span style="margin-left: 10px;">Loading dates...</span>
+      </div>
+
+      {% comment %} Error State Message {% endcomment %}
+      <div id="arrival-dates-error" class="arrival-dates-state arrival-dates-error" style="display: none; color: #d9534f; border: 1px solid #d9534f; padding: 10px; border-radius: 4px;">
+        Error loading arrival dates.
+      </div>
+
+      {% comment %} No Data State Message {% endcomment %}
+      <div id="arrival-dates-no-data" class="arrival-dates-state arrival-dates-no-data" style="display: none; color: #777; padding: 10px;">
+        No estimated arrival dates available.
+      </div>
+
+      {% comment %} Content Area - Populated by JavaScript {% endcomment %}
+      <div id="arrival-dates-content" class="arrival-dates-content" style="display: none;">
+        {% comment %} JavaScript will render either standard or compact layout here {% endcomment %}
+      </div>
+
+    </div>
+
+    {% comment %}
+      JavaScript Configuration Block
+      Passes necessary data from Liquid to the JavaScript file.
+      The JS file expects this data on the 'window.arrivalDatesConfig' object.
+    {% endcomment %}
+    <script type="text/javascript">
+      window.arrivalDatesConfig = {
+        // API Details
+        authToken: {{ api_token | json }}, // Pass token securely as JSON string
+        apiUrl: {{ api_base_url | json }}, // Pass base URL as JSON string
+
+        // Product Details (Initial State)
+        productSku: {{ current_variant.sku | json }},
+        productInStock: {{ current_variant.available | json }}, // boolean: true/false
+
+        // Behavior Settings
+        forceCheck: {{ force_check | json }}, // boolean: true/false
+        useCompactLayout: {{ use_compact_layout | json }}, // boolean: true/false
+        maxVisibleCompact: {{ max_visible_compact | json }}, // number
+
+        // Labels & Text (Passed for JS rendering)
+        titleStandard: {{ title_standard | json }},
+        noteStandard: {{ note_standard | json }}, // Note: Assumes simple HTML or text
+        titleCompact: {{ title_compact | json }},
+        noteCompact: {{ note_compact | json }},
+        labelCargo: {{ label_cargo | json }},
+        labelPO: {{ label_po | json }},
+        labelShowMore: {{ label_show_more | json }},
+        labelShowLess: {{ label_show_less | json }},
+
+        // Diagnostics (Enable cautiously for debugging)
+        enableApiDiagnostics: false, // Set to true only for temporary debugging
+        skipSanitization: false // Set to true only if you fully trust config inputs
+      };
+
+      // Optional: Trigger initialization if the script uses a manual start function
+      // document.dispatchEvent(new CustomEvent('productArrivalDates:configLoaded'));
+      // or if the script exposes a function:
+      // if (window.ProductArrivalDates && typeof window.ProductArrivalDates.init === 'function') {
+      //   window.ProductArrivalDates.init(); // Or a specific re-init function
+      // }
+    </script>
+
+    {% comment %} Basic CSS for Loader (can be moved to theme CSS) {% endcomment %}
+    <style>
+      #product-arrival-section-{{ section.id }} .lds-dual-ring {
+        display: inline-block;
+        width: 20px; /* Smaller size */
+        height: 20px;
+      }
+      #product-arrival-section-{{ section.id }} .lds-dual-ring:after {
+        content: " ";
+        display: block;
+        width: 16px; /* Adjust size */
+        height: 16px;
+        margin: 2px; /* Adjust margin */
+        border-radius: 50%;
+        border: 3px solid #555; /* Thinner border */
+        border-color: #555 transparent #555 transparent;
+        animation: lds-dual-ring 1.2s linear infinite;
+      }
+      @keyframes lds-dual-ring {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      /* Add basic styling for standard/compact layouts if needed */
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--standard .arrival-dates-list { list-style: none; padding: 0; margin: 10px 0; }
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--standard .arrival-date-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--standard .arrival-date-item:last-child { border-bottom: none; }
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--standard .arrival-status .confirmed { color: green; font-weight: bold; }
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--standard .arrival-status .estimated { color: orange; }
+
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--compact .arrival-dates-subtle__list { list-style: none; padding: 0; margin: 5px 0; }
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--compact .arrival-dates-subtle__item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 0.9em; }
+       #product-arrival-section-{{ section.id }} .product-arrival-dates--compact .arrival-dates-subtle__status .confirmed { color: green; font-weight: bold; }
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--compact .arrival-dates-subtle__status .estimated { color: orange; }
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--compact .arrival-dates-subtle__toggle { background: none; border: none; color: var(--color-accent-1, #004FC7); text-decoration: underline; cursor: pointer; padding: 5px 0; font-size: 0.9em; }
+      #product-arrival-section-{{ section.id }} .product-arrival-dates--compact .arrival-dates-subtle__note { font-size: 0.85em; color: #666; margin-top: 5px; }
+
+    </style>
+
+  {%- else -%}
+    {% comment %} Optional: Render placeholder or message if block conditions aren't met {% endcomment %}
+    {%- if enabled and api_token == blank and current_product and current_variant.sku != blank -%}
+      <div class="product-arrival-dates-disabled" style="padding: 10px; color: #777; font-style: italic;">
+         Arrival dates cannot be shown. Please configure the Gamma API Token in Theme Settings -> API Integrations.
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+</div>
+
+
+{% schema %}
+{
+  "name": "Product Arrival Dates",
+  "tag": "section",
+  "class": "product-arrival-dates-section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable_arrival_dates",
+      "label": "Enable Arrival Dates Display",
+      "info": "Requires Gamma API Token in Theme Settings and SKUs on variants.",
+      "default": true
+    },
+    {
+      "type": "paragraph",
+      "content": "Requires the Gamma API Bearer Token to be set under Theme Settings -> API Integrations."
+    },
+    {
+      "type": "header",
+      "content": "Behavior"
+    },
+    {
+      "type": "checkbox",
+      "id": "force_check",
+      "label": "Check Dates Even if Variant is In Stock",
+      "info": "Useful if you always want to show potential future stock dates.",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "use_compact_layout",
+      "label": "Use Compact Layout",
+      "info": "Displays dates in a more subtle, condensed format.",
+      "default": false
+    },
+    {
+        "type": "range",
+        "id": "max_visible_compact",
+        "min": 1,
+        "max": 10,
+        "step": 1,
+        "label": "Max Dates Visible (Compact Layout)",
+        "info": "Number of dates shown before 'Show More' appears in compact layout.",
+        "default": 2
+    },
+    {
+      "type": "header",
+      "content": "Labels & Text (Standard Layout)"
+    },
+    {
+      "type": "text",
+      "id": "title_standard",
+      "label": "Title (Standard Layout)",
+      "default": "Estimated Arrival Dates"
+    },
+    {
+      "type": "richtext",
+      "id": "note_standard",
+      "label": "Note (Standard Layout)",
+      "default": "<p><strong>Note:</strong> Confirmed dates are based on shipping information, while estimated dates are based on purchase orders and subject to change.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Labels & Text (Compact Layout)"
+    },
+    {
+      "type": "text",
+      "id": "title_compact",
+      "label": "Title (Compact Layout)",
+      "default": "Expected Arrival:"
+    },
+    {
+      "type": "text",
+      "id": "note_compact",
+      "label": "Note (Compact Layout)",
+      "default": "Confirmed = In Transit, Estimated = On Order. Dates subject to change."
+    },
+     {
+        "type": "text",
+        "id": "label_show_more",
+        "label": "Show More Button Text (Compact)",
+        "info": "Use {count} for number, {s} for plural 's'.",
+        "default": "Show {count} more date{s}"
+    },
+    {
+        "type": "text",
+        "id": "label_show_less",
+        "label": "Show Less Button Text (Compact)",
+        "default": "Hide extra dates"
+    },
+    {
+      "type": "header",
+      "content": "Labels & Text (Status)"
+    },
+    {
+      "type": "text",
+      "id": "label_cargo",
+      "label": "Label for 'CARGO' Status",
+      "info": "Typically means confirmed/in transit.",
+      "default": "Confirmed"
+    },
+    {
+      "type": "text",
+      "id": "label_po",
+      "label": "Label for 'PO' Status",
+      "info": "Typically means estimated/on order.",
+      "default": "Estimated"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Arrival Dates"
+    }
+  ]
+}
+{% endschema %}

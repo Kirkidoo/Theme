@@ -1,0 +1,165 @@
+{% comment %}
+  Renders a customizable media with text banner card.
+
+  Accepts:
+  - image: {Object} Optional. Image object.
+  - title: {String} Optional. The title.
+  - description: {String} Optional. The description.
+  - button_link: {String} Optional. Button link.
+  - button_text: {String} Optional. Button text.
+  - new_window: {Boolean} Optional. Whether to open the link in a new window.
+  - class: {String} Optional. CSS class.
+  - columns {Number} Optional. The number of columns the card is rendered in.
+  - image_position {String} Optional. Top, Left, Right.
+  - id: {String} Optional. HTML id.
+  - heading_size: {String} Title size for desktop.
+  - mobile_heading_size: {String} Title size for mobile.
+  - settings: {Object} Optional. The card settings.
+  - lazyload: {Boolean} Whether to lazy load the main thumbnail.
+
+  Usage:
+  {% render 'card-media-with-text-banner' title: title, image: image %}
+{% endcomment %}
+
+{% liquid
+  assign ratio = 1
+  if image and aspect == 'portrait'
+    assign ratio = 0.8
+  elsif image and aspect == 'landscape'
+    assign ratio = 1.77
+  elsif image and aspect == 'adapt'
+    assign ratio = image.aspect_ratio
+  endif
+  if ratio == 0 or ratio == null
+    assign ratio = 1
+  endif
+
+  if lazyload == true
+    assign lazy = 'lazy'
+  endif
+
+  assign card_class = 'card card-padded-content'
+  if image_position == 'left' or image_position == 'right'
+    assign card_class = card_class | append: ' card-padded-content-media'
+
+    if image_position == 'right'
+      assign card_class = card_class | append: ' card-padded-content-media-end'
+    endif
+  endif
+  if class != blank
+    assign card_class = card_class | append: ' ' | append: class
+  endif
+%}
+
+<div
+  {% if id != blank %}
+    id="{{ id }}"
+  {% endif %}
+  class="{{ card_class }}"
+>
+  <figure class="card-media">
+    {% if button_link %}
+      <a
+        href="{{ button_link }}"
+        {% if new_window %}
+          target="_blank"
+        {% endif %}
+      >
+    {% endif %}
+    {% if ratio != 0 %}
+      <div class="aspect-ratio" style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;">
+    {% endif %}
+    {% if image != blank %}
+      {%- capture image_sizes -%}
+					{% if columns == 1 %}
+						(min-width: 1420px) 1420px, calc(100vw - 3rem)
+					{% else %}
+						(min-width: 1200px) calc((100vw - 6rem) / 2), (min-width: 990px) calc((100vw - 6rem) * 0.6), (min-width: 750px) calc(100vw - 4rem), calc(100vw - 3rem)
+					{% endif %}
+				{%- endcapture -%}
+      {{
+        image
+        | image_url: width: 2840
+        | image_tag:
+          loading: lazy,
+          sizes: image_sizes,
+          widths: '165, 440, 650, 850, 1100, 1200, 1420, 2840'
+      }}
+    {% else %}
+      {{ 'collection-1' | strip | placeholder_svg_tag: 'placeholder-svg' }}
+    {% endif %}
+    {% if ratio != 0 %}
+      </div>
+    {% endif %}
+    {% unless title == blank %}
+      <span class="visually-hidden">{{ title }}</span>
+    {% endunless %}
+
+    {% if settings.badge_overlay_line_1_text != blank
+      or settings.badge_overlay_line_2_text != blank
+      or settings.badge_overlay_line_3_text != blank
+    %}
+      <div
+        class="card-badge-overlay card-badge-overlay-position-{{ settings.badge_overlay_position }}"
+        style="color: {{ settings.badge_overlay_colors_text }}; background-color: {{ settings.badge_overlay_colors_background }};"
+      >
+        {% if settings.badge_overlay_line_1_text != blank %}
+          <span class="card-badge-overlay-text card-badge-overlay-text-1 card-badge-overlay-text-{{ settings.badge_overlay_line_1_font_size }}">
+            {{ settings.badge_overlay_line_1_text }}
+          </span>
+        {% endif %}
+        {% if settings.badge_overlay_line_2_text != blank %}
+          <span class="card-badge-overlay-text card-badge-overlay-text-2 card-badge-overlay-text-{{ settings.badge_overlay_line_2_font_size }}">
+            {{ settings.badge_overlay_line_2_text }}
+          </span>
+        {% endif %}
+        {% if settings.badge_overlay_line_3_text != blank %}
+          <span class="card-badge-overlay-text card-badge-overlay-text-3 card-badge-overlay-text-{{ settings.badge_overlay_line_3_font_size }}">
+            {{ settings.badge_overlay_line_3_text }}
+          </span>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if button_link %}
+      </a>
+    {% endif %}
+  </figure>
+
+  <div class="card-info">
+    {%- unless title == blank -%}
+      <h3 class="card-heading card-heading-{{ mobile_heading_size }} card-heading-desktop-{{ heading_size }}">
+        {%- if button_link -%}
+          <a
+            href="{{ button_link }}"
+            {% if new_window %}
+              target="_blank"
+            {% endif %}
+          >
+        {%- endif -%}
+        {{ title }}
+        {%- if button_link -%}
+          </a>
+        {%- endif -%}
+      </h3>
+    {%- endunless -%}
+
+    {%- unless description == blank -%}
+      <div class="card-caption">
+        {{ description }}
+      </div>
+    {%- endunless -%}
+
+    {%- unless button_text == blank or button_link == blank -%}
+      <a
+        href="{{ button_link }}"
+        class="{% if settings.button_type_link %}button-text-link{% else %}button {% endif %}"
+        {% if new_window %}
+          target="_blank"
+        {% endif %}
+      >
+        {{ button_text }}
+      </a>
+    {%- endunless -%}
+  </div>
+</div>

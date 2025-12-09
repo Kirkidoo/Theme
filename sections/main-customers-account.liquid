@@ -1,0 +1,112 @@
+{{ 'template-customer.css' | asset_url | stylesheet_tag }}
+
+<div class="container">
+  <div class="section-content">
+    <div class="customer account">
+      <div class="account-header">
+        <h1 class="page-title">{{ 'customer.account.title' | t }}</h1>
+        <a href="{{ routes.account_logout_url }}" class="link-text-primary">
+          {{ 'customer.log_out' | t }}
+        </a>
+      </div>
+
+      <div class="account-wrap">
+        <div class="account-details-wrap">
+          <h3 class="widget-title">{{ 'customer.account.details' | t }}</h3>
+
+          {{ customer.default_address | format_address }}
+
+          <a href="{{ routes.account_addresses_url }}" class="link-text-primary">
+            {{ 'customer.account.view_addresses' | t }} ({{ customer.addresses_count }})
+          </a>
+        </div>
+        <div class="account-orders-wrap">
+          <h3 class="widget-title">{{ 'customer.orders.title' | t }}</h3>
+
+          {% paginate customer.orders by 20 %}
+            {%- if customer.orders.size > 0 -%}
+              <table role="table" class="order-history rte">
+                <caption class="visually-hidden">
+                  {{ 'customer.orders.title' | t }}
+                </caption>
+                <thead role="rowgroup">
+                  <tr role="row">
+                    <th id="ColumnOrder" scope="col" role="columnheader">
+                      {{ 'customer.orders.order_number' | t }}
+                    </th>
+                    <th id="ColumnDate" scope="col" role="columnheader">
+                      {{ 'customer.orders.date' | t }}
+                    </th>
+                    <th id="ColumnPayment" scope="col" role="columnheader">
+                      {{ 'customer.orders.payment_status' | t }}
+                    </th>
+                    <th id="ColumnFulfillment" scope="col" role="columnheader">
+                      {{ 'customer.orders.fulfillment_status' | t }}
+                    </th>
+                    <th id="ColumnTotal" scope="col" role="columnheader">
+                      {{ 'customer.orders.total' | t }}
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody role="rowgroup">
+                  {%- for order in customer.orders -%}
+                    <tr role="row">
+                      <td
+                        id="RowOrder-{{ forloop.index }}"
+                        role="cell"
+                        headers="ColumnOrder"
+                        data-label="{{ 'customer.orders.order_number' | t }}"
+                      >
+                        <a
+                          href="{{ order.customer_url }}"
+                          aria-label="{{ 'customer.orders.order_number_link' | t: number: order.name }}"
+                        >
+                          {{ order.name }}
+                        </a>
+                      </td>
+                      <td
+                        headers="RowOrder-{{ forloop.index }} ColumnDate"
+                        role="cell"
+                        data-label="{{ 'customer.orders.date' | t }}"
+                      >
+                        {{ order.created_at | time_tag: format: 'date' }}
+                      </td>
+                      <td
+                        headers="RowOrder-{{ forloop.index }} ColumnPayment"
+                        role="cell"
+                        data-label="{{ 'customer.orders.payment_status' | t }}"
+                      >
+                        {{ order.financial_status_label }}
+                      </td>
+                      <td
+                        headers="RowOrder-{{ forloop.index }} ColumnFulfillment"
+                        role="cell"
+                        data-label="{{ 'customer.orders.fulfillment_status' | t }}"
+                      >
+                        {{ order.fulfillment_status_label }}
+                      </td>
+                      <td
+                        headers="RowOrder-{{ forloop.index }} ColumnTotal"
+                        role="cell"
+                        data-label="{{ 'customer.orders.total' | t }}"
+                      >
+                        {{ order.total_price | money_with_currency }}
+                      </td>
+                    </tr>
+                  {%- endfor -%}
+                </tbody>
+              </table>
+            {%- else -%}
+              <p>{{ 'customer.orders.none' | t }}</p>
+            {%- endif -%}
+
+            {%- if paginate.pages > 1 -%}
+              {%- render 'pagination', paginate: paginate -%}
+            {%- endif -%}
+          {% endpaginate %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

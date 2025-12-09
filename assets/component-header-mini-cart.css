@@ -1,0 +1,220 @@
+/* Component - Header Mini Cart
+=================================== */
+.mini-cart-wrap {
+  z-index: 1000;
+  will-change: transform;
+}
+
+.header-mini-cart-open .mini-cart-wrap,
+[dir="rtl"] .header-mini-cart-open .mini-cart-wrap {
+  transform: translateX(0);
+}
+
+.mini-cart-wrap .form-status {
+  padding: 1rem 1.5rem;
+}
+
+.mini-cart-content-notice {
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  background: rgba(var(--color-background));
+  padding: 1rem 1.5rem;
+  border-bottom: 1px dashed rgba(var(--color-border));
+  z-index: 2;
+}
+
+.mini-cart-content-notice > * {
+  margin: 0;
+}
+
+.mini-cart-error:empty {
+  display: none;
+}
+
+.mini-cart-recap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  color: rgba(var(--color-foreground-alt));
+  margin-bottom: 1rem;
+}
+
+.loading .mini-cart-recap {
+  pointer-events: none;
+  opacity: 0.2;
+}
+
+.mini-cart-footer {
+  position: relative;
+}
+
+.mini-cart-footer > [class^="spinner"] {
+  position: absolute;
+  top: 1rem;
+  left: calc(50% - 13px);
+  display: none;
+}
+
+.loading .mini-cart-footer > [class^="spinner"] {
+  display: block;
+}
+
+.mini-cart-footer-actions {
+  display: flex;
+  grid-gap: 1.5rem;
+  justify-content: space-between;
+}
+
+.mini-cart-footer-actions > * {
+  width: 50%;
+  flex: auto;
+}
+
+.mini-cart-footer-actions > .button {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  text-align: center;
+}
+
+.loading .mini-cart-footer-actions {
+  pointer-events: none;
+  opacity: 0.2;
+}
+
+.mini-cart-message-empty {
+  position: relative;
+  padding: 3rem 0.5rem;
+  text-align: center;
+}
+
+.mini-cart-message-empty svg {
+  width: 48px;
+  height: 48px;
+  color: rgba(var(--color-accent-1));
+}
+
+.mini-cart-item {
+  margin-bottom: 3.5rem;
+  display: flex;
+  align-items: flex-start;
+  grid-gap: 1.5rem;
+}
+
+.mini-cart-item-image-wrap {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-border)),
+    0 2px 0 rgba(var(--color-box-shadow));
+  background-color: rgba(var(--color-background));
+  border-radius: var(--border-radius-base);
+  position: relative;
+  padding: 0.5rem;
+  flex: none;
+  width: 64px;
+}
+
+.mini-cart-item-image-wrap:empty {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.mini-cart-item-heading {
+  font-size: calc(var(--font-heading-scale) * 1.4rem);
+  color: rgba(var(--color-foreground-alt));
+  letter-spacing: normal;
+  margin: 0 0 0.5rem;
+  font-weight: 400;
+}
+
+.mini-cart-item-heading a {
+  color: currentColor;
+  text-decoration-color: transparent;
+  transition: text-decoration 0.18s ease;
+}
+
+.mini-cart-item-heading a:hover {
+  text-decoration: underline;
+}
+
+.mini-cart-item-info {
+  min-width: 0;
+  flex: auto;
+}
+
+.mini-cart-item-eyebrow {
+  margin-bottom: 0.15rem;
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+}
+
+.mini-cart-item-price {
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+  margin-bottom: 1.5rem;
+}
+
+.mini-cart-unit-price {
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+  margin: -1rem 0 1.5rem;
+}
+
+.mini-cart-item-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  grid-gap: 2rem;
+}
+
+.mini-cart-item-actions .quantity-input {
+  height: 4rem;
+  width: 12rem;
+  flex: none;
+}
+
+.mini-cart-item-actions .quantity-input .quantity-input-field {
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+}
+
+.loading .mini-cart-item-actions .quantity-input {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.mini-cart-item-actions cart-remove-button {
+  margin-left: auto;
+}
+
+.mini-cart-item-remove {
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+.mini-cart-variations-list {
+  display: block;
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+}
+
+.mini-cart-variation-option {
+  display: flex;
+}
+
+.mini-cart-variation-option dd {
+  margin: 0 0 0 0.5rem;
+}
+
+.mini-cart-item .discounts {
+  display: block;
+  margin: -1.5rem 0 var(--spacing-base-1);
+}
+
+.checkbox-cart-policy-consent {
+  margin: 1rem 0 2rem;
+  font-size: calc(var(--font-body-scale) * 1.4rem);
+}
+
+.checkbox-cart-policy-consent [type="checkbox"] {
+  margin-top: 0.1rem;
+}
+
+.loading .checkbox-cart-policy-consent {
+  opacity: 0.2;
+}

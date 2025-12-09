@@ -1,0 +1,35 @@
+{% comment %}
+     Returns a string 'true' or 'false' (needs to be captured, becomes string when captured) depending on whether the product requires the customer to be logged in to view the price.
+     The snippet may return true if login_for_price is enabled on the product level, a collection it belongs to, or globally from the theme settings.
+  Make sure to also hide any "add to cart" buttons, otherwise a customer could add the product to the cart, proceed to checkout, and see the price there.
+
+     Accepts:
+     - product: {Object} Product object
+
+     Usage:
+     {%- capture login_for_price -%}{%- render 'price-get-login-for-price', product: card_product -%}{%- endcapture -%}{%- assign login_for_price = login_for_price | strip -%}
+     {% if login_for_price == 'true' %}
+  {% if login_for_price != 'true' %}
+{% endcomment %}
+{%- liquid
+  assign login_for_price = false
+  if product.metafields.custom.login_for_price == true
+    assign login_for_price = true
+  else
+    for collection in product.collections
+      if collection.metafields.custom.login_for_price == true
+        assign login_for_price = true
+        break
+      endif
+    endfor
+  endif
+
+  if settings.login_for_price_enabled == true
+    assign login_for_price = true
+  endif
+
+  if customer
+    assign login_for_price = false
+  endif
+-%}
+{{- login_for_price -}}

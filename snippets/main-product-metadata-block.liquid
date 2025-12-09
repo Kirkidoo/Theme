@@ -1,0 +1,63 @@
+{% comment %}
+  Renders the product's "Product metadata"
+
+  Accepts:
+  - product: {Object} The product.
+  - block: {Object} The
+  - settings: {Object} The settings.
+
+  Usage:
+  {% render 'main-product-metadata-block', product: product, block: block, position: 'right' %}
+{% endcomment %}
+
+<div class="product-metadata-block">
+  <div class="product-info-meta product-info-meta-{{ section.id }} {% if product.selected_or_first_available_variant == nil %}visually-hidden{% endif %}">
+    {% if settings.show_vendor and product.vendor != blank %}
+      {% liquid
+        assign matching_collection = false
+        assign vendor_handle = product.vendor | handleize
+        for collection in product.collections
+          if collection.handle == vendor_handle
+            assign matching_collection = true
+          endif
+        endfor
+      %}
+      <div class="product-info-meta-item">
+        <span class="product-info-eyebrow">
+          {% if matching_collection %}
+            <a href="{{ routes.collections_url }}/{{ vendor_handle }}">{{ product.vendor }}</a>
+          {% else %}
+            {{ product.vendor | link_to_vendor }}
+          {% endif %}
+        </span>
+      </div>
+    {% endif %}
+
+    {% if settings.show_sku %}
+      {% if product.selected_or_first_available_variant.sku != blank %}
+        <span class="product-info-meta-item product-info-meta-item-code">
+          {{ 'products.product.sku' | t }}:
+          <span class="ProductSku-{{ section.id }}" id="ProductSku-{{ section.id }}-{{ block.id }}">
+            {{- product.selected_or_first_available_variant.sku -}}
+          </span>
+        </span>
+      {% endif %}
+    {% endif %}
+
+    {% if settings.show_barcode %}
+      {% if product.selected_or_first_available_variant.barcode != blank %}
+        <span class="product-info-meta-item product-info-meta-item-code">
+          {% if settings.barcode_label != blank %}
+            {{ settings.barcode_label }}:
+          {% endif %}
+          <span
+            class="ProductBarcode-{{ section.id }}"
+            id="ProductBarcode-{{ section.id }}-{{ block.id }}"
+          >
+            {{- product.selected_or_first_available_variant.barcode -}}
+          </span>
+        </span>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

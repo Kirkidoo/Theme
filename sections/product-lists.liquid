@@ -1,0 +1,509 @@
+{% liquid
+  assign is_empty = true
+  for block in section.blocks
+    if block.settings.products.count > 0
+      assign is_empty = false
+    endif
+  endfor
+
+  assign hide_because_empty = false
+  if request.design_mode == false and section.settings.hide_if_empty and is_empty
+    assign hide_because_empty = true
+  endif
+%}
+{%- unless hide_because_empty -%}
+  {{ 'component-card-overlay.css' | asset_url | stylesheet_tag }}
+  {{ 'component-card.css' | asset_url | stylesheet_tag }}
+  {{ 'component-scroller.css' | asset_url | stylesheet_tag }}
+
+  {% liquid
+    assign columns = section.settings.columns
+    assign layout_classes = 'grid grid-1-col grid-2-col-tablet grid-' | append: columns | append: '-col-desktop'
+
+    assign color_scheme_string = section.settings.color_scheme | append: ''
+    assign section_content_class = 'section-content'
+    unless color_scheme_string == 'background-1'
+      assign section_content_class = section_content_class | append: ' section-content-padded'
+    endunless
+
+    assign first_block = section.blocks[0]
+    assign ratio = 0
+    if section.settings.card_ratio == 'adapt' and first_block.settings.image and first_block
+      assign ratio = first_block.settings.image.aspect_ratio
+    elsif section.settings.card_ratio == 'portrait'
+      assign ratio = 0.75
+    elsif section.settings.card_ratio == 'landscape'
+      assign ratio = 1.777
+    elsif section.settings.card_ratio == 'square'
+      assign ratio = 1
+    endif
+  %}
+
+  <style>
+    #shopify-section-{{ section.id }} .section-content {
+    	margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+    	margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    #shopify-section-{{ section.id }} .section-content-padded {
+    	margin-top: 0;
+    	margin-bottom: 0;
+    	padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+    	padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    @media (min-width: 990px) {
+    	#shopify-section-{{ section.id }} .section-content {
+    		margin-top: {{ section.settings.spacing_top }}px;
+    		margin-bottom: {{ section.settings.spacing_bottom }}px;
+    	}
+
+    	#shopify-section-{{ section.id }} .section-content-padded {
+    		margin-top: 0;
+    		margin-bottom: 0;
+    		padding-top: {{ section.settings.spacing_top }}px;
+    		padding-bottom: {{ section.settings.spacing_bottom }}px;
+    	}
+    }
+
+    {% for block in section.blocks %}
+    	{% if block.settings.overlay_background != blank %}
+    		#Card-{{ section.id }}-{{ forloop.index }}::after {
+    			background: {{ block.settings.overlay_background }};
+    		}
+    	{% endif %}
+    {% endfor %}
+  </style>
+
+  {%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+  {%- assign visibility_classes = visibility_classes | strip -%}
+
+  <div class="{{ visibility_classes }}">
+    <div class="color-{{ section.settings.color_scheme }}">
+      <div class="container">
+        <div class="{{ section_content_class }}">
+          {% if section.settings.heading != blank
+            or section.settings.subheading != blank
+            or section.settings.link_title != blank
+            and section.settings.link_url != blank
+          %}
+            <div class="section-headings {% if section.settings.subheading != blank %}with-subheading{% endif %}">
+              {% if section.settings.heading != blank or section.settings.subheading != blank %}
+                <div class="section-headings-content{% if section.settings.headings_alignment == 'center' %} center-aligned{% endif %}">
+                  {% if section.settings.heading != blank %}
+                    <{{ section.settings.heading_tag }} class="section-heading heading-size-{{ section.settings.heading_size }}">
+                      {{- section.settings.heading -}}
+                    </{{ section.settings.heading_tag }}>
+                  {% endif %}
+                  {% if section.settings.subheading != blank %}
+                    <p class="section-subheading">{{ section.settings.subheading }}</p>
+                  {% endif %}
+                </div>
+              {% endif %}
+
+              {% if section.settings.link_title != blank
+                and section.settings.link_url != blank
+                and section.settings.headings_alignment == 'left'
+              %}
+                <div class="section-headings-actions">
+                  <a
+                    href="{{ section.settings.link_url }}"
+                    class="button button-tertiary"
+                  >
+                    {{ section.settings.link_title }}
+                    {% render 'angle', direction: 'right' %}
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          {%- unless section.settings.stack_on_mobile or section.blocks.size == 1 -%}
+            <div class="scroller">
+              <div class="scroller-inner">
+          {% endunless %}
+          <div class="{{ layout_classes }}">
+            {% for block in section.blocks %}
+              {% liquid
+                assign has_image = false
+                if block.settings.image != blank
+                  assign has_image = true
+                endif
+              %}
+              <div class="grid-item" {{ block.shopify_attributes }}>
+                <div class="card-item-list">
+                  {% if block.settings.heading != blank or block.settings.description != blank %}
+                    {% liquid
+                      assign card_class = 'card-overlay card-pointer-all card-item-list-heading'
+                      if ratio == 0 or section.settings.card_ratio == 'auto'
+                        assign card_class = card_class | append: ' card-overlay-auto-fit'
+                      else
+                        assign card_class = card_class | append: ' card-overlay-custom-ratio'
+                      endif
+                      unless has_image
+                        assign card_class = card_class | append: ' card-item-list-heading-no-image'
+                      endunless
+                    %}
+                    <div
+                      id="{{ 'Card-' | append: section.id | append: '-' | append: forloop.index }}"
+                      class="{{ card_class }}"
+                      {% unless ratio == null or ratio == 0 %}
+                        style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+                      {% endunless %}
+                    >
+                      {% if block.settings.link != blank %}
+                        <a href="{{ block.settings.link }}">
+                      {% endif %}
+                      {% if has_image %}
+                        {{
+                          block.settings.image
+                          | image_url: width: 1420
+                          | image_tag:
+                            class: 'card-overlay-media',
+                            loading: 'lazy',
+                            sizes: '(min-width: 1200px) calc((100vw - 6rem) / 2), (min-width: 990px) calc((100vw - 6rem) * 0.6), (min-width: 750px) calc(100vw - 4rem), calc(100vw - 3rem)',
+                            widths: '165, 440, 650, 850, 1100, 1200, 1420'
+                        }}
+                      {% else %}
+                        {{ 'collection-1' | strip | placeholder_svg_tag: 'card-overlay-media' }}
+                      {% endif %}
+
+                      {% unless block.settings.heading == blank %}
+                        <span class="visually-hidden">{{ block.settings.heading }}</span>
+                      {% endunless %}
+                      {% if block.settings.link != blank %}
+                        </a>
+                      {% endif %}
+
+                      <div class="card-overlay-info">
+                        {% if block.settings.heading != blank %}
+                          <h3 class="card-overlay-heading card-overlay-heading-desktop-sm">
+                            {{ block.settings.heading }}
+                          </h3>
+                        {% endif %}
+
+                        {% if block.settings.description != blank %}
+                          <div class="card-overlay-caption">
+                            {{ block.settings.description }}
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endif %}
+
+                  {% for card_product in block.settings.products %}
+                    {% render 'card-product-media',
+                      card_product: card_product,
+                      show_vendor: false,
+                      show_stock: false,
+                      show_rating: false,
+                      show_add_to_cart: false,
+                      event_context: 'ProductListsSection'
+                    %}
+                  {% else %}
+                    {% for i in (1..3) %}
+                      {% render 'card-product-media',
+                        card_product: blank,
+                        show_vendor: false,
+                        show_stock: false,
+                        show_rating: false,
+                        show_add_to_cart: false
+                      %}
+                    {% endfor %}
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          {%- unless section.settings.stack_on_mobile or section.blocks.size == 1 -%}
+            </div>
+            </div>
+          {% endunless %}
+
+          {% if section.settings.link_title != blank
+            and section.settings.link_url != blank
+            and section.settings.headings_alignment == 'center'
+          %}
+            <div class="section-footer-content text-center">
+              <a
+                href="{{ section.settings.link_url }}"
+                class="button button-tertiary"
+              >
+                {{ section.settings.link_title }}
+                {% render 'angle', direction: 'right' %}
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endunless -%}
+{% schema %}
+  {
+    "name": "t:sections.product_lists.name",
+    "tag": "section",
+    "class": "section-product-lists",
+    "disabled_on": {
+      "groups": ["header", "footer", "custom.overlays"]
+    },
+    "settings": [
+      {
+        "type": "inline_richtext",
+        "id": "heading",
+        "label": "t:sections.product_lists.settings.heading.label",
+        "default": "Product lists"
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:sections.all.heading_size.label",
+        "default": "md",
+        "options": [
+          {
+            "value": "sm",
+            "label": "t:sections.all.heading_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.heading_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.heading_size.options.label_lg"
+          },
+          {
+            "value": "xl",
+            "label": "t:sections.all.heading_size.options.label_xl"
+          },
+          {
+            "value": "xxl",
+            "label": "t:sections.all.heading_size.options.label_xxl"
+          }
+        ]
+      },
+      {
+        "type": "inline_richtext",
+        "id": "subheading",
+        "label": "t:sections.product_lists.settings.subheading.label"
+      },
+      {
+        "type": "select",
+        "id": "headings_alignment",
+        "label": "t:sections.all.headings_alignment.label",
+        "default": "left",
+        "options": [
+          {
+            "value": "left",
+            "label": "t:sections.all.headings_alignment.options.label_left"
+          },
+          {
+            "value": "center",
+            "label": "t:sections.all.headings_alignment.options.label_center"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "id": "link_title",
+        "label": "t:sections.all.links.link_title.label"
+      },
+      {
+        "type": "url",
+        "id": "link_url",
+        "label": "t:sections.all.links.link_url.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.layout.heading"
+      },
+      {
+        "type": "select",
+        "id": "columns",
+        "label": "t:sections.all.layout.desktop_columns.label",
+        "default": "3",
+        "options": [
+          {
+            "value": "2",
+            "label": "2"
+          },
+          {
+            "value": "3",
+            "label": "3"
+          }
+        ]
+      },
+      {
+        "type": "checkbox",
+        "id": "stack_on_mobile",
+        "default": false,
+        "label": "t:sections.all.layout.stack_on_mobile.label"
+      },
+      {
+        "type": "select",
+        "id": "card_ratio",
+        "label": "t:sections.all.card_ratio.label",
+        "default": "auto",
+        "options": [
+          {
+            "value": "auto",
+            "label": "t:sections.all.card_ratio.options.auto"
+          },
+          {
+            "value": "adapt",
+            "label": "t:sections.all.card_ratio.options.adapt"
+          },
+          {
+            "value": "square",
+            "label": "t:sections.all.card_ratio.options.square"
+          },
+          {
+            "value": "portrait",
+            "label": "t:sections.all.card_ratio.options.portrait"
+          },
+          {
+            "value": "landscape",
+            "label": "t:sections.all.card_ratio.options.landscape"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.seo_heading.label"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "default": "h2",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "hide_if_empty",
+        "default": false,
+        "label": "t:sections.product_lists.settings.hide_if_empty.label",
+        "info": "t:sections.all.advanced.hide_if_empty.info"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "product_list",
+        "name": "t:sections.product_lists.blocks.product_list.name",
+        "settings": [
+          {
+            "type": "image_picker",
+            "id": "image",
+            "label": "t:sections.product_lists.blocks.product_list.settings.image.label"
+          },
+          {
+            "type": "color_background",
+            "id": "overlay_background",
+            "label": "t:sections.all.gradient.overlay_background.label",
+            "default": "linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.8) 100%)"
+          },
+          {
+            "type": "text",
+            "id": "heading",
+            "label": "t:sections.product_lists.blocks.product_list.settings.heading.label",
+            "default": "Product list"
+          },
+          {
+            "id": "description",
+            "label": "t:sections.product_lists.blocks.product_list.settings.description.label",
+            "type": "richtext",
+            "default": "<p>Pair text with image backdrops to display promotional content for your product list.</p>"
+          },
+          {
+            "type": "url",
+            "id": "link",
+            "label": "t:sections.product_lists.blocks.product_list.settings.link.label"
+          },
+          {
+            "type": "product_list",
+            "id": "products",
+            "label": "t:sections.product_lists.blocks.product_list.settings.products.label"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.product_lists.presets.name",
+        "category": "t:sections.all.preset_category.products",
+        "blocks": [
+          {
+            "type": "product_list"
+          },
+          {
+            "type": "product_list"
+          },
+          {
+            "type": "product_list"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

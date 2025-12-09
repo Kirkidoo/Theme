@@ -1,0 +1,47 @@
+/* Component - Breadcrumb
+=================================== */
+.section-breadcrumbs-wrapper {
+  .section-content {
+    /* default: border on section-content */
+    border-bottom: 1px solid rgba(var(--color-border));
+
+    /* override for background 1 or 2 → move border to .breadcrumb instead */
+    &.color-background-1 {
+      border-bottom: none;
+
+      .breadcrumb {
+        border-bottom: 1px solid rgba(var(--color-border));
+      }
+    }
+  }
+}
+
+/* No margin for the theme setting breadcrumb */
+.section-breadcrumbs-setting {
+  margin: 0;
+}
+
+/* Do not CSS nest in .section-breadcrumbs-wrapper, we need to keep it separate for the border to work correctly for the theme setting version */
+.breadcrumb {
+  font-size: calc(var(--font-body-scale) * 1.3rem);
+  display: none;
+  line-height: normal;
+  padding-block: 1.7rem;
+
+  a {
+    color: rgba(var(--color-accent-1));
+    transition: text-decoration 0.18s ease;
+    text-decoration-color: transparent;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  span {
+    display: inline-block;
+    margin: 0 0.2rem;
+  }
+
+  @media (min-width: 990px) {
+    display: block;
+  }
+}

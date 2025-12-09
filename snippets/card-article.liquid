@@ -1,0 +1,88 @@
+{% comment %}theme-check-disable ImgLazyLoading{% endcomment %}
+{% comment %}
+  Renders an article card for a given blog with settings to either show the image or not.
+
+  Accepts:
+  - blog: {Object} Blog object
+  - article: {Object} Article object
+  - show_image: {Boolean} Show the article image. Default: false
+  - show_date: {Boolean} Show the article date. Default: false
+  - show_author: {Boolean} Show the article author. Default: false
+  - show_excerpt: {Boolean} Show the article excerpt. Default: false
+  - lazyload: {Boolean} Image should be lazy loaded. Default: true
+  - is_card: {Boolean} If the item should be displayed as a (product) card visually. Default: false
+
+  Usage:
+  {% render 'card-article', blog: blog, article: article, show_image: section.settings.show_image %}
+{% endcomment %}
+
+{%- if article and article != empty -%}
+  <article class="card-article {% if is_card %} card{% endif %}">
+    {%- if show_image and article.image -%}
+      <figure class="card-article-image card-media">
+        {% liquid
+          unless lazyload == false
+            assign lazy = 'lazy'
+          endunless
+        %}
+        <a href="{{ article.url }}">
+          <div class="aspect-ratio" style="--ratio-percent: 66.66667%;">
+            {{
+              article.image
+              | image_url: width: 1400
+              | image_tag:
+                loading: lazy,
+                widths: '250, 450, 600, 700, 950, 1400',
+                sizes: '(min-width: 750px) calc((100vw - 4rem) / 2), calc(100vw - 3rem)'
+            }}
+          </div>
+        </a>
+      </figure>
+    {%- endif -%}
+
+    <div class="card-article-info card-eyebrow">
+      {%- if show_date -%}
+        <span>{{ article.published_at | time_tag: format: 'date' }}</span>
+      {%- endif -%}
+      {%- if show_author -%}
+        <span>
+          {%- if article.user.homepage -%}
+            <a href="{{ article.user.homepage }}">
+          {%- endif -%}
+
+          {{ article.author }}
+
+          {%- if article.user.homepage -%}
+            </a>
+          {%- endif -%}
+        </span>
+      {%- endif -%}
+      {%- if article.comments_count > 0 and blog.comments_enabled? -%}
+        <span>
+          <a href="{{ article.url }}#comments">
+            {{- 'blogs.article.comments' | t: count: article.comments_count -}}
+          </a>
+        </span>
+      {%- endif -%}
+    </div>
+
+    <h3 class="card-article-heading">
+      <a href="{{ article.url }}">
+        {{ article.title | escape }}
+      </a>
+    </h3>
+
+    {%- if show_excerpt -%}
+      {%- if article.excerpt_or_content.size > 0 -%}
+        <p class="card-article-excerpt rte">
+          {{ article.excerpt_or_content | strip_html | truncatewords: 30 }}
+        </p>
+      {%- endif -%}
+    {%- endif -%}
+
+    <a href="{{ article.url }}" class="button">
+      {{ 'blogs.article.read_more' | t }}
+      {% render 'angle', direction: 'right' %}
+    </a>
+  </article>
+{%- endif -%}

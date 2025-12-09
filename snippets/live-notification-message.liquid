@@ -1,0 +1,29 @@
+{% comment %}
+  Notification Message Snippet
+
+  Parameters:
+  - block: {Object} The block.
+  - settings: {Object} The block's settings.
+  - id: {String} Unique notification id.
+
+  Usage:
+  {% render 'live-notification-message', block: block, settings: block.settings %}
+{% endcomment %}
+
+<div
+  class="live-notification-message"
+  style="display: none;"
+  {{ block.shopify_attributes }}
+  data-notification-id="{{ id }}"
+>
+  <div class="live-notification-content">
+    {{ settings.text }}
+  </div>
+  <button
+    type="button"
+    class="live-notification-close"
+    aria-label="{{ 'accessibility.close' | t }}"
+  >
+    {% render 'icons', icon: 'cross' %}
+  </button>
+</div>

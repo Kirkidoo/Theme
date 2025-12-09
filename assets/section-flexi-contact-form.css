@@ -1,0 +1,123 @@
+/* Flexi Contact Form Section Styles */
+.flexi-contact-form-section {
+  --flexi-form-gap: 2rem;
+  --flexi-column-gap: 1rem;
+}
+
+@media (min-width: 990px) {
+  .flexi-contact-form-section {
+    --flexi-column-gap: 5rem;
+  }
+}
+
+/* Column Layout */
+.flexi-contact-form__columns {
+  display: grid;
+  gap: var(--flexi-column-gap);
+  align-items: start;
+  grid-template-columns: 1fr;
+}
+
+.flexi-contact-form__columns--centered {
+  max-width: 70rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 750px) {
+  .flexi-contact-form__columns--2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.flexi-column__content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Content Blocks - Use standard theme typography */
+.flexi-heading {
+  margin: 0;
+}
+
+.flexi-text,
+.flexi-richtext {
+  color: rgba(var(--color-foreground));
+}
+
+.flexi-richtext p:last-child {
+  margin-bottom: 0;
+}
+
+/* Image Block */
+.flexi-media {
+  position: relative;
+}
+
+.flexi-media__img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--border-radius-base);
+}
+
+/* Form Field Styling */
+.flexi-column__content > .flexi-block {
+  margin-bottom: var(--flexi-form-gap);
+
+  &.flexi-heading {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.flexi-contact-form .field {
+  margin-bottom: var(--spacing-base-1);
+
+  &.field-hidden {
+    margin-bottom: 0;
+  }
+}
+
+/* Checkbox styling - group checkbox + label, help text on new line */
+.flexi-contact-form-section .field-checkbox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.field-checkbox-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.field-checkbox-group input {
+  margin-right: 0.5rem;
+}
+
+.field-checkbox-group label {
+  margin: 0;
+}
+
+.field .field-help-text {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+/* Half-width fields for side-by-side layout */
+@media (min-width: 990px) {
+  .flexi-column__content:has(.field-half-width) {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: 2rem;
+  }
+
+  .field-half-width {
+    flex: 0 0 calc(50% - 1rem) !important;
+    width: calc(50% - 1rem) !important;
+  }
+
+  .flexi-column__content:has(.field-half-width) > .flexi-block:not(.field-half-width) {
+    flex: 0 0 100%;
+    width: 100%;
+  }
+}

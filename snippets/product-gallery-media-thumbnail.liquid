@@ -1,0 +1,54 @@
+{% comment %}theme-check-disable ImgLazyLoading{% endcomment %}
+{% comment %}
+  Renders a product thumbnail
+
+  Accepts:
+  - media: {Object} Product Media object
+  - position: {Integer} Position of the media. Used for accessible label.
+  - media_width: {Integer} The width of the media in pixels.
+  - lazyload: {Boolean} Image should be lazy loaded. Default: true (optional).
+
+  Usage:
+  {% render 'product-gallery-media-thumbnail',
+    media: media,
+    position: forloop.index,
+  %}
+{% endcomment %}
+
+{% liquid
+  unless lazyload == false
+    assign lazy = 'lazy'
+  endunless
+%}
+
+<div class="aspect-ratio" style="--ratio-percent: 100%;">
+  {{
+    media.preview_image
+    | image_url: width: 450
+    | image_tag:
+      loading: lazy,
+      widths: '48, 96, 150, 300, 450',
+      sizes: '(min-width: 990px) calc(((100vw - 4rem) / 2) * 0.14), (min-width: 750px) calc((100vw - 3rem) * 0.14), calc((100vw - 3rem - 5rem) / 5)'
+  }}
+</div>
+
+<button
+  type="button"
+  class="product-media-toggle"
+  aria-haspopup="dialog"
+  data-media-id="{{ media.id }}"
+>
+  <span class="visually-hidden">
+    {{- 'products.product.media.load_image' | t: index: position -}}
+  </span>
+</button>
+
+{% if media.media_type == 'model' %}
+  <span class="product-media-thumbnail-badge" aria-hidden="true">
+    {%- render 'icons', icon: '3d-model' -%}
+  </span>
+{% elsif media.media_type == 'video' or media.media_type == 'external_video' %}
+  <span class="product-media-thumbnail-badge" aria-hidden="true">
+    {%- render 'icons', icon: 'play' -%}
+  </span>
+{% endif %}

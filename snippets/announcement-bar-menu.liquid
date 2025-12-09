@@ -1,0 +1,70 @@
+{% comment %}
+  Renders the announcement bar's menu
+
+  Accepts:
+  - menu: {Object} Menu (linklist) object
+
+  Usage:
+  {% render 'announcement-bar-menu', menu: menu %}
+{% endcomment %}
+
+<ul class="navigation-menu navigation-announcement-bar navigation-end" role="list">
+  {%- for link in menu.links -%}
+    <li
+      class="
+        navigation-item
+        {% if forloop.first %} navigation-item-end {% endif %}
+        {% if link.links != blank %} has-sub-menu {% endif %}
+      "
+    >
+      <a
+        href="{{ link.url }}"
+        {%- if link.current -%}
+          aria-current="page" class="current"
+        {%- endif -%}
+      >
+        {{ link.title | escape }}
+        {%- if link.links != blank -%}
+          {% render 'icons', icon: 'angle' %}
+        {%- endif -%}
+      </a>
+
+      {%- if link.links != blank -%}
+        <ul class="navigation-sub-menu color-background-1">
+          {%- for childlink in link.links -%}
+            <li class="navigation-item {% if childlink.links != blank %} has-sub-menu {% endif %}">
+              <a
+                href="{{ childlink.url }}"
+                {%- if childlink.current -%}
+                  aria-current="page" class="current"
+                {%- endif -%}
+              >
+                {{ childlink.title | escape }}
+                {%- if childlink.links != blank -%}
+                  {% render 'icons', icon: 'angle' %}
+                {%- endif -%}
+              </a>
+
+              {%- if childlink.links != blank -%}
+                <ul class="navigation-sub-menu color-background-1">
+                  {%- for grandchildlink in childlink.links -%}
+                    <li class="navigation-item {% if grandchildlink.links != blank %} has-sub-menu {% endif %}">
+                      <a
+                        href="{{ grandchildlink.url }}"
+                        {%- if grandchildlink.current -%}
+                          aria-current="page" class="current"
+                        {%- endif -%}
+                      >
+                        {{ grandchildlink.title | escape }}
+                      </a>
+                    </li>
+                  {%- endfor -%}
+                </ul>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </li>
+  {%- endfor -%}
+</ul>

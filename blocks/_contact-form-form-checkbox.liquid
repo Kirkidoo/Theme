@@ -1,0 +1,77 @@
+{% liquid
+  assign form_id = section.settings.form_id | handleize | default: 'flexi-contact-form'
+  assign field_name = block.settings.title | handleize
+  assign field_id = form_id | append: '-' | append: field_name | append: '-' | append: block.id
+  assign field_classes = 'flexi-block field field-checkbox'
+  assign checkbox_value = block.settings.checkbox_value | default: 'Yes'
+%}
+
+{% if block.settings.title != blank %}
+  <div class="{{ field_classes }}" {{ block.shopify_attributes }}>
+    <div class="field-checkbox-group">
+      <input
+        type="checkbox"
+        id="{{ field_id }}"
+        name="contact[{{ field_name }}]"
+        value="{{ checkbox_value | escape }}"
+        {% if block.settings.required %}
+          required="required"
+          aria-required="true"
+        {% endif %}
+      >
+
+      <label class="field-label" for="{{ field_id }}">
+        {{ block.settings.title }}
+        {% if block.settings.required -%}
+          <span aria-hidden="true">*</span>
+        {%- endif %}
+      </label>
+    </div>
+
+    {% if block.settings.help_text != blank %}
+      <small class="field-help-text">{{ block.settings.help_text }}</small>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._contact_form_form_checkbox.name",
+    "tag": null,
+    "class": "flexi-block flexi-checkbox",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "t:theme_blocks._contact_form_form_checkbox.settings.title.label",
+        "info": "t:theme_blocks._contact_form_form_checkbox.settings.title.info",
+        "default": "Checkbox Label"
+      },
+      {
+        "type": "text",
+        "id": "checkbox_value",
+        "label": "t:theme_blocks._contact_form_form_checkbox.settings.checkbox_value.label",
+        "info": "t:theme_blocks._contact_form_form_checkbox.settings.checkbox_value.info",
+        "default": "Yes"
+      },
+      {
+        "type": "checkbox",
+        "id": "required",
+        "label": "t:theme_blocks._contact_form_form_checkbox.settings.required.label",
+        "info": "t:theme_blocks._contact_form_form_checkbox.settings.required.info",
+        "default": false
+      },
+      {
+        "type": "inline_richtext",
+        "id": "help_text",
+        "label": "t:theme_blocks._contact_form_form_checkbox.settings.help_text.label"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._contact_form_form_checkbox.name",
+        "category": "t:theme_blocks.categories.form"
+      }
+    ]
+  }
+{% endschema %}

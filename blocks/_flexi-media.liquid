@@ -1,0 +1,136 @@
+{% liquid
+  assign has_custom_video = false
+  if block.settings.custom_video != blank
+    assign has_custom_video = true
+  endif
+
+  assign has_video_url = false
+  if block.settings.video_url != blank
+    assign has_video_url = true
+  endif
+
+  assign video_type = blank
+  if has_custom_video
+    assign video_type = 'self-hosted'
+  elsif has_video_url
+    assign video_type = block.settings.video_url.type
+  endif
+%}
+
+{% if has_custom_video or has_video_url %}
+  {{ 'section-video.css' | asset_url | stylesheet_tag }}
+  {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
+  {{ 'component-video-background.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'video-background.js' | asset_url }}" defer="defer"></script>
+{% endif %}
+
+<div
+  class="flexi-block flexi-media{% if has_custom_video or has_video_url %} flexi-media-video{% endif %}"
+  {{ block.shopify_attributes }}
+>
+  {%- capture image_sizes -%}
+    (min-width: 990px) calc((100vw - 6rem) / 2), calc(100vw - 3rem)
+  {%- endcapture -%}
+  {%- assign image_widths = '375, 550, 750, 1100, 1420' -%}
+
+  {% if has_custom_video %}
+    {%- assign ratio = block.settings.custom_video.aspect_ratio -%}
+    <div
+      class="aspect-ratio"
+      style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+    >
+      <video-background
+        data-section-id="{{ section.id }}"
+        data-type="{{ video_type }}"
+        class="flexi-media-video-background"
+      >
+        <div class="video-background-loader"></div>
+        <div class="video-background-player">
+          <video muted playsinline preload="none" loop>
+            {% for source in block.settings.custom_video.sources %}
+              <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
+            {% endfor %}
+          </video>
+        </div>
+      </video-background>
+    </div>
+  {% elsif has_video_url %}
+    {% render 'video',
+      media_id: block.settings.video_url.id,
+      video_url: block.settings.video_url,
+      cover_image: block.settings.image,
+      description: block.settings.alt_text,
+      image_sizes: image_sizes,
+      image_widths: image_widths
+    %}
+  {% elsif block.settings.image != blank %}
+    {% assign alt_text = block.settings.alt_text | default: block.settings.image.alt %}
+    {% liquid
+      assign ratio = 0
+      if block.settings.image and block.settings.image.aspect_ratio != 0 and block.settings.image.aspect_ratio != null
+        assign ratio = block.settings.image.aspect_ratio
+      endif
+    %}
+    {% if ratio != 0 %}
+      <div
+        class="aspect-ratio"
+        style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+      >
+    {% endif %}
+    {{
+      block.settings.image
+      | image_url: width: 1420
+      | image_tag:
+        alt: alt_text,
+        class: 'flexi-media__img',
+        loading: 'lazy',
+        sizes: image_sizes,
+        widths: image_widths
+    }}
+    {% if ratio != 0 %}
+      </div>
+    {% endif %}
+  {% else %}
+    {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+  {% endif %}
+</div>
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._flexi-media.name",
+    "tag": null,
+    "class": "flexi-block flexi-media",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:theme_blocks._flexi-media.settings.image.label"
+      },
+      {
+        "type": "video",
+        "id": "custom_video",
+        "label": "t:theme_blocks._flexi-media.settings.custom_video.label",
+        "info": "t:theme_blocks._flexi-media.settings.custom_video.info"
+      },
+      {
+        "type": "video_url",
+        "id": "video_url",
+        "label": "t:theme_blocks._flexi-media.settings.video_url.label",
+        "info": "t:theme_blocks._flexi-media.settings.video_url.info",
+        "accept": ["youtube", "vimeo"],
+        "placeholder": "https://"
+      },
+      {
+        "type": "text",
+        "id": "alt_text",
+        "label": "t:theme_blocks._flexi-media.settings.alt_text.label",
+        "info": "t:theme_blocks._flexi-media.settings.alt_text.info"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._flexi-media.name"
+      }
+    ]
+  }
+{% endschema %}

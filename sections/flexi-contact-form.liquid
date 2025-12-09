@@ -1,0 +1,248 @@
+{% liquid
+  assign color_scheme_string = section.settings.color_scheme | append: ''
+  assign section_content_class = 'section-content'
+  unless color_scheme_string == 'background-1'
+    assign section_content_class = section_content_class | append: ' section-content-padded'
+  endunless
+
+  assign form_id = section.settings.form_id | handleize | default: 'flexi-contact-form'
+  assign columns_count = section.blocks.size
+  assign columns_layout_class = 'flexi-contact-form__columns--' | append: columns_count
+  if columns_count == 1
+    assign columns_layout_class = columns_layout_class | append: ' flexi-contact-form__columns--centered'
+  endif
+%}
+
+<style>
+  #shopify-section-{{ section.id }} .section-content {
+  	margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+  	margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+  }
+
+  #shopify-section-{{ section.id }} .section-content-padded {
+  	margin-top: 0;
+  	margin-bottom: 0;
+  	padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+  	padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+  }
+
+  @media (min-width: 990px) {
+  	#shopify-section-{{ section.id }} .section-content {
+  		margin-top: {{ section.settings.spacing_top }}px;
+  		margin-bottom: {{ section.settings.spacing_bottom }}px;
+  	}
+
+  	#shopify-section-{{ section.id }} .section-content-padded {
+  		margin-top: 0;
+  		margin-bottom: 0;
+  		padding-top: {{ section.settings.spacing_top }}px;
+  		padding-bottom: {{ section.settings.spacing_bottom }}px;
+  	}
+  }
+</style>
+
+{{ 'section-flexi-contact-form.css' | asset_url | stylesheet_tag }}
+
+{%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+{%- assign visibility_classes = visibility_classes | strip -%}
+
+<div class="{{ visibility_classes }}">
+  <div class="color-{{ section.settings.color_scheme }}">
+    <div class="container">
+      <div class="{{ section_content_class }}">
+        {%- form 'contact', id: form_id, class: 'flexi-contact-form' -%}
+          {%- if form.posted_successfully? -%}
+            <div class="form-status form-status-success" tabindex="-1" autofocus>
+              {% if section.settings.success_message != blank %}
+                {{ section.settings.success_message }}
+              {% else %}
+                {{ 'templates.contact.form.post_success' | t }}
+              {% endif %}
+            </div>
+          {%- elsif form.errors -%}
+            <div class="form-status form-status-error" role="alert" tabindex="-1" autofocus>
+              <h5 class="form-status-title">{{ 'general.form.error_heading' | t }}</h5>
+              <ul class="form-status-list" role="list">
+                {%- for field in form.errors -%}
+                  <li>
+                    <a href="#{{ form_id }}-{{ field }}" class="link">
+                      {{ form.errors.translated_fields[field] | capitalize }}
+                      {{ form.errors.messages[field] }}
+                    </a>
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
+
+          <div class="flexi-contact-form__columns {{ columns_layout_class }}">
+            {% content_for 'blocks' %}
+          </div>
+        {%- endform -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.flexi_contact_form.name",
+    "tag": "section",
+    "class": "flexi-contact-form-section",
+    "disabled_on": {
+      "groups": ["header", "footer", "custom.overlays"]
+    },
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:sections.flexi_contact_form.settings.header_form.content"
+      },
+      {
+        "type": "text",
+        "id": "form_id",
+        "label": "t:sections.flexi_contact_form.settings.form_id.label",
+        "info": "t:sections.flexi_contact_form.settings.form_id.info",
+        "default": "flexi-contact-form"
+      },
+      {
+        "type": "text",
+        "id": "success_message",
+        "label": "t:sections.flexi_contact_form.settings.success_message.label",
+        "default": "Thank you for your message. We'll get back to you soon!"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.seo_heading.label"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "default": "h2",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      }
+    ],
+    "blocks": [{ "type": "_contact-form-column" }],
+    "max_blocks": 2,
+    "presets": [
+      {
+        "name": "t:sections.flexi_contact_form.name",
+        "category": "t:sections.all.preset_category.flexi",
+        "blocks": [
+          {
+            "type": "_contact-form-column",
+            "blocks": [
+              {
+                "type": "_flexi-heading",
+                "settings": {
+                  "text": "Get in Touch"
+                }
+              },
+              {
+                "type": "_flexi-richtext",
+                "settings": {
+                  "text": "<p>We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>"
+                }
+              }
+            ]
+          },
+          {
+            "type": "_contact-form-column",
+            "blocks": [
+              {
+                "type": "_contact-form-form-input",
+                "settings": {
+                  "title": "Name",
+                  "input_type": "text",
+                  "required": false
+                }
+              },
+              {
+                "type": "_contact-form-form-input",
+                "settings": {
+                  "title": "Email",
+                  "input_type": "email",
+                  "required": true
+                }
+              },
+              {
+                "type": "_contact-form-form-textarea",
+                "settings": {
+                  "title": "Message",
+                  "required": true
+                }
+              },
+              {
+                "type": "_contact-form-form-button",
+                "settings": {
+                  "title": "Send Message"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

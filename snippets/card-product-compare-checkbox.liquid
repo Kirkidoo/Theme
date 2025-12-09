@@ -1,0 +1,35 @@
+{% comment %}
+  Renders a compare checkbox for a product card.
+
+  Accepts:
+  - product: Product (required) - The product to render the compare checkbox for.
+
+  Usage:
+  {% render 'card-product-compare-checkbox', product: product %}
+{% endcomment %}
+
+<product-compare-checkbox
+  data-id="{{ product.id }}"
+  data-title="{{ product.title | escape }}"
+  data-url="{{ product.url }}"
+  data-handle="{{ product.handle }}"
+  class="card-product-compare-actions"
+>
+  <label
+    class="card-product-compare-label"
+    aria-label="{{ 'templates.collection.product_compare.compare_product_card_label' | t }}"
+  >
+    <input
+      type="checkbox"
+      name="compare-product"
+    >
+    <span>{{ 'templates.collection.product_compare.compare_product_card_label' | t }}</span>
+  </label>
+
+  <span class="card-product-compare-alert rte color-accent-1">
+    {{
+      'templates.collection.product_compare.compare_product_card_alert_link_html'
+      | t: modal: settings.product_compare_modal
+    }}
+  </span>
+</product-compare-checkbox>

@@ -1,0 +1,104 @@
+{% comment %}
+  Quantity input for variants
+
+  Accepts:
+  - variant: {Object} Variant object
+  - min: {Number} Min (optional)
+
+  Usage:
+  {% render 'quantity-input-variant' variant: variant %}
+{% endcomment %}
+{% liquid
+  if variant.inventory_policy == 'deny' and variant.inventory_management != null
+    assign max = variant.inventory_quantity
+
+    if variant.quantity_rule.max != null
+      if variant.quantity_rule.max > variant.inventory_quantity
+        if variant.quantity_rule.increment != null
+          assign remainder = variant.inventory_quantity | modulo: variant.quantity_rule.increment
+          assign max = variant.inventory_quantity | minus: remainder
+        endif
+      else
+        assign max = variant.quantity_rule.max
+      endif
+    endif
+
+  elsif variant.quantity_rule.max != null
+    assign max = variant.quantity_rule.max
+  endif
+
+  assign check_against_inventory = true
+  if variant.inventory_management != 'shopify' or variant.inventory_policy == 'continue'
+    assign check_against_inventory = false
+  endif
+  if variant.quantity_rule.min > variant.inventory_quantity and check_against_inventory
+    assign quantity_rule_soldout = true
+  endif
+
+  assign is_available = false
+  unless variant.available == false or quantity_rule_soldout
+    assign is_available = true
+  endunless
+%}
+{% if is_available %}
+  <quantity-input class="quantity-input quantity-input-variant">
+    <button
+      type="button"
+      name="minus"
+      class="quantity-input-button quantity-input-minus"
+      data-target="decrement-{{ variant.id }}"
+    >
+      &minus;
+      <span class="visually-hidden">
+        {{- 'products.product.quantity.decrease' | t: product: variant.title | escape -}}
+      </span>
+    </button>
+    <input
+      class="quantity-input-field"
+      data-quantity-variant-id="{{ variant.id }}"
+      type="number"
+      name="updates[{{ variant.id }}]"
+      {% # theme-check-disable %}
+      value="{{ cart | item_count_for_variant: variant.id }}"
+      data-cart-quantity="{{ cart | item_count_for_variant: variant.id }}"
+      min="{{ min }}"
+      data-min="{{ variant.quantity_rule.min }}"
+      {% if max != blank %}
+        max="{{ max }}"
+      {% endif %}
+      step="{{ variant.quantity_rule.increment }}"
+      {% # theme-check-enable %}
+      aria-label="{{ 'products.product.quantity.input_label' | t: product: variant.title | escape }}"
+      id="Quantity-{{ variant.id }}"
+      data-index="{{ variant.id }}"
+      data-target="quantity-input-{{ variant.id }}"
+    >
+    <button
+      type="button"
+      name="plus"
+      class="quantity-input-button quantity-input-plus"
+      data-target="increment-{{ variant.id }}"
+    >
+      &plus;
+      <span class="visually-hidden">
+        {{- 'products.product.quantity.increase' | t: product: variant.title | escape -}}
+      </span>
+    </button>
+    <div class="qty-progress-bar-container">
+      <div class="qty-progress-bar">
+        <div class="qty-progress-bar-value"></div>
+      </div>
+    </div>
+    <span class="spinner spinner-xs"></span>
+    <span class="quantity-success-check">
+      {% render 'icons', icon: 'check' %}
+    </span>
+  </quantity-input>
+{% else %}
+  <span class="bulk-variant-out-of-stock">
+    {{-
+      'products.product.availability.insufficient_stock'
+      | t: stock: variant.inventory_quantity, min: variant.quantity_rule.min
+    -}}
+  </span>
+{% endif %}

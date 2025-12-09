@@ -1,0 +1,53 @@
+/* Blog Template
+=================================== */
+.blog-articles .grid {
+  grid-row-gap: 5rem;
+}
+
+.main-blog-blogs-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  grid-gap: 1rem;
+  margin: 3rem auto 4rem;
+}
+
+@media (min-width: 990px) {
+  .main-blog-blogs-list {
+    max-width: 50%;
+    grid-gap: 1.5rem;
+    margin: 4rem auto 5rem;
+  }
+}
+
+.main-blog-blogs-list-link {
+  font-size: calc(var(--font-body-scale) * 1.5rem);
+  font-family: inherit;
+  cursor: pointer;
+  display: block;
+  justify-content: flex-start;
+  align-items: center;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  text-decoration: none;
+  background: rgba(var(--color-background));
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-border));
+  color: rgba(var(--color-foreground));
+  height: auto;
+  line-height: calc(1 + 0.2 / var(--font-body-scale));
+  border-radius: var(--border-radius-base);
+  font-weight: var(--font-bolder-weight);
+  text-align: center;
+}
+
+.main-blog-blogs-list-link:hover,
+.main-blog-blogs-list-link[aria-current] {
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-accent-2));
+}
+
+@media (min-width: 990px) {
+  .main-blog-blogs-list-link {
+    padding: 0.7rem 1.25rem;
+    min-width: 10rem;
+  }
+}

@@ -1,0 +1,89 @@
+<style>
+  .product-block-highlights {
+    display: flex;
+    gap: 1rem;
+    font-size: calc(var(--font-body-scale) * 1.3rem);
+
+    .product-block-highlight {
+      display: flex;
+      flex: 1 1 0;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      background-color: rgba(var(--color-background));
+      color: rgba(var(--color-foreground));
+      border: solid 1px rgba(var(--color-border));
+      border-radius: var(--border-radius-base);
+
+      & > span {
+        display: flex;
+        justify-self: center;
+        line-height: 1;
+      }
+    }
+
+    &.product-block-highlights-horizontal {
+      flex-direction: row;
+      flex-wrap: wrap;
+
+      .product-block-highlight {
+        white-space: nowrap;
+        min-width: max-content;
+      }
+    }
+
+    &.product-block-highlights-vertical {
+      flex-direction: column;
+
+      .product-block-highlight {
+        justify-content: start;
+      }
+    }
+  }
+
+  @media (max-width: 749px) {
+    .product-block-highlights.product-block-highlights-horizontal {
+      flex-direction: column;
+      flex-wrap: nowrap;
+
+      .product-block-highlight {
+        flex: none;
+        width: 100%;
+        justify-content: start;
+      }
+    }
+  }
+</style>
+
+<div class="product-block-highlights product-block-highlights-{{ block.settings.highlights_layout }}">
+  {% for i in (1..3) %}
+    {% assign highlight_text = 'highlight_' | append: i | append: '_text' %}
+    {% assign highlight_icon = 'highlight_' | append: i | append: '_icon' %}
+    {% assign highlight_custom_icon = 'highlight_' | append: i | append: '_custom_icon' %}
+
+    {% if block.settings[highlight_text] != blank %}
+      <div class="product-block-highlight color-{{ block.settings.color_scheme }}">
+        {% if block.settings[highlight_icon] != blank %}
+          <span class="product-block-highlight-icon {{  highlight_icon }}">
+            {% if block.settings[highlight_icon] == 'custom'
+              and block.settings[highlight_custom_icon] != blank
+            %}
+              <img
+                src="{{ block.settings[highlight_custom_icon] | image_url: width: 24 }}"
+                alt="{{ block.settings[highlight_text] }}"
+                width="24"
+                height="24"
+              >
+            {% else %}
+              {% render 'icons', icon: block.settings[highlight_icon] %}
+            {% endif %}
+          </span>
+        {% endif %}
+        <span class="product-block-highlight-text {{  highlight_text }}">
+          {{- block.settings[highlight_text] -}}
+        </span>
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>

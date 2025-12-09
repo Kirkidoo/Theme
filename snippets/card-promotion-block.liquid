@@ -1,0 +1,110 @@
+{% comment %}
+  Renders a customizable banner card.
+
+  Accepts:
+  - image: {Object} Optional. Image object.
+  - title: {String} Optional. The title.
+  - description: {String} Optional. The description.
+  - button_link: {String} Optional. Button link.
+  - button_text: {String} Optional. Button text.
+  - new_window: {Boolean} Optional. Whether to open the link in a new window.
+  - overlay: {Boolean} Show overlay when true. Default true.
+  - class: {String} Optional. CSS class.
+  - id: {String} Optional. HTML id.
+  - card_clickable_desktop: {Boolean} Optional. Whether the card should be clickable on desktop.
+  - settings: {Object} Optional. The card settings.
+  - settings.background_color: {String} Optional. The card's background color.
+  - settings.background_image_position: {String} Optional. The card's image position.
+  - settings.box_align: {String} Content alignment for desktop.
+  - settings.mobile_box_align: {String} Content alignment for mobile.
+  - settings.heading_size: {String} Title size for desktop.
+  - settings.mobile_heading_size: {String} Title size for mobile.
+  - settings.text_color: {String} Text color.
+
+  Usage:
+  {% render 'card-promotion-block' title: title, image: image %}
+{% endcomment %}
+
+<div
+  {% if id != blank %}
+    id="{{ id }}"
+  {% endif %}
+  class="card-overlay card-overlay-fixed-media {% if overlay == false or settings.overlay_background == blank %}card-overlay-off{% else %}card-overlay-on{% endif %} {% if card_clickable_desktop %}card-pointer-all{% endif %} {{ class }}"
+  style="
+    {% unless settings.background_color == blank %}
+    	background-color: {{ settings.background_color }};
+    {% endunless %}
+  "
+>
+  {% if button_link and button_text == blank and title == blank and description == blank %}
+    <a href="{{ button_link }}">
+  {% endif %}
+
+  <div
+    class="card-overlay-info content-align-{{ settings.mobile_box_align }} content-align-desktop-{{ settings.box_align }}"
+    style="color: {{ settings.text_color }}"
+  >
+    {%- unless title == blank -%}
+      <h3 class="card-overlay-heading card-overlay-heading-{{ settings.mobile_heading_size }} card-overlay-heading-desktop-{{ settings.heading_size }}">
+        {%- if button_link -%}
+          <a
+            href="{{ button_link }}"
+            {% if new_window %}
+              target="_blank"
+            {% endif %}
+          >
+        {%- endif -%}
+        {{ title }}
+        {%- if button_link -%}
+          </a>
+        {%- endif -%}
+      </h3>
+    {%- endunless -%}
+
+    {%- unless description == blank -%}
+      <div class="card-overlay-caption">
+        {{ description }}
+      </div>
+    {%- endunless -%}
+
+    {%- unless button_text == blank or button_link == blank -%}
+      <a
+        href="{{ button_link }}"
+        class="{% if settings.button_type_link %}button-text-link{% else %}button color-button-{{ settings.button_color_scheme }}{% endif %}"
+        {% if new_window %}
+          target="_blank"
+        {% endif %}
+      >
+        {{ button_text }}
+      </a>
+    {%- endunless -%}
+  </div>
+
+  {% if image != blank %}
+    <div class="card-overlay-fixed-media-wrap content-align-{{ settings.background_image_position }}">
+      <img
+        class="card-overlay-media"
+        srcset="
+          {%- if image.width >= 180 -%}{{ image | image_url: width: 180 }} 180w,{%- endif -%}
+          {%- if image.width >= 220 -%}{{ image | image_url: width: 220 }} 220w,{%- endif -%}
+          {%- if image.width >= 360 -%}{{ image | image_url: width: 360 }} 360w,{%- endif -%}
+          {%- if image.width >= 440 -%}{{ image | image_url: width: 440 }} 440w,{%- endif -%}
+          {%- if image.width >= 540 -%}{{ image | image_url: width: 540 }} 540w,{%- endif -%}
+          {%- if image.width >= 720 -%}{{ image | image_url: width: 720 }} 720w,{%- endif -%}
+          {%- if image.width >= 1080 -%}{{ image | image_url: width: 1080 }} 1080w,{%- endif -%}
+          {{ image | image_url }} {{ image.width }}w
+        "
+        sizes="(min-width: 990px) 220px, 180px"
+        src="{{ image | image_url: width: 540 }}"
+        alt="{{ image.alt | escape }}"
+        width="{{ image.width }}"
+        height="{{ image.height }}"
+        loading="lazy"
+      >
+    </div>
+  {% endif %}
+
+  {% if button_link and button_text == blank and title == blank and description == blank %}
+    </a>
+  {% endif %}
+</div>

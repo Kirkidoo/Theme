@@ -1,0 +1,474 @@
+<script src="{{ 'recently-viewed-products.js' | asset_url }}" defer="defer"></script>
+{% liquid
+  assign show_section = false
+  if request.design_mode or search.performed and search.results_count >= 1
+    assign show_section = true
+  endif
+%}
+{{ 'component-card-overlay.css' | asset_url | stylesheet_tag }}
+{{ 'component-card.css' | asset_url | stylesheet_tag }}
+{{ 'component-price.css' | asset_url | stylesheet_tag }}
+{{ 'component-pills.css' | asset_url | stylesheet_tag }}
+{{ 'component-scroller.css' | asset_url | stylesheet_tag }}
+{{ 'component-rating.css' | asset_url | stylesheet_tag }}
+
+{%- if section.settings.layout == 'slider' -%}
+  {{ 'flickity.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'flickity.pkgd.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'carousel-slider.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+<recently-viewed-products
+  data-section-id="{{ section.id }}"
+  data-columns="{{ section.settings.columns }}"
+>
+  {% if show_section %}
+    {% liquid
+      assign columns = section.settings.columns | at_most: 5
+      assign products_to_show = section.settings.products_to_show | times: 1
+      assign layout_classes = 'grid-3-col-tablet'
+
+      if columns >= 5
+        assign layout_classes = layout_classes | append: ' grid-compact grid-5-col-desktop'
+      endif
+
+      if columns == 4
+        assign layout_classes = layout_classes | append: ' grid-4-col-desktop'
+      endif
+
+      if section.settings.layout == 'slider'
+        assign layout_classes = layout_classes | append: ' grid-carousel'
+      endif
+
+      assign mobile_two_columns = false
+      if section.settings.mobile_columns == '2'
+        assign layout_classes = layout_classes | prepend: 'product-grid grid grid-2-col '
+        assign mobile_two_columns = true
+      else
+        assign layout_classes = layout_classes | prepend: 'grid grid-1-col '
+      endif
+
+      assign color_scheme_string = section.settings.color_scheme | append: ''
+      assign section_content_class = 'section-content'
+      unless color_scheme_string == 'background-1'
+        assign section_content_class = section_content_class | append: ' section-content-padded'
+      endunless
+    %}
+
+    <style>
+        #shopify-section-{{ section.id }} .card-overlay::after {
+        	background: {{ section.settings.collection_overlay_background }};
+        }
+
+        #shopify-section-{{ section.id }} .card-overlay .card-overlay-info {
+        	color: {{ section.settings.collection_text_color }};
+        }
+
+      #shopify-section-{{ section.id }} .section-content {
+        margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+        margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+      }
+
+      #shopify-section-{{ section.id }} .section-content-padded {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+        padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+      }
+
+      @media (min-width: 990px) {
+        #shopify-section-{{ section.id }} .section-content {
+          margin-top: {{ section.settings.spacing_top }}px;
+          margin-bottom: {{ section.settings.spacing_bottom }}px;
+        }
+
+        #shopify-section-{{ section.id }} .section-content-padded {
+          margin-top: 0;
+          margin-bottom: 0;
+          padding-top: {{ section.settings.spacing_top }}px;
+          padding-bottom: {{ section.settings.spacing_bottom }}px;
+        }
+      }
+    </style>
+
+    {%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+    {%- assign visibility_classes = visibility_classes | strip -%}
+
+    <div class="{{ visibility_classes }}">
+      <div class="color-{{ section.settings.color_scheme }}">
+        <div class="container">
+          <div class="{{ section_content_class }}">
+            {% if section.settings.heading != blank
+              or section.settings.subheading != blank
+              or section.settings.layout == 'slider'
+            %}
+              <div class="section-headings {% if section.settings.subheading != blank %}with-subheading{% endif %}">
+                {% if section.settings.heading != blank or section.settings.subheading != blank %}
+                  <div class="section-headings-content{% if section.settings.headings_alignment == 'center' %} center-aligned{% endif %}">
+                    {% if section.settings.heading != blank %}
+                      <{{ section.settings.heading_tag }} class="section-heading heading-size-{{ section.settings.heading_size }}">
+                        {{- section.settings.heading -}}
+                      </{{ section.settings.heading_tag }}>
+                    {% endif %}
+                    {% if section.settings.subheading != blank %}
+                      <p class="section-subheading">{{ section.settings.subheading }}</p>
+                    {% endif %}
+                  </div>
+                {% endif %}
+
+                {% if section.settings.layout == 'slider' and products_to_show > columns %}
+                  <carousel-navigation
+                    for="Carousel-{{ section.id }}"
+                    class="section-headings-actions visible-tablet-up"
+                  >
+                    <div class="pill-nav pill-nav-slider">
+                      <button
+                        class="pill-nav-item pill-nav-item-disabled focus-none js-prev"
+                        aria-disabled="true"
+                      >
+                        <span class="visually-hidden">
+                          {{- 'sections.slideshow.previous_slide' | t -}}
+                        </span>
+                        {% render 'angle', direction: 'left' %}
+                      </button>
+                      <button
+                        class="pill-nav-item js-next"
+                        aria-disabled="false"
+                      >
+                        <span class="visually-hidden">
+                          {{- 'sections.slideshow.next_slide' | t -}}
+                        </span>
+                        {% render 'angle', direction: 'right' %}
+                      </button>
+                    </div>
+                  </carousel-navigation>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <div class="collection">
+              {%- if section.settings.layout == 'slider' -%}
+                <carousel-slider id="Carousel-{{ section.id }}">
+              {%- endif -%}
+
+              {%- unless section.settings.stack_on_mobile -%}
+                <div class="scroller">
+                  <div class="scroller-inner">
+              {%- endunless -%}
+
+              <div class="{{ layout_classes }}">
+                {% if search.performed %}
+                  {% assign paginate_limit = section.settings.products_to_show | times: 2 %}
+                  {% paginate search.results by paginate_limit %}
+                    {% liquid
+                      assign search_terms = search.terms | split: ' OR '
+                      assign output_count = 0
+                    %}
+                    {% for search_term in search_terms %}
+                      {% assign search_id = search_term | split: 'id:' | last | plus: 0 %}
+                      {% for product in search.results %}
+                        {% if product.id == search_id
+                          and output_count < section.settings.products_to_show
+                        %}
+                          {% liquid
+                            assign lazyload = false
+                            if forloop.index > 2
+                              assign lazyload = true
+                            endif
+                          %}
+                          <div class="grid-item">
+                            {% render 'card-product',
+                              card_product: product,
+                              show_vendor: section.settings.show_vendor,
+                              show_stock: section.settings.show_stock,
+                              show_rating: section.settings.show_rating,
+                              show_sku: section.settings.show_sku,
+                              show_add_to_cart: settings.products_show_add_to_cart,
+                              mobile_two_columns: mobile_two_columns,
+                              event_context: 'RecentlyViewedProductsSection',
+                              lazyload: lazyload
+                            %}
+                          </div>
+
+                          {% assign output_count = output_count | plus: 1 %}
+                          {% break %}
+                        {% endif %}
+                      {% endfor %}
+                    {% endfor %}
+                  {% endpaginate %}
+                {% endif %}
+
+                {% if output_count == 0 and request.design_mode %}
+                  {% for i in (1..section.settings.products_to_show) %}
+                    <div class="grid-item">
+                      {% render 'card-product',
+                        card_product: null,
+                        show_vendor: section.settings.show_vendor,
+                        show_stock: section.settings.show_stock,
+                        show_rating: section.settings.show_rating,
+                        show_sku: section.settings.show_sku,
+                        show_add_to_cart: settings.products_show_add_to_cart,
+                        mobile_two_columns: mobile_two_columns,
+                        event_context: 'FeaturedCollectionSection'
+                      %}
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              </div>
+
+              {%- unless section.settings.stack_on_mobile -%}
+                </div>
+                </div>
+              {%- endunless -%}
+
+              {%- if section.settings.layout == 'slider' -%}
+                </carousel-slider>
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</recently-viewed-products>
+{% schema %}
+  {
+    "name": "t:sections.recently_viewed_products.name",
+    "tag": "section",
+    "class": "section section-recently-viewed-products",
+    "disabled_on": {
+      "groups": ["header", "custom.overlays"]
+    },
+    "settings": [
+      {
+        "type": "range",
+        "id": "products_to_show",
+        "min": 3,
+        "max": 12,
+        "step": 1,
+        "default": 5,
+        "label": "t:sections.recently_viewed_products.settings.products_to_show.label"
+      },
+      {
+        "type": "inline_richtext",
+        "id": "heading",
+        "label": "t:sections.recently_viewed_products.settings.heading.label",
+        "default": "Recently viewed"
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:sections.all.heading_size.label",
+        "default": "md",
+        "options": [
+          {
+            "value": "sm",
+            "label": "t:sections.all.heading_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.heading_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.heading_size.options.label_lg"
+          },
+          {
+            "value": "xl",
+            "label": "t:sections.all.heading_size.options.label_xl"
+          },
+          {
+            "value": "xxl",
+            "label": "t:sections.all.heading_size.options.label_xxl"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "headings_alignment",
+        "label": "t:sections.all.headings_alignment.label",
+        "default": "left",
+        "options": [
+          {
+            "value": "left",
+            "label": "t:sections.all.headings_alignment.options.label_left"
+          },
+          {
+            "value": "center",
+            "label": "t:sections.all.headings_alignment.options.label_center"
+          }
+        ]
+      },
+      {
+        "type": "inline_richtext",
+        "id": "subheading",
+        "label": "t:sections.recently_viewed_products.settings.subheading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_vendor",
+        "default": true,
+        "label": "t:sections.all.product.show_vendor.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_sku",
+        "default": false,
+        "label": "t:sections.all.product.show_sku.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_stock",
+        "default": true,
+        "label": "t:sections.all.product.show_stock.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_rating",
+        "default": false,
+        "label": "t:sections.all.product.show_rating.label",
+        "info": "t:sections.all.product.show_rating.info"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.layout.heading"
+      },
+      {
+        "type": "select",
+        "id": "layout",
+        "label": "t:sections.all.layout.layout.label",
+        "default": "grid",
+        "options": [
+          {
+            "value": "grid",
+            "label": "t:sections.all.layout.layout.options.label_grid"
+          },
+          {
+            "value": "slider",
+            "label": "t:sections.all.layout.layout.options.label_slider"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "columns",
+        "label": "t:sections.all.layout.desktop_columns.label",
+        "default": "5",
+        "options": [
+          {
+            "value": "3",
+            "label": "3"
+          },
+          {
+            "value": "4",
+            "label": "4"
+          },
+          {
+            "value": "5",
+            "label": "5"
+          }
+        ]
+      },
+      {
+        "type": "checkbox",
+        "id": "stack_on_mobile",
+        "default": false,
+        "label": "t:sections.all.layout.stack_on_mobile.label"
+      },
+      {
+        "type": "select",
+        "id": "mobile_columns",
+        "label": "t:sections.all.layout.mobile_columns.label",
+        "default": "1",
+        "options": [
+          {
+            "value": "1",
+            "label": "1"
+          },
+          {
+            "value": "2",
+            "label": "2"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.seo_heading.label"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "default": "h2",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.recently_viewed_products.presets.name",
+        "category": "t:sections.all.preset_category.products"
+      }
+    ]
+  }
+{% endschema %}

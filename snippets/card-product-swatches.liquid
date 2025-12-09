@@ -1,0 +1,111 @@
+{% comment %}
+  Renders a product card's swatches.
+
+  Accepts:
+  - product: {Object} Product object
+  - collection: {Object} Collection object associated with the product. Optional.
+
+  Usage:
+  {% render 'card-product-swatches' product: product %}
+{% endcomment %}
+
+{% liquid
+  assign swatches_colors = settings.color_swatches | newline_to_br | strip_newlines | split: '<br />'
+  assign swatches_options = settings.option_swatches | split: ',' | uniq
+  assign words = ''
+  assign colors = ''
+  for line in swatches_colors
+    assign word_color = line | split: ':'
+    assign word = word_color[0] | strip
+    assign color = word_color[1] | strip
+    assign words = words | append: '|' | append: word
+    assign colors = colors | append: '|' | append: color
+  endfor
+  assign words = words | replace_first: '|', '' | split: '|' | compact
+  assign colors = colors | replace_first: '|', '' | split: '|' | compact
+%}
+
+<div class="card-product-color-swatches">
+  {%- liquid
+    assign options_with_values_reversed = product.options_with_values | reverse
+    assign product_variants_reversed = product.variants | reverse
+  -%}
+  {%- # theme-check-disable LiquidTag -%}
+  {%- for option in options_with_values_reversed -%}
+    {%- # theme-check-enable LiquidTag -%}
+    {%- if swatches_options contains option.name -%}
+      {%- if option.values.size == 1 -%}
+        {%- continue -%}
+      {%- endif -%}
+      {%- for value in option.values -%}
+        {%- assign swatch_variant = product.selected_variant -%}
+        {%- for variant in product_variants_reversed -%}
+          {%- if variant.title contains value -%}
+            {%- assign swatch_variant = variant -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {% liquid
+          if forloop.index > settings.swatches_on_product_listings_max
+            break
+          endif
+        %}
+        <a
+          href="/products/{{ product.handle }}?variant={{ swatch_variant.id }}"
+          class="color-swatch card-product-color-swatch {% if option.selected_value == value %}is-active{% endif %}"
+          data-value="{{ value | escape }}"
+          data-tooltip="{{ value }}"
+          data-variant-image="{{ swatch_variant.image.src }}"
+          data-variant-sku="{{ swatch_variant.sku }}"
+          {% if value.swatch.image != blank %}
+            {% assign image_url = value.swatch.image | image_url: width: 80 %}
+            data-image="{{ image_url }}"
+            style="background-image: url({{ image_url }})"
+          {% elsif value.swatch.color != blank %}
+            data-color="{{ value.swatch.color }}"
+            style="background-color: rgb({{ value.swatch.color.rgb }})"
+          {% else %}
+            {% for word in words %}
+              {% if word == value %}
+                {% assign color = colors[forloop.index0] %}
+                {% if images[color] != blank %}
+                  data-image="{{ images[color] | image_url: width: 80 }}"
+                  style="background-image: url({{ images[color] | image_url: width: 80 }})"
+                {% else %}
+                  data-color="{{ color }}"
+                  style="background-color: {{ color }}"
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        >
+          {{ value | escape }}
+
+          {%- assign featured_media = swatch_variant.featured_media -%}
+          {%- if featured_media -%}
+            {{
+              featured_media
+              | image_url: width: 950
+              | image_tag:
+                class: 'card-media-image card-variant-image',
+                loading: 'lazy',
+                sizes: image_sizes,
+                widths: '200, 420, 650, 750, 950'
+            }}
+          {%- endif -%}
+        </a>
+      {%- endfor -%}
+
+      {% if option.values.size > settings.swatches_on_product_listings_max %}
+        {% assign more_swatches = option.values.size
+          | minus: settings.swatches_on_product_listings_max
+        %}
+        <a
+          class="card-product-color-swatch-more-text"
+          href="{% if settings.collection_product_url_enabled %}{{ product.url | within: collection }}{% else %}{{ product.url }}{% endif %}"
+        >
+          {{- 'products.product.swatches.more_swatches_count' | t: count: more_swatches -}}
+        </a>
+      {% endif %}
+    {%- endif -%}
+  {%- endfor -%}
+</div>

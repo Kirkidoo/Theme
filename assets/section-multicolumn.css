@@ -1,0 +1,38 @@
+/* Section - Multicolumn
+=================================== */
+
+.multicolumn .start {
+  text-align: start;
+}
+
+.multicolumn .center {
+  text-align: center;
+}
+
+.multicolumn .right {
+  text-align: end;
+}
+
+.multicolumn-call-to-action {
+  margin-top: 3rem;
+}
+
+.multicolumn-card-image-wrapper {
+  margin-bottom: 2rem;
+}
+
+.multicolumn-card-image-wrapper img {
+  border-radius: var(--border-radius-base);
+}
+
+.multicolumn-card-info h3 {
+  margin-bottom: 1rem;
+}
+
+.multicolumn-card-info .rte :last-child {
+  margin-bottom: 0;
+}
+
+.multicolumn-card-info .button {
+  margin-top: var(--spacing-base-1);
+}

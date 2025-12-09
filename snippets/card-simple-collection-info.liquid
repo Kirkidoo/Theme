@@ -1,0 +1,97 @@
+{% comment %}
+  Renders a customizable collection card.
+
+  Accepts:
+  - collection: {Object} Collection object
+  - image: {Object} Image object. Optional. If present, overrides the collection's image.
+  - title: {Boolean} Show title. Default: true.
+  - product_size: {Boolean} Show product size next to the title. Default: false.
+  - class: {String} Extra CSS classes. Optional.
+  - aspect: {String} Portrait, Square, or Adapt. Optional.
+  - columns {Number} Optional. The number of columns the card is rendered in.
+  - heading_size: {String} Optional. The heading size (sm, md, lg, xl, xxl).
+  - enable_border: {Boolean} Optional. Enable padding and border on the card.
+  - rounded: {Boolean} Optional. Whether to round the image.
+
+  Usage:
+  {% render 'card-simple-collection-info' collection: collection, image: image %}
+{% endcomment %}
+
+{% liquid
+  assign target_image = collection.featured_image
+  if image != blank
+    assign target_image = image
+  endif
+
+  assign ratio = 1
+  if target_image and aspect == 'portrait'
+    assign ratio = 0.8
+  elsif target_image and aspect == 'landscape'
+    assign ratio = 1.77
+  elsif target_image and aspect == 'adapt'
+    assign ratio = target_image.aspect_ratio
+  endif
+  if ratio == 0 or ratio == null
+    assign ratio = 1
+  endif
+
+  assign collection_title = collection.title
+  if product_size and collection_title
+    assign collection_title = collection_title | append: ' (' | append: collection.all_products_count | append: ')'
+  endif
+
+  assign title_size = 'md'
+  if heading_size != blank
+    assign title_size = heading_size
+  endif
+
+  assign card_class = 'card card-small card-simple-media color-background-1'
+  if rounded
+    assign card_class = card_class | append: ' card-simple-media-round'
+  endif
+  if enable_border == true
+    assign card_class = card_class | append: ' card-simple-media-plain'
+  endif
+%}
+
+<div class="card-simple {{ class }}">
+  <div class="{{ card_class }}">
+    <a
+      href="{{ collection.url }}"
+      class="card-media card-justify-center"
+      aria-label="{% if collection.title %}{{ collection_title }}{% else %}{{ 'onboarding.collection_title' | t }}{% endif %}"
+    >
+      {% if ratio != 0 %}
+        <div
+          class="aspect-ratio"
+          style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+        >
+      {% endif %}
+
+      {% if target_image != blank %}
+        {{
+          target_image
+          | image_url: width: 950
+          | image_tag:
+            widths: '250, 420, 650, 750, 950',
+            sizes: '(min-width: 1200px) 400px, (min-width: 990px) calc((100vw - 4rem - 3rem) / 3), calc(100vw - 3rem - 1rem)'
+        }}
+      {% else %}
+        {{ 'collection-1' | strip | placeholder_svg_tag }}
+      {% endif %}
+      {% if ratio != 0 %}
+        </div>
+      {% endif %}
+    </a>
+  </div>
+
+  {% unless title == false %}
+    <h3 class="card-simple-title card-simple-title-size-{{ title_size }}">
+      {% if collection.title %}
+        <a href="{{ collection.url }}">{{ collection_title }}</a>
+      {% else %}
+        {{ 'onboarding.collection_title' | t }}
+      {% endif %}
+    </h3>
+  {% endunless %}
+</div>

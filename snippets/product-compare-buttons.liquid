@@ -1,0 +1,93 @@
+{% comment %}
+  Renders the product comparison action buttons.
+
+  Usage:
+  {% render 'product-compare-buttons' %}
+{% endcomment %}
+
+<script>
+  (function () {
+    document.body.classList.add('page-loading');
+
+    const compareMode = '{{ settings.product_compare_mode }}';
+    let shouldShow = false;
+
+    if (compareMode === 'always') {
+      shouldShow = true;
+    } else if (compareMode === 'switch_enabled') {
+      const userToggleState = sessionStorage.getItem('compareMasterToggleState');
+      shouldShow = userToggleState === null ? true : userToggleState === 'true';
+    } else if (compareMode === 'switch_disabled') {
+      const userToggleState = sessionStorage.getItem('compareMasterToggleState');
+      shouldShow = userToggleState === 'true';
+    }
+
+    if (shouldShow) {
+      document.body.classList.add('product-compare-toggled-on');
+      const toggleCheckbox = document.getElementById('ProductCompareToggle');
+      if (toggleCheckbox) {
+        toggleCheckbox.checked = shouldShow;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const toggleCheckbox = document.getElementById('ProductCompareToggle');
+      if (toggleCheckbox) {
+        toggleCheckbox.checked = shouldShow;
+      }
+
+      setTimeout(function () {
+        document.body.classList.remove('page-loading');
+      }, 100);
+    });
+  })();
+</script>
+
+<div class="collection-actions-compare">
+  <product-compare-buttons
+    class="collection-actions-compare-buttons"
+    data-max-products="{{ settings.product_compare_max_products }}"
+    data-modal="{{ settings.product_compare_modal }}"
+  >
+    <div hidden class="collection-actions-compare-action">
+      <a
+        href="#"
+        role="link"
+        aria-disabled="true"
+        class="collection-actions-compare-button-label"
+      >
+        {{
+          'templates.collection.product_compare.compare_label_html'
+          | t:
+            max_products: settings.product_compare_max_products,
+            class: 'collection-actions-compare-value'
+        }}
+      </a>
+      <button class="collection-actions-compare-button-dismiss">
+        {% render 'icons', icon: 'trash' %}
+        <span class="visually-hidden">
+          {{- 'templates.collection.product_compare.compare_dismiss_all' | t -}}
+        </span>
+      </button>
+    </div>
+
+    {% if settings.product_compare_mode != 'always' %}
+      <div class="collection-actions-compare-toggle">
+        <input
+          id="ProductCompareToggle"
+          type="checkbox"
+          class="collection-action-compare-toggle-checkbox visually-hidden"
+          {% if settings.product_compare_mode == 'switch_enabled' %}
+            checked
+          {% endif %}
+        >
+        <label for="ProductCompareToggle" class="collection-action-compare-toggle-label">
+          <span class="collection-action-compare-toggle-label-text">
+            {{ 'templates.collection.product_compare.compare_switch_label' | t }}
+          </span>
+          <span class="collection-action-compare-toggle-label-switch"></span>
+        </label>
+      </div>
+    {% endif %}
+  </product-compare-buttons>
+</div>

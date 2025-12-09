@@ -1,0 +1,47 @@
+/* Section - Rich text
+=================================== */
+.section-rich-text {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.rich-text-align-left {
+  text-align: start;
+}
+
+.rich-text-align-center {
+  text-align: center;
+}
+
+.rich-text-align-right {
+  text-align: end;
+}
+
+.section-rich-text-content > * {
+  margin-top: var(--spacing-base-1);
+  margin-bottom: var(--spacing-base-1);
+}
+
+.section-rich-text-content .rich-text-heading a {
+  color: rgba(var(--color-accent-1));
+}
+
+.section-rich-text-content .button {
+  display: inline-block;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.section-rich-text-content > :first-child {
+  margin-top: 0;
+}
+
+.section-rich-text-content > :last-child {
+  margin-bottom: 0;
+}
+
+.section-rich-text-content .button {
+  margin-left: calc(var(--spacing-base-1) / 4);
+  margin-right: calc(var(--spacing-base-1) / 4);
+}

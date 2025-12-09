@@ -1,0 +1,165 @@
+{% comment %}theme-check-disable ImgLazyLoading{% endcomment %}
+{% comment %}
+  Renders a product thumbnail
+
+  Accepts:
+  - media: {Object} Product Media object
+  - position: {Integer} Position of the media. Used for accessible label.
+  - media_width: {Integer} The width of the media in pixels.
+  - lazyload: {Boolean} Image should be lazy loaded. Default: true (optional).
+  - modal_id: {String} The product modal that will be shown by clicking the thumbnail.
+  - image_zoom_type: {String} The image zoom type (lightbox|zoom_hover)
+  - custom_ratio: {Number} Optionally force a ratio.
+  - image_fit: {String} Optionally set the image's fit in the container (cover or contain).
+
+  Usage:
+  {% render 'product-gallery-media',
+    media: media,
+    position: forloop.index,
+    modal_id: section.id
+  %}
+{% endcomment %}
+
+{%- liquid
+  assign ratio = 0
+  if media and media.preview_image.aspect_ratio != 0 and media.preview_image.aspect_ratio != null
+    assign ratio = media.preview_image.aspect_ratio
+  endif
+
+  if custom_ratio
+    assign ratio = custom_ratio
+  endif
+
+  assign fit = 'contain'
+  if image_fit
+    assign fit = image_fit
+  endif
+
+  unless lazyload == false
+    assign lazy = 'lazy'
+  endunless
+-%}
+
+{% if image_zoom_type != 'none' %}
+  <modal-opener
+    class="product-modal-opener product-modal-opener-{{ media.media_type }} image-zoom-type-{{ image_zoom_type }}"
+    data-modal="#ProductModal-{{ modal_id }}"
+  >
+{% endif %}
+
+<div
+  {% if ratio != 0 %}
+    class="aspect-ratio aspect-ratio-fit-{{ fit }}"
+    style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+  {% endif %}
+>
+  {% if image_zoom_type == 'zoom_hover' or image_zoom_type == 'lightbox_zoom_hover' %}
+    <media-zoom
+      data-zoom="{{ media.preview_image | image_url: width: 3000 }}"
+      data-modal-id="{{ modal_id }}"
+      data-media-id="{{ media.id }}"
+      data-mode="{{ image_zoom_type }}"
+    >
+  {% endif %}
+  {{
+    media.preview_image
+    | image_url: width: 1200
+    | image_tag:
+      loading: lazy,
+      widths: '200, 420, 550, 750, 950, 1200',
+      sizes: '(min-width: 1200px) 550px, (min-width: 990px) calc(((100vw - 4rem) / 2) - 5rem), (min-width: 750px) calc(100vw - 6rem - (14% + 20px)), calc(100vw - 5rem)'
+  }}
+  {% if image_zoom_type == 'zoom_hover' or image_zoom_type == 'lightbox_zoom_hover' %}
+    </media-zoom>
+  {% endif %}
+</div>
+
+{% if image_zoom_type != 'none' %}
+  <button
+    type="button"
+    class="product-media-toggle"
+    aria-haspopup="dialog"
+    data-media-id="{{ media.id }}"
+  >
+    <span class="visually-hidden">
+      {{- 'products.product.media.open_media' | t: index: position -}}
+    </span>
+  </button>
+
+  <span class="product-media-icon-enlarge">
+    {% render 'icons', icon: 'search' %}
+  </span>
+  </modal-opener>
+{% endif %}
+
+{%- if media.media_type != 'image' -%}
+  {%- if media.media_type == 'model' -%}
+    <product-model
+      class="deferred-media media-with-aspect"
+      style="padding-top: 100%"
+      data-media-id="{{ media.id }}"
+    >
+  {%- else -%}
+    <deferred-media
+      class="deferred-media media-with-aspect"
+      style="padding-top: {{ 1 | divided_by: media.preview_image.aspect_ratio | times: 100 }}%"
+      data-media-id="{{ media.id }}"
+    >
+  {%- endif -%}
+  <button id="Deferred-Poster-Modal-{{ media.id }}" class="deferred-media-poster" type="button">
+    <span class="deferred-media-poster-button">
+      {%- if media.media_type == 'model' -%}
+        <span class="visually-hidden">{{ 'products.product.media.play_model' | t }}</span>
+        {%- render 'icons', icon: '3d-model' -%}
+      {%- else -%}
+        <span class="visually-hidden">{{ 'products.product.media.play_video' | t }}</span>
+        {%- render 'icons', icon: 'play' -%}
+      {%- endif -%}
+    </span>
+    {{
+      media.preview_image
+      | image_url: width: 1200
+      | image_tag:
+        loading: lazy,
+        widths: '200, 420, 550, 750, 950, 1200',
+        sizes: '(min-width: 1200px) 550px, (min-width: 990px) calc(((100vw - 4rem) / 2) - 5rem), (min-width: 750px) calc(100vw - 6rem - (14% + 20px)), calc(100vw - 5rem)'
+    }}
+  </button>
+  <template>
+    <div class="video-wrapper">
+      {%- liquid
+        case media.media_type
+          when 'external_video'
+            assign video_class = 'js-' | append: media.host
+            if media.host == 'youtube'
+              echo media | external_video_url: autoplay: true, loop: loop, playlist: media.external_id | external_video_tag: class: video_class, loading: 'lazy'
+            else
+              echo media | external_video_url: autoplay: true, loop: loop | external_video_tag: class: video_class, loading: 'lazy'
+            endif
+          when 'video'
+            echo media | media_tag: image_size: '2048x', autoplay: true, loop: loop, controls: true, preload: 'none'
+          when 'model'
+            echo media | media_tag: image_size: '2048x', toggleable: true
+        endcase
+      -%}
+    </div>
+  </template>
+
+  {%- if media.media_type == 'model' -%}
+    </product-model>
+    <button
+      class="button product-xr-button"
+      type="button"
+      aria-label="{{ 'products.product.xr_button_label' | t }}"
+      data-shopify-xr
+      data-shopify-model3d-id="{{ media.id }}"
+      data-shopify-title="title"
+      data-shopify-xr-hidden
+    >
+      {{ 'products.product.xr_button' | t }}
+      {% render 'icons', icon: '3d-model' %}
+    </button>
+  {%- else -%}
+    </deferred-media>
+  {%- endif -%}
+{%- endif -%}

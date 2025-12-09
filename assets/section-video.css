@@ -1,0 +1,89 @@
+/* Section - Video
+=================================== */
+.video-section-wrap {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-border)),
+    0 2px 0 rgba(var(--color-box-shadow));
+  background-color: rgba(var(--color-background));
+  padding: 2rem;
+  border-radius: var(--border-radius-base);
+}
+
+@media (min-width: 990px) {
+  .video-section-wrap {
+    padding: 2.5rem;
+  }
+}
+
+.section-fullwidth .video-section-wrap {
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.video-media {
+  position: relative;
+  padding-bottom: 56.25%;
+}
+
+.video-media.deferred-media::after {
+  content: none;
+}
+
+.video-media .video-poster {
+  border-radius: var(--border-radius-base);
+  overflow: hidden;
+}
+
+.section-fullwidth .video-media .video-poster {
+  border-radius: 0;
+}
+
+.video-media .video-poster-button {
+  width: 6rem;
+  height: 6rem;
+  color: var(--color-base-white);
+  border: 2px solid currentColor;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+@media (min-width: 990px) {
+  .video-media .video-poster-button {
+    width: 8rem;
+    height: 8rem;
+  }
+}
+
+.video-media .video-poster-button svg {
+  position: relative;
+  left: 2px;
+}
+
+.video-media iframe {
+  background-color: color-mix(in srgb, rgba(var(--color-foreground)), transparent 95%);
+  border: 0;
+}
+
+.video-media .placeholder-svg {
+  max-width: 100%;
+  height: 100%;
+  width: 100%;
+  background-color: color-mix(in srgb, rgba(var(--color-foreground)), transparent 95%);
+  color: color-mix(in srgb, rgba(var(--color-foreground)), transparent 45%);
+  fill: rgba(var(--color-foreground));
+}
+
+.video-poster,
+.video-media {
+  position: relative;
+  overflow: visible;
+}
+
+.video-poster > a > img,
+.video-poster iframe,
+.video-media > a > img,
+.video-media iframe {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}

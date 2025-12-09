@@ -1,0 +1,48 @@
+{% if block.settings.text != blank %}
+  <div
+    class="flexi-block flexi-text rte text-size-{{ block.settings.text_size }}"
+    {{ block.shopify_attributes }}
+  >
+    {{ block.settings.text }}
+  </div>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._flexi-text.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "inline_richtext",
+        "id": "text",
+        "label": "t:theme_blocks._flexi-text.settings.text.label",
+        "default": "Add your text here."
+      },
+      {
+        "type": "select",
+        "id": "text_size",
+        "label": "t:sections.all.text_size.label",
+        "default": "md",
+        "options": [
+          {
+            "value": "sm",
+            "label": "t:sections.all.text_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.text_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.text_size.options.label_lg"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._flexi-text.name"
+      }
+    ]
+  }
+{% endschema %}

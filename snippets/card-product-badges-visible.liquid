@@ -1,0 +1,39 @@
+{% comment %}
+  Returns true if the product has any badges visible on the product card.
+
+  Accepts:
+    - product: The product object
+
+  Usage:
+    {% capture card_product_badges_visible %}
+      {% render 'card-product-badges-visible', product: product %}
+    {% endcapture %}
+    {{ card_product_badges_visible }}
+{% endcomment %}
+
+{%- liquid
+  assign has_card_badges = blank
+
+  assign badge_1 = product.metafields.custom.custom_badge_1.value
+  assign badge_2 = product.metafields.custom.custom_badge_2.value
+  assign badge_3 = product.metafields.custom.custom_badge_3.value
+
+  unless badge_1 == blank
+    assign has_card_badges = true
+  endunless
+
+  unless badge_2 == blank
+    assign has_card_badges = true
+  endunless
+
+  unless badge_3 == blank
+    assign has_card_badges = true
+  endunless
+
+  unless settings.catalog_enabled or settings.slate_badge_mode == 'none'
+    if product.compare_at_price > product.price
+      assign has_card_badges = true
+    endif
+  endunless
+-%}
+{{- has_card_badges -}}

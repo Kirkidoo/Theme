@@ -1,0 +1,57 @@
+{% comment %}
+  Renders the header's mini cart
+
+  Usage:
+  {% render 'header-mini-cart' %}
+{% endcomment %}
+
+{{ 'component-drawer.css' | asset_url | stylesheet_tag }}
+{{ 'component-discounts.css' | asset_url | stylesheet_tag }}
+<link
+  rel="stylesheet"
+  href="{{ 'component-cart-items.css' | asset_url }}"
+  media="print"
+  onload="this.media='all'"
+>
+<link
+  rel="stylesheet"
+  href="{{ 'component-header-mini-cart.css' | asset_url }}"
+  media="print"
+  onload="this.media='all'"
+>
+
+<mini-cart data-event-context="MiniCart">
+  <drawer-modal
+    id="HeaderMiniCart"
+    body-class="header-mini-cart-open"
+    role="dialog"
+    aria-modal="true"
+    aria-label="{{ 'sections.minicart.title' | t }}"
+    data-event-prefix="cart-drawer"
+  >
+    <div class="mini-cart-wrap drawer">
+      <form action="{{ routes.cart_url }}" method="post" class="mini-cart-inner drawer-inner">
+        <div class="mini-cart-header drawer-header" tabindex="-1">
+          <h4 class="h5">{{ 'sections.minicart.title' | t }}</h4>
+          <drawer-toggle for="HeaderMiniCart">
+            <button
+              type="button"
+              class="button button-tertiary button-drawer-header-dismiss"
+              aria-label="{{ 'accessibility.close' | t }}"
+            >
+              &times;
+            </button>
+          </drawer-toggle>
+        </div>
+
+        <div id="header-mini-cart-content" class="mini-cart-inner-content drawer-content">
+          {% render 'header-mini-cart-content' %}
+        </div>
+
+        <div id="header-mini-cart-footer" class="header-mini-cart-footer drawer-footer">
+          {% render 'header-mini-cart-footer' %}
+        </div>
+      </form>
+    </div>
+  </drawer-modal>
+</mini-cart>

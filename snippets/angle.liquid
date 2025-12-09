@@ -1,0 +1,13 @@
+{% comment %}
+  Renders an angle icon.
+
+  Accepts:
+  - direction: {String} The direction of the angle. Required. Accepts 'up', 'down', 'left', 'right'.
+
+  Usage:
+  {% render 'angle', direction: 'right' %}
+{% endcomment %}
+
+<span class="angle angle-{{ direction }}">
+  <span class="angle-icon"></span>
+</span>

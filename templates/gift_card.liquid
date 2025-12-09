@@ -1,0 +1,157 @@
+{% layout none %}
+{%- assign text_direction = 'localization.text_direction' | t | downcase -%}
+<!doctype html>
+<html
+  lang="{{ request.locale.iso_code }}"
+  {% if text_direction == 'rtl' %}
+    dir="{{ text_direction }}"
+  {% endif %}
+>
+  <head>
+    <meta charset="utf-8">
+
+    {%- assign formatted_initial_value = gift_card.initial_value
+      | money_without_trailing_zeros
+      | strip_html
+    -%}
+
+    <title>
+      {{ 'gift_cards.issued.title' | t: value: formatted_initial_value, shop: shop.name }}
+    </title>
+    <meta name="description" content="Your gift card">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {% # theme-check-disable RemoteAsset %}
+    <link rel="preconnect" href="//cdn.shopify.com" crossorigin>
+    {% # theme-check-enable RemoteAsset %}
+
+    {% unless settings.typography_headings.system? and settings.typography_body.system? %}
+      {% # theme-check-disable RemoteAsset %}
+      <link rel="preconnect" href="//fonts.shopifycdn.com" crossorigin>
+      {% # theme-check-enable RemoteAsset %}
+    {% endunless %}
+
+    {% comment %}theme-check-disable AssetPreload{% endcomment %}
+    {% unless settings.typography_body.system? %}
+      <link
+        rel="preload"
+        as="font"
+        href="{{ settings.typography_body | font_url }}"
+        type="font/woff2"
+        crossorigin
+      >
+    {% endunless %}
+    {% unless settings.typography_headings.system? %}
+      <link
+        rel="preload"
+        as="font"
+        href="{{ settings.typography_headings | font_url }}"
+        type="font/woff2"
+        crossorigin
+      >
+    {% endunless %}
+    {% comment %}theme-check-enable AssetPreload{% endcomment %}
+
+    {% render 'head-css' %}
+
+    {{ 'base.css' | asset_url | stylesheet_tag }}
+    {{ 'template-giftcard.css' | asset_url | stylesheet_tag }}
+
+    {% if settings.favicon != blank %}
+      <link
+        rel="icon"
+        type="image/png"
+        href="{{ settings.favicon | image_url: width: 32, height: 32 }}"
+      >
+    {% endif %}
+
+    <style>
+      html {
+        box-sizing: border-box;
+        -ms-overflow-style: scrollbar;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        height: 100%;
+        font-size: calc(var(--font-body-scale) * 62.5%);
+        scroll-behavior: smooth;
+        line-height: 1.15;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      * {
+        box-sizing: inherit;
+      }
+
+      *::before,
+      *::after {
+        box-sizing: inherit;
+      }
+
+      body {
+        min-height: 100%;
+        font-size: 1.5rem;
+        line-height: calc(1 + 0.6 / var(--font-body-scale));
+        font-family: var(--font-body-family);
+        font-style: var(--font-body-style);
+        font-weight: var(--font-body-weight);
+        text-transform: none;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        margin: 0;
+      }
+
+      @media print {
+        .no-print {
+          display: none;
+        }
+      }
+    </style>
+
+    {{ content_for_header }}
+
+    <script src="{{ 'vendor/qrcode.js' | shopify_asset_url }}" defer></script>
+  </head>
+
+  <body class="template-{{ template.name }}">
+    <header class="gift-card-site-title">
+      <h1>{{ shop.name }}</h1>
+    </header>
+
+    {% section 'gift-card' %}
+
+    <div hidden>
+      <span id="a11y-new-window-message">{{ 'accessibility.link_messages.new_window' | t }}</span>
+    </div>
+  </body>
+</html>
+
+<script>
+  var string = { qrImageAlt: {{ 'gift_cards.issued.qr_image_alt' | t | json }} };
+  document.addEventListener('DOMContentLoaded', function() {
+  	new QRCode( document.querySelector('.gift-card-qr-code'), {
+  		text: document.querySelector('.gift-card-qr-code').dataset.identifier,
+  		width: 120,
+  		height: 120,
+  		imageAltText: string.qrImageAlt
+  	});
+  });
+
+  var template = document.getElementsByTagName("template")[0];
+  var clonedTemplate = template.content.cloneNode(true);
+
+  var isMessageDisplayed = false;
+  document
+  	.querySelector('.gift-card-copy-link')
+  	.addEventListener('click', () => {
+  		navigator.clipboard.writeText(document.querySelector('.gift-card-number').value).then(function () {
+  			if (!isMessageDisplayed) {
+  				document.querySelector('.gift-card-copy-success').appendChild(clonedTemplate);
+  				isMessageDisplayed = true;
+  				document.querySelector('.gift-card-copy-code').classList.add('success');
+  			}
+  		});
+  	});
+</script>

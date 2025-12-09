@@ -1,0 +1,273 @@
+{% if product.variants.size >= section.settings.minimum_variants
+  and settings.catalog_enabled == false
+%}
+  {{ 'section-bulk-order.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'bulk-order-list.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
+
+  {% liquid
+    assign per_page = 0
+    if section.settings.pagination == 'enabled'
+      assign per_page = section.settings.variants_per_page | plus: 0
+    endif
+
+    assign color_scheme_string = section.settings.color_scheme | append: ''
+    assign section_content_class = 'section-content'
+    unless color_scheme_string == 'background-1'
+      assign section_content_class = section_content_class | append: ' section-content-padded'
+    endunless
+  %}
+
+  <style>
+    #shopify-section-{{ section.id }} .section-content {
+      margin-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+      margin-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    #shopify-section-{{ section.id }} .section-content-padded {
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-top: {{ section.settings.spacing_top | times: 0.8 | round: 0 }}px;
+      padding-bottom: {{ section.settings.spacing_bottom | times: 0.8 | round: 0 }}px;
+    }
+
+    @media (min-width: 990px) {
+      #shopify-section-{{ section.id }} .section-content {
+        margin-top: {{ section.settings.spacing_top }}px;
+        margin-bottom: {{ section.settings.spacing_bottom }}px;
+      }
+
+      #shopify-section-{{ section.id }} .section-content-padded {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: {{ section.settings.spacing_top }}px;
+        padding-bottom: {{ section.settings.spacing_bottom }}px;
+      }
+    }
+  </style>
+
+  {%- capture visibility_classes -%}{%- render 'section-visibility-classes' -%}{%- endcapture -%}
+  {%- assign visibility_classes = visibility_classes | strip -%}
+
+  <div class="{{ visibility_classes }}">
+    <div class="color-{{ section.settings.color_scheme }}">
+      <div class="container">
+        <div class="{{ section_content_class }}">
+          {% if section.settings.heading != blank or section.settings.subheading != blank %}
+            <div class="section-headings {% if section.settings.subheading != blank %}with-subheading{% endif %}">
+              <div class="section-headings-content{% if section.settings.headings_alignment == 'center' %} center-aligned{% endif %}">
+                {% if section.settings.heading != blank %}
+                  <{{ section.settings.heading_tag }} class="section-heading heading-size-{{ section.settings.heading_size }}">
+                    {{- section.settings.heading -}}
+                  </{{ section.settings.heading_tag }}>
+                {% endif %}
+                {% if section.settings.subheading != blank %}
+                  <p class="section-subheading">{{ section.settings.subheading }}</p>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="section-bulk-order-wrap">
+            {% render 'bulk-order-list',
+              product: product,
+              per_page: per_page,
+              color_scheme: section.settings.color_scheme,
+              show_variant_images: section.settings.show_variant_images
+            %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:sections.bulk_order.name",
+    "tag": "section",
+    "class": "section section-bulk-order",
+    "enabled_on": {
+      "templates": ["product"]
+    },
+    "limit": 1,
+    "settings": [
+      {
+        "type": "inline_richtext",
+        "id": "heading",
+        "label": "t:sections.bulk_order.settings.heading.label",
+        "default": "Bulk order"
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:sections.all.heading_size.label",
+        "default": "md",
+        "options": [
+          {
+            "value": "sm",
+            "label": "t:sections.all.heading_size.options.label_sm"
+          },
+          {
+            "value": "md",
+            "label": "t:sections.all.heading_size.options.label_md"
+          },
+          {
+            "value": "lg",
+            "label": "t:sections.all.heading_size.options.label_lg"
+          },
+          {
+            "value": "xl",
+            "label": "t:sections.all.heading_size.options.label_xl"
+          },
+          {
+            "value": "xxl",
+            "label": "t:sections.all.heading_size.options.label_xxl"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "headings_alignment",
+        "label": "t:sections.all.headings_alignment.label",
+        "default": "left",
+        "options": [
+          {
+            "value": "left",
+            "label": "t:sections.all.headings_alignment.options.label_left"
+          },
+          {
+            "value": "center",
+            "label": "t:sections.all.headings_alignment.options.label_center"
+          }
+        ]
+      },
+      {
+        "type": "inline_richtext",
+        "id": "subheading",
+        "label": "t:sections.bulk_order.settings.subheading.label"
+      },
+      {
+        "type": "range",
+        "id": "minimum_variants",
+        "min": 1,
+        "max": 100,
+        "step": 1,
+        "default": 1,
+        "label": "t:sections.bulk_order.settings.minimum_variants.label",
+        "info": "t:sections.bulk_order.settings.minimum_variants.info"
+      },
+      {
+        "type": "select",
+        "id": "pagination",
+        "label": "t:sections.bulk_order.settings.pagination.label",
+        "info": "t:sections.bulk_order.settings.pagination.info",
+        "default": "enabled",
+        "options": [
+          {
+            "value": "enabled",
+            "label": "t:sections.bulk_order.settings.pagination.options.enabled"
+          },
+          {
+            "value": "disabled",
+            "label": "t:sections.bulk_order.settings.pagination.options.disabled"
+          }
+        ]
+      },
+      {
+        "type": "range",
+        "id": "variants_per_page",
+        "visible_if": "{{ section.settings.pagination == 'enabled' }}",
+        "min": 5,
+        "max": 50,
+        "step": 1,
+        "default": 10,
+        "label": "t:sections.bulk_order.settings.variants_per_page.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_variant_images",
+        "label": "t:sections.bulk_order.settings.show_variant_images.label",
+        "default": true
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.colors.heading"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme.label",
+        "default": "background-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_spacing.heading"
+      },
+      {
+        "type": "range",
+        "id": "spacing_top",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_top.label"
+      },
+      {
+        "type": "range",
+        "id": "spacing_bottom",
+        "min": 0,
+        "max": 150,
+        "step": 2,
+        "default": 60,
+        "label": "t:sections.all.section_spacing.spacing_bottom.label"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.seo_heading.label"
+      },
+      {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "t:sections.all.advanced.heading_tag.label",
+        "default": "h2",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.advanced.visibility_heading.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_desktop",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_desktop.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_on_mobile",
+        "default": true,
+        "label": "t:sections.all.advanced.show_on_mobile.label"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.bulk_order.presets.name",
+        "category": "t:sections.all.preset_category.products"
+      }
+    ]
+  }
+{% endschema %}

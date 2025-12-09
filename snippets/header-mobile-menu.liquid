@@ -1,0 +1,95 @@
+{% comment %}
+  Renders the site's mobile navigation menu
+
+  Accepts:
+  - menu_mobile: {Object} The mobile menu (linklist) object
+  - menu: {Object} The main menu (linklist) object. Used as fallback only if a menu_mobile is not set.
+  - menu_right: {Object} The right menu (linklist) object. Used as fallback only if a menu_mobile is not set.
+  - expand_on_arrow: {Boolean} Whether the menu items should expand only on arrow click.
+  - typography: {String} The typography to be used
+  - blocks: {Object} The section's blocks
+  - position: {String} The position of the mobile menu ("start" or "end")
+
+  Usage:
+  {% render 'header-mobile-menu', menu_mobile: mobile_menu %}
+{% endcomment %}
+
+{% if menu != blank or menu_right != blank or menu_mobile != blank %}
+  <div class="head-slot-nav-mobile-link-wrapper mobile-menu-{{ position }}">
+    <button
+      class="head-slot-nav-link head-slot-nav-mobile-link"
+      aria-expanded="false"
+      aria-haspopup="true"
+      aria-controls="mobile-menu"
+      aria-label="{{ 'sections.mobile_menu.label' | t }}"
+    >
+      <span class="icon-state-primary">
+        {% render 'icons', icon: 'menu' %}
+      </span>
+      <span class="icon-state-secondary">
+        {% render 'icons', icon: 'cross' %}
+      </span>
+    </button>
+
+    <div
+      class="mobile-menu color-{{ section.settings.mobile_navigation_color_scheme }}"
+      aria-hidden="true"
+      {% if expand_on_arrow %}
+        data-button-expand
+      {% endif %}
+    >
+      <div class="mobile-menu-inner">
+        <nav class="navigation-mobile-wrap typography-{{ typography }}" tabindex="-1">
+          <ul class="navigation-mobile">
+            {% if menu_mobile != blank %}
+              {% render 'header-mobile-menu-items', menu: menu_mobile, blocks: blocks %}
+            {% elsif menu != blank or menu_right != blank %}
+              {% render 'header-mobile-menu-items', menu: menu, blocks: blocks %}
+              {% render 'header-mobile-menu-items', menu: menu_right, blocks: blocks %}
+            {% endif %}
+          </ul>
+        </nav>
+
+        <div class="mobile-menu-utilities">
+          {%- if section.settings.promo_title != blank or section.settings.promo_text != blank -%}
+            <div class="mobile-menu-utility-section">
+              <span class="h5">{{ 'sections.mobile_menu.contact_label' | t }}</span>
+
+              <div class="mobile-menu-region-promos">
+                {%- if section.settings.promo_title != blank -%}
+                  <div>{{ section.settings.promo_title }}</div>
+                {%- endif -%}
+
+                {%- if section.settings.promo_text != blank -%}
+                  <div class="rte">{{ section.settings.promo_text }}</div>
+                {%- endif -%}
+              </div>
+            </div>
+          {%- endif -%}
+
+          <div class="mobile-menu-utility-section">
+            <div class="mobile-menu-region-currency">
+              {%- if section.settings.enable_country_selector
+                and localization.available_countries.size > 1
+              -%}
+                {%- render 'dropdown-region',
+                  classname: 'dropdown-left dropdown-up dropdown-toggle-button',
+                  id: 'MobileMenu'
+                -%}
+              {%- endif -%}
+
+              {%- if section.settings.enable_language_selector
+                and localization.available_languages.size > 1
+              -%}
+                {%- render 'dropdown-language',
+                  classname: 'dropdown-left dropdown-up dropdown-toggle-button',
+                  id: 'MobileMenu'
+                -%}
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}

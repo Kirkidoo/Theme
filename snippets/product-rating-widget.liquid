@@ -1,0 +1,12 @@
+{% comment %}
+  Renders the product's star rating.
+
+  Accepts:
+  - product: {Object} Product object
+  - new_window: {Boolean} Optional. Opens the link in a new window.
+
+  Usage:
+  {% render 'product-rating-widget' product: product %}
+{% endcomment %}
+
+{% render 'rating', product: product, new_window: new_window %}

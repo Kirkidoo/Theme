@@ -1,0 +1,195 @@
+{% comment %}
+  Renders a product's "Add to cart" button (or out of stock, or select options) for listing pages
+
+  Accepts:
+  - product: {Object} Product object
+  - event_context: {Object} The JavaScript's cart-item:add event context (the location of the product card)
+  - collection: {Object} Collection object associated with the product. Optional.
+
+  Usage:
+  {% render 'card-product-add-to-cart', product: product %}
+{% endcomment %}
+
+{% liquid
+  assign always_in_stock = false
+  assign is_backorder = false
+  assign inventory_count = 0
+
+  for variant in product.variants
+    if variant.inventory_management == null or variant.inventory_policy == 'continue' and variant.inventory_quantity > 0
+      assign always_in_stock = true
+    endif
+
+    if variant.inventory_policy == 'continue' and variant.inventory_quantity <= 0
+      assign is_backorder = true
+    endif
+
+    if variant.inventory_management
+      assign inventory_count = variant.inventory_quantity | plus: inventory_count
+    endif
+  endfor
+
+  assign any_in_stock = false
+  if always_in_stock or inventory_count > 0
+    assign any_in_stock = true
+  endif
+
+  # theme-check-disable-next-line VariableName
+  assign preorderSuffixArray = product.template_suffix | split: 'pre-order-'
+  assign is_pre_order = false
+  if product.template_suffix != blank and preorderSuffixArray[0] == blank or product.template_suffix == 'pre-order'
+    assign is_pre_order = true
+  endif
+%}
+{%- capture show_call_for_pricing -%}{%- render 'price-get-call-for-pricing', product: product, use_variant: false -%}{%- endcapture -%}
+{%- assign show_call_for_pricing = show_call_for_pricing | strip -%}
+
+{% if product.variants.size <= 1 %}
+  {% if show_call_for_pricing == 'true' %}
+    <div class="product-actions card-product-actions">
+      {% render 'price-call-for-pricing', product: product %}
+    </div>
+  {% else %}
+    {% case settings.products_quickadd_no_variants %}
+      {% when 'add_to_cart' %}
+        <product-form>
+          {% liquid
+            assign product_form_id = 'product-form-' | append: product.id
+            assign event_context = 'ProductCard' | append: event_context
+          %}
+          {% form 'product',
+            product,
+            id: product_form_id,
+            novalidate: 'novalidate',
+            data-type: 'add-to-cart-form',
+            data-stock-threshold: settings.only_x_left,
+            data-event-context: event_context
+          %}
+            <input
+              type="hidden"
+              name="id"
+              value="{{ product.selected_or_first_available_variant.id }}"
+            >
+            <input type="hidden" name="quantity" value="1">
+            <div class="product-actions card-product-actions">
+              <div class="product-actions-add-to-cart">
+                <button
+                  type="submit"
+                  name="add"
+                  class="button button-{{ settings.products_add_to_cart_style }} button-add-to-cart"
+                  {% if product.selected_or_first_available_variant.available == false %}
+                    disabled
+                  {% endif %}
+                >
+                  {%- if product.selected_or_first_available_variant.available -%}
+                    {%- if is_pre_order -%}
+                      <span>{{ 'products.product.pre_order' | t }}</span>
+                    {%- elsif product.selected_or_first_available_variant.inventory_policy
+                        == 'continue'
+                      and product.selected_or_first_available_variant.inventory_quantity <= 0
+                    -%}
+                      <span>{{ 'products.product.backorder' | t }}</span>
+                    {%- else -%}
+                      <span>{{ 'products.product.add_to_cart' | t }}</span>
+                    {%- endif -%}
+                  {%- else -%}
+                    <span>{{ 'products.product.availability.out_of_stock' | t }}</span>
+                  {%- endif -%}
+
+                  <div class="button-overlay-spinner hidden">
+                    <span class="spinner-xs"></span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="product-form-error-message-wrapper form-status form-status-error"
+              role="alert"
+              hidden
+            >
+              <span class="product-form-error-message"></span>
+            </div>
+          {% endform %}
+        </product-form>
+
+      {% when 'quantity_picker' %}
+        <div class="product-actions card-product-actions">
+          {% if product.selected_or_first_available_variant.available == true %}
+            {% render 'card-product-quick-add-bulk',
+              variant: product.selected_or_first_available_variant,
+              min: 0,
+              reveal_header: false,
+              trigger_cart: true
+            %}
+          {% else %}
+            <button
+              class="button button-{{ settings.products_add_to_cart_style }} button-add-to-cart"
+              disabled
+            >
+              <span>{{ 'products.product.availability.out_of_stock' | t }}</span>
+            </button>
+          {% endif %}
+        </div>
+
+      {% when 'quickview' %}
+        <div class="product-actions card-product-actions">
+          {% if product.selected_or_first_available_variant.available == true %}
+            <drawer-toggle for="QuickViewDrawer">
+              <button class="button button-quick-view button-{{ settings.products_add_to_cart_style }}">
+                {% if settings.quickview_no_variants_text != blank %}
+                  {{ settings.quickview_no_variants_text }}
+                {% else %}
+                  {{- 'products.product.quickview' | t -}}
+                {% endif %}
+              </button>
+            </drawer-toggle>
+          {% else %}
+            <button
+              class="button button-{{ settings.products_add_to_cart_style }} button-add-to-cart"
+              disabled
+            >
+              <span>{{ 'products.product.availability.out_of_stock' | t }}</span>
+            </button>
+          {% endif %}
+        </div>
+    {% endcase %}
+  {% endif %}
+{% else %}
+  {% if any_in_stock or is_backorder or is_pre_order %}
+    <div class="product-actions card-product-actions">
+      <div class="product-actions-add-to-cart">
+        {% if settings.products_quickadd_variants == 'quickview' %}
+          <drawer-toggle for="QuickViewDrawer">
+            <button class="button button-quick-view button-{{ settings.products_add_to_cart_style }}">
+              {% if settings.quickview_variants_text != blank %}
+                {{ settings.quickview_variants_text }}
+              {% else %}
+                {{- 'products.product.quickview' | t -}}
+              {% endif %}
+            </button>
+          </drawer-toggle>
+        {% else %}
+          <a
+            href="{% if settings.collection_product_url_enabled %}{{ product.url | within: collection }}{% else %}{{ product.url }}{% endif %}"
+            class="button button-{{ settings.products_add_to_cart_style }} js-product-link"
+          >
+            {{- 'products.product.select_options' | t -}}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="product-actions card-product-actions">
+      <div class="product-actions-add-to-cart">
+        <a
+          role="link"
+          aria-disabled="true"
+          class="button button-{{ settings.products_add_to_cart_style }}"
+        >
+          {{- 'products.product.availability.out_of_stock' | t -}}
+        </a>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}

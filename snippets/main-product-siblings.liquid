@@ -1,0 +1,221 @@
+{% doc %}
+  Renders a product's sibling products picker block.
+  @param {object} section - The section object that renders the block.
+  @param {object} block - The block object.
+  @param {object} product - The product object for which siblings will be rendered.
+  @param {string} product_form_id - The product form ID.
+  @example
+  {% render 'main-product-siblings', section: section, block: block, product_form_id: 'product-123'
+  %}
+{% enddoc %}
+<style>
+  @media (min-width: 750px) {
+    /* Let's limit the width of the siblings block when it's right after/before the variants block */
+    .product-block-siblings:has(+ .product-block-variants),
+    /*
+      If we ever move this style tag to its own file,
+      we also have tomake sure to remove + style + from the selector below.
+    */
+    .product-block-variants + style + .product-block-siblings {
+      width: 42rem;
+    }
+  }
+
+  .product-block-siblings {
+    .product-form-input {
+      &:last-of-type {
+        margin-bottom: 0;
+      }
+
+      [type='radio'] {
+        clip: rect(0, 0, 0, 0);
+        overflow: hidden;
+        position: absolute;
+        height: 1px;
+        width: 1px;
+
+        &:focus-visible {
+          box-shadow: 0 0 0 calc(0.1rem + var(--inputs-border-width)) rgba(var(--color-foreground));
+        }
+
+        & + label {
+          font-size: calc(var(--font-body-scale) * 1.3rem);
+          font-family: inherit;
+          cursor: pointer;
+          display: inline-flex;
+          justify-content: center;
+          align-items: center;
+          border: none;
+          padding: 0.5rem 1.5rem;
+          margin: 0 0.2rem 0.8rem 0.3rem;
+          text-decoration: none;
+          background: rgba(var(--color-background));
+          box-shadow: 0 0 0 0.2rem rgba(var(--color-border));
+          color: rgba(var(--color-foreground));
+          height: auto;
+          line-height: calc(1 + 0.2 / var(--font-body-scale));
+          border-radius: var(--buttons-radius);
+          font-weight: var(--font-bolder-weight);
+
+          .product-block-siblings-large & {
+            min-width: 6.2rem;
+            height: 6.2rem;
+          }
+
+          .product-block-siblings-medium & {
+            min-width: 4.2rem;
+            height: 4.2rem;
+          }
+
+          .product-block-siblings-small & {
+            min-width: 2.8rem;
+            height: 2.8rem;
+
+            @media (max-width: 749px) {
+              min-width: 3.6rem;
+              height: 3.6rem;
+            }
+          }
+
+          &[data-image] {
+            background-size: cover;
+          }
+
+          &[data-color],
+          &[data-image] {
+            text-indent: -999em;
+            padding: 0.2rem;
+            border: 0.2rem solid rgba(var(--color-background));
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            border-radius: var(--buttons-radius);
+          }
+        }
+
+        &:checked + label,
+        &.checked + label {
+          box-shadow: 0 0 0 0.2rem rgba(var(--color-accent-2));
+          color: var(--color-base-white);
+          background-color: rgba(var(--color-accent-2));
+
+          &[data-color],
+          &[data-image] {
+            box-shadow: 0 0 0 0.2rem rgba(var(--color-foreground));
+            background-color: transparent;
+          }
+        }
+
+        &.disabled + label {
+          opacity: 0.6;
+          position: relative;
+          overflow: hidden;
+
+          &::after {
+            content: '';
+            display: block;
+            position: absolute;
+            height: 2px;
+            width: calc(100% + 10px);
+            background-color: rgba(202, 65, 65, 1);
+            top: 50%;
+            inset-inline-start: -5px;
+            transform: rotate(-26deg);
+            opacity: 0.4;
+          }
+        }
+      }
+    }
+  }
+</style>
+
+{% liquid
+  assign metaobject = product.metafields.custom.sibling_products.value
+
+  # The compact filter here is a workaround, that converts the swatches to a proper array.
+  # Otherwise we can't access its items by index, se we would need to iterate it
+  # and compare the forloop.index0 to the product's forloop.index0 instead.
+  assign swatches = metaobject.swatches.value | compact
+%}
+{% if metaobject.products.value.count > 0 %}
+  <div
+    class="product-block product-block-siblings product-block-siblings-{{ block.settings.button_size }} {% if block.settings.show_bottom_divider %}has-divider{% endif %}"
+    {{ block.shopify_attributes }}
+  >
+    <fieldset
+      class="color-swatch product-form-input"
+      data-option-name="{{ metaobject.option_title }}"
+    >
+      {% if metaobject.option_title %}
+        <legend>{{ metaobject.option_title }}</legend>
+      {% endif %}
+
+      {% for sibling_product in metaobject.products.value %}
+        {% liquid
+          assign product_swatch = blank
+          assign swatch_color = blank
+          assign swatch_image = blank
+          assign product_image = blank
+
+          assign product_index = forloop.index0
+          assign product_title = sibling_product.title
+          assign product_label = metaobject.labels.value[product_index] | default: product_title
+          assign product_swatch = swatches[product_index]
+          assign product_image = sibling_product.featured_image | image_url: width: 80
+
+          assign is_disabled = false
+          if sibling_product.available == false and block.settings.out_of_stock_variants != 'show'
+            if block.settings.out_of_stock_variants == 'hide' and product.handle != sibling_product.handle
+              continue
+            endif
+            assign is_disabled = true
+          endif
+
+          if product_swatch.image.value != blank
+            assign swatch_image = product_swatch.image.value | image_url: width: 80
+          endif
+
+          if product_swatch.color.value != blank
+            assign swatch_color = product_swatch.color.value
+          endif
+        %}
+        <input
+          type="radio"
+          id="{{ section.id }}-sibling-{{ forloop.index0 }}"
+          name="{{ metaobject.option_title | escape }}"
+          value="{{ product_label | escape }}"
+          form="{{ product_form_id }}"
+          data-product-url="{{ sibling_product.url }}"
+          data-variant-available="{{ sibling_product.available }}"
+          {% if product.handle == sibling_product.handle %}
+            checked
+          {% endif %}
+          class="{% if product.handle == sibling_product.handle %}checked{% endif %} {% if is_disabled %}disabled{% endif %}"
+          onclick="window.location.href = this.dataset.productUrl;"
+        >
+        <label
+          for="{{ section.id }}-sibling-{{ forloop.index0 }}"
+          {% if swatch_image != blank %}
+            data-image="{{ swatch_image }}"
+            data-tooltip="{{ product_label | escape }}"
+            style="background-image: url({{ swatch_image }});"
+          {% elsif swatch_color != blank %}
+            data-color="{{ swatch_color }}"
+            data-tooltip="{{ product_label | escape }}"
+            {% if swatch_color.rgb != blank %}
+              style="background-color: rgb({{ swatch_color.rgb }});"
+            {% else %}
+              style="background-color: {{ swatch_color }};"
+            {% endif %}
+          {% elsif product_image != blank %}
+            data-image="{{ product_image }}"
+            data-tooltip="{{ product_label | escape }}"
+            style="background-image: url({{ product_image }});"
+          {% endif %}
+        >
+          {{ product_label }}
+        </label>
+      {% endfor %}
+    </fieldset>
+  </div>
+{% endif %}

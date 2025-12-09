@@ -1,0 +1,22 @@
+{% for filter in collection.filters %}
+  {% liquid
+    if filter.type != 'list'
+      continue
+    endif
+  %}
+  <select
+    class="dropdown-filter"
+    data-label="{{ filter.label }}"
+    data-param-name="{{ filter.param_name }}"
+  >
+    {% for value in filter.values %}
+      <option
+        value="{{ value.value }}"
+        data-count="{{ value.count }}"
+        data-param-name="{{ filter.param_name }}"
+      >
+        {{ value.label | escape }} ({{ value.count }})
+      </option>
+    {% endfor %}
+  </select>
+{% endfor %}

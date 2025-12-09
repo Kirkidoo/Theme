@@ -1,0 +1,123 @@
+{% comment %}
+  Variant List Row
+
+  Accepts:
+  - variant: {Object} Variant object
+  - show_variant_images: {Boolean} Whether to show the variants' image.
+  - login_for_price: {String} 'true' when login_for_price applies to this product, 'false' otherwise.
+
+  Usage:
+  {% render 'bulk-order-list-row' variant: variant %}
+{% endcomment %}
+
+{% liquid
+  assign cart_qty = cart | item_count_for_variant: variant.id
+  assign image = variant.image
+  assign title = variant.title
+
+  if variant.product.has_only_default_variant
+    assign product = variant.product
+    assign image = product.featured_image
+    assign title = product.title
+  endif
+%}
+{% comment %}We use the `product: variant, use_variant: false` workaround here. See snippet for more info.{% endcomment %}
+{%- capture show_call_for_pricing -%}{%- render 'price-get-call-for-pricing', product: variant, use_variant: false -%}{%- endcapture -%}
+{%- assign show_call_for_pricing = show_call_for_pricing | strip -%}
+
+<tr class="bulk-order-list-row {% unless show_variant_images %} bulk-order-list-row-images-disabled{% endunless %}">
+  <td
+    class="bulk-variant-item-details"
+    {% if show_call_for_pricing == 'true' %}
+      colspan="3"
+    {% endif %}
+  >
+    <div class="bulk-variant-item-info-container">
+      {% if show_variant_images %}
+        <div class="bulk-variant-item-image-container {% unless image != blank %}bulk-variant-thumbnail-no-image{% endunless %}">
+          <div class="aspect-ratio" style="--ratio-percent: 100%">
+            {% if image %}
+              {{
+                image
+                | image_url: width: 160
+                | image_tag:
+                  loading: 'lazy',
+                  fetchpriority: 'low',
+                  decoding: 'async',
+                  class: 'bulk-variant-item-image',
+                  width: 160,
+                  widths: '160',
+                  alt: image.alt
+                | escape
+              }}
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+      <div class="bulk-variant-item-info">
+        <span class="bulk-variant-item-title">
+          {{ title }}
+        </span>
+        {% if variant.sku != blank %}
+          <span class="bulk-variant-item-sku">
+            {{ variant.sku | escape }}
+          </span>
+        {% endif %}
+
+        {% if login_for_price == 'true' %}
+          <div class="hidden-mobile-up">
+            {% render 'price-login-for-price' %}
+          </div>
+        {% else %}
+          {% render 'bulk-order-row-price', variant: variant, price_class: 'hidden-mobile-up' %}
+        {% endif %}
+      </div>
+    </div>
+  </td>
+
+  {% if login_for_price == 'false' and show_call_for_pricing == 'false' %}
+    <td class="bulk-variant-item-totals text-end hidden-mobile-up">
+      {{- cart | line_items_for: variant | sum: 'original_line_price' | money -}}
+    </td>
+  {% endif %}
+
+  {% if login_for_price == 'false' and show_call_for_pricing == 'false' %}
+    <td class="bulk-variant-item-quantity">
+      {% if variant and variant.available %}
+        <div class="bulk-variant-item-quantity-container">
+          {% render 'variant-quantity-popover', variant: variant %}
+          {% render 'quantity-input-variant', variant: variant, min: 0, reveal_header: false %}
+
+          {% if cart_qty > 0 %}
+            <button
+              class="bulk-order-list-remove-button"
+              data-index="{{ variant.id }}"
+              data-target="remove-{{ variant.id }}"
+              aria-label="{{ 'templates.cart.remove_title' | t: title: item.title }}"
+            >
+              {% render 'icons', icon: 'trash' %}
+            </button>
+          {% endif %}
+        </div>
+      {% else %}
+        <span class="bulk-variant-out-of-stock">
+          {{- 'products.product.availability.out_of_stock' | t -}}
+        </span>
+      {% endif %}
+    </td>
+  {% endif %}
+
+  <td class="bulk-variant-item-price text-end hidden-mobile">
+    {% if login_for_price == 'true' %}
+      {% render 'price-login-for-price' %}
+    {% else %}
+      {% render 'bulk-order-row-price', variant: variant %}
+    {% endif %}
+  </td>
+
+  {% if login_for_price == 'false' and show_call_for_pricing == 'false' %}
+    <td class="bulk-variant-item-totals text-end hidden-mobile">
+      {{- cart | line_items_for: variant | sum: 'original_line_price' | money -}}
+    </td>
+  {% endif %}
+</tr>

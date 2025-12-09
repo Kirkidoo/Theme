@@ -1,0 +1,142 @@
+{% comment %}
+  Renders range indicator for main product
+
+  Accepts:
+  - title: {String} Block title
+  - from: {Number} Lower limit value
+  - to: {Number} Upper limit value
+  - value: {Number} Actual value
+  - track_color: {String} Track (background) color value
+  - filled_color: {String} Filled (foreground) color value
+{% endcomment %}
+
+{% style %}
+  .range-indicator {
+    .range-indicator-label {
+      margin-bottom: 1rem;
+      font-weight: var(--font-bolder-weight);
+      color: rgba(var(--color-foreground-alt));
+    }
+
+    .range-indicator-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .range-indicator-track {
+      position: relative;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      background-color: rgba(var(--color-border));
+    }
+
+    .range-indicator-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .range-indicator-values {
+      position: relative;
+      margin-top: 0.5rem;
+      font-size: calc(var(--font-body-scale) * 1.2rem);
+      color: rgba(var(--color-foreground));
+      height: 1.5rem;
+    }
+
+    .range-indicator-value {
+      position: absolute;
+      font-weight: var(--font-bolder-weight);
+      transform: translateX(-50%);
+    }
+
+    .range-indicator-value-from {
+      left: 0;
+      transform: translateX(0);
+    }
+
+    .range-indicator-value-to {
+      right: 0;
+      transform: translateX(0);
+    }
+
+    .range-indicator-value-current {
+      /* Position will be set inline based on percentage */
+    }
+  }
+{% endstyle %}
+
+{% liquid
+  assign range_from = from | default: 0
+  assign range_to = to | default: 100
+  assign value_input = value | strip
+  assign current_value = value_input | times: 1 | default: 0
+  assign filled_color = filled_color | default: '#007bff'
+  assign track_color = track_color | default: '#e9ecef'
+
+  # Calculate percentage
+  assign range_span = range_to | minus: range_from
+  if range_span <= 0
+    assign range_span = 1
+  endif
+
+  assign value_position = current_value | minus: range_from
+  if value_position < 0
+    assign value_position = 0
+  elsif current_value > range_to
+    assign value_position = range_span
+  endif
+
+  assign fill_percentage = value_position | times: 100.0 | divided_by: range_span
+  if fill_percentage > 100
+    assign fill_percentage = 100
+  elsif fill_percentage < 0
+    assign fill_percentage = 0
+  endif
+
+  # Determine which values to show to avoid overlap (15% from start/end)
+  assign show_from = true
+  assign show_to = true
+
+  if fill_percentage <= 15
+    assign show_from = false
+  endif
+
+  if fill_percentage >= 85
+    assign show_to = false
+  endif
+%}
+
+<div class="range-indicator product-info-secondary">
+  {% if title %}
+    <p class="range-indicator-label h5">{{ title }}</p>
+  {% endif %}
+
+  <div class="range-indicator-wrapper">
+    <div class="range-indicator-track" style="background-color: {{ track_color }};">
+      <div
+        class="range-indicator-fill"
+        style="width: {{ fill_percentage }}%; background-color: {{ filled_color }};"
+      ></div>
+    </div>
+
+    <div class="range-indicator-values">
+      {% if show_from %}
+        <span class="range-indicator-value range-indicator-value-from">{{ range_from }}</span>
+      {% endif %}
+      <span
+        class="range-indicator-value range-indicator-value-current"
+        style="left: {{ fill_percentage }}%;"
+      >
+        {{- current_value -}}
+      </span>
+      {% if show_to %}
+        <span class="range-indicator-value range-indicator-value-to">{{ range_to }}</span>
+      {% endif %}
+    </div>
+  </div>
+</div>

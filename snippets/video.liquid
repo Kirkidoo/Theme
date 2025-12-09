@@ -1,0 +1,76 @@
+{% comment %}
+  Renders a video with cover image as deferred media.
+
+  Accepts:
+  - media_id: {String} The video unique id.
+  - video_url: {String} The video url.
+  - cover_image: {Object} An optional cover image to show as the video's cover.
+  - description: {String} An optional video description for screen readers.
+  - full_width: {Boolean} If the video is displayed full width. Default: false
+  - image_sizes: {String} The image sizes to display the video cover image at.
+  - image_widths: {String} The image widths to display the video cover image at.
+
+  Usage:
+  {% render 'video' media_id: video_url.id, video_url: video_url, cover_image: cover_image, description: description %}
+{% endcomment %}
+
+{% liquid
+  if description == blank and cover_image != blank
+    assign description = cover_image.alt
+  endif
+
+  if description != blank
+    assign description = 'general.video.load' | t: description: description
+  endif
+%}
+
+<deferred-media
+  class="video-media deferred-media media-with-aspect"
+  data-media-id="{{ video_url.id }}"
+  {% if cover_image != blank %}
+    style="padding-bottom: {{ 1 | divided_by: cover_image.aspect_ratio | at_least: 0.5625 | times: 100 }}%;"
+  {% endif %}
+>
+  <button
+    id="Deferred-Poster-Modal-{{ video_url.id }}"
+    class="deferred-media-poster video-poster {% if cover_image == blank %} video-placeholder{% endif %}"
+    type="button"
+  >
+    {%- if cover_image != blank -%}
+      {{
+        cover_image
+        | image_url: width: 3840
+        | image_tag: widths: image_widths, sizes: image_sizes, alt: description
+      }}
+    {%- else -%}
+      {{ 'collection-2' | placeholder_svg_tag: 'placeholder-svg placeholder' }}
+    {%- endif -%}
+
+    <span class="visually-hidden">{{ 'general.video.play' | t }}</span>
+    <span class="deferred-media-poster-button video-poster-button">
+      {%- render 'icons', icon: 'play' -%}
+    </span>
+  </button>
+
+  <template>
+    <div class="video-wrapper">
+      {%- if video_url.type == 'youtube' -%}
+        <iframe
+          src="https://www.youtube.com/embed/{{ video_url.id }}?enablejsapi=1&autoplay=1"
+          class="js-youtube"
+          allow="autoplay; encrypted-media"
+          allowfullscreen
+          title="{{ description | escape }}"
+        ></iframe>
+      {%- else -%}
+        <iframe
+          src="https://player.vimeo.com/video/{{ video_url.id }}?autoplay=1"
+          class="js-vimeo"
+          allow="autoplay; encrypted-media"
+          allowfullscreen
+          title="{{ description | escape }}"
+        ></iframe>
+      {%- endif -%}
+    </div>
+  </template>
+</deferred-media>

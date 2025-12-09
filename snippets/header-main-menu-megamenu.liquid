@@ -1,0 +1,170 @@
+{% comment %}
+  Renders a mega menu entry.
+
+  Accepts:
+  - block: {Object} Block object
+  - link: {Object} Current link (link) object. The specific entry that will become a mega menu.
+  - color_scheme: {String} Submenu color scheme.
+
+  Usage:
+  {% render 'header-main-menu-megamenu', block: mega_block, link: link, color_scheme: 'background-1' %}
+{% endcomment %}
+{% liquid
+  assign is_mega_compact = false
+  if block.settings.show_compact_banners == true
+    assign is_mega_compact = true
+  endif
+
+  assign has_side_item_1 = false
+  assign has_side_item_2 = false
+  assign has_side_item_3 = false
+  assign has_side_item_4 = false
+  assign side_item_count = 0
+
+  if block.settings.side_image != blank or block.settings.side_title != blank or block.settings.side_text != blank
+    assign has_side_item_1 = true
+    assign side_item_count = side_item_count | plus: 1
+  endif
+  if block.settings.side_image_2 != blank or block.settings.side_title_2 != blank or block.settings.side_text_2 != blank
+    assign has_side_item_2 = true
+    assign side_item_count = side_item_count | plus: 1
+  endif
+  if block.settings.side_image_3 != blank or block.settings.side_title_3 != blank or block.settings.side_text_3 != blank
+    assign has_side_item_3 = true
+    assign side_item_count = side_item_count | plus: 1
+  endif
+  if block.settings.side_image_4 != blank or block.settings.side_title_4 != blank or block.settings.side_text_4 != blank
+    assign has_side_item_4 = true
+    assign side_item_count = side_item_count | plus: 1
+  endif
+%}
+<div class="navigation-sub-menu mega-menu mega-menu-feature-{{ block.settings.side_position }} color-{{ color_scheme }}">
+  <div class="container">
+    <div class="mega-menu-container {% if is_mega_compact %} mega-menu-container-compact {% endif %}">
+      {% if link.links != blank %}
+        <div class="mega-menu-columns">
+          {%- for childlink in link.links -%}
+            <div class="mega-menu-column">
+              <a
+                href="{{ childlink.url }}"
+                class="mega-menu-column-title {% if childlink.current %} current {% endif %}"
+                {%- if childlink.current -%}
+                  aria-current="page"
+                {%- endif -%}
+              >
+                {{- childlink.title | escape -}}
+              </a>
+              {%- if childlink.links != blank -%}
+                <ul class="mega-menu-column-list">
+                  {%- for grandchildlink in childlink.links -%}
+                    <li class="navigation-item">
+                      <a
+                        href="{{ grandchildlink.url }}"
+                        {%- if grandchildlink.current -%}
+                          aria-current="page" class="current"
+                        {%- endif -%}
+                      >
+                        {{ grandchildlink.title | escape }}
+                      </a>
+                    </li>
+                  {%- endfor -%}
+                </ul>
+              {%- endif -%}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% liquid
+        assign has_products = false
+        assign has_collections = false
+        assign has_banners = false
+
+        if block.settings.product_list.count > 0
+          assign has_products = true
+        endif
+        if block.settings.collection_list.count > 0
+          assign has_collections = true
+        endif
+        if side_item_count > 0
+          assign has_banners = true
+        endif
+      %}
+
+      {% if has_products or has_collections %}
+        <div class="mega-menu-column-feature-grid mega-menu-column-item-grid">
+          {% if block.settings.side_items_heading != blank %}
+            <div class="mega-menu-side-items-heading">
+              {{ block.settings.side_items_heading }}
+            </div>
+          {% endif %}
+
+          {% if has_products %}
+            <!-- Show products -->
+            <ul class="mega-menu-item-list">
+              {% for product in block.settings.product_list %}
+                {%- assign featured_media = product.featured_media
+                  | default: block.settings.product_placeholder_image
+                -%}
+                <li class="mega-menu-item">
+                  {% if featured_media %}
+                    <div class="mega-menu-item-image">
+                      {{
+                        featured_media
+                        | image_url: width: 80, height: 80
+                        | image_tag: loading: lazy
+                      }}
+                    </div>
+                  {% endif %}
+                  <div class="mega-menu-item-title">
+                    <a href="{{ product.url }}" title="{{ product.title }}">
+                      {{ product.title }}
+                    </a>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% elsif has_collections %}
+            <!-- Show collections -->
+            <ul class="mega-menu-item-list mega-menu-item-list-collections">
+              {% for collection in block.settings.collection_list %}
+                <li class="mega-menu-item">
+                  <div class="mega-menu-item-image">
+                    {{
+                      collection.featured_image
+                      | image_url: width: 80, height: 80
+                      | image_tag: loading: lazy
+                    }}
+                  </div>
+                  <div class="mega-menu-item-title">
+                    <a href="{{ collection.url }}" title="{{ collection.title }}">
+                      {{ collection.title }}
+                    </a>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      {% elsif has_banners %}
+        <!-- Show banners -->
+        <div class="mega-menu-column-feature-grid {% if is_mega_compact %} mega-menu-column-feature-grid-compact {% endif %}">
+          {% liquid
+            if has_side_item_1
+              render 'mega-menu-side-item', url: block.settings.side_url, image: block.settings.side_image, title: block.settings.side_title, text: block.settings.side_text
+            endif
+            if has_side_item_2
+              render 'mega-menu-side-item', url: block.settings.side_url_2, image: block.settings.side_image_2, title: block.settings.side_title_2, text: block.settings.side_text_2
+            endif
+            if has_side_item_3
+              render 'mega-menu-side-item', url: block.settings.side_url_3, image: block.settings.side_image_3, title: block.settings.side_title_3, text: block.settings.side_text_3
+            endif
+            if has_side_item_4
+              render 'mega-menu-side-item', url: block.settings.side_url_4, image: block.settings.side_image_4, title: block.settings.side_title_4, text: block.settings.side_text_4
+            endif
+          %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,114 @@
+{% comment %}
+  Renders the product's "Signup" block.
+
+  Accepts:
+  - id: {String} The form id.
+  - product: {Object} The product.
+  - block: {Object} The block.
+
+  Usage:
+  {% render 'main-product-signup', product: product, block: block %}
+{% endcomment %}
+
+<div
+  class="product-signup-block color-{{ block.settings.color_scheme }}"
+>
+  <div class="product-signup-block-icon">
+    {% render 'icons', icon: 'paper-airplane' %}
+  </div>
+
+  <div class="product-signup-block-content">
+    {% if block.settings.heading != blank %}
+      <p class="product-signup-block-heading h5">
+        {{ block.settings.heading }}
+      </p>
+    {% endif %}
+
+    <div class="product-signup-block-form-wrap">
+      {%- form 'contact', id: id, class: 'product-signup-block-form' -%}
+        <input
+          type="hidden"
+          id="ProductSignupBlock-message"
+          name="contact[message]"
+          value="{{ 'products.product.product_signup.contact_message' | t }}"
+        >
+
+        <input
+          type="hidden"
+          id="ProductSignupBlock-product-id"
+          name="contact[product_id]"
+          value="{{ product.id }}"
+        >
+
+        <input
+          type="hidden"
+          id="ProductSignupBlock-page-url"
+          name="contact[page_url]"
+          value="{{ canonical_url }}"
+        >
+
+        <input
+          type="hidden"
+          id="ProductSignupBlock-product-title"
+          name="contact[product_title]"
+          value="{{ product.title }}"
+        >
+
+        <div class="product-signup-block-input-wrap">
+          <label for="form-newsletter-email-{{ id }}" class="visually-hidden">
+            {{- 'sections.newsletter.email' | t -}}
+          </label>
+          <input
+            type="email"
+            pattern=".+@.+\.(.+\.?)+"
+            name="contact[email]"
+            id="form-newsletter-email-{{ id }}"
+            placeholder="{{ 'sections.newsletter.email' | t }}"
+            autocorrect="off"
+            autocapitalize="off"
+            autocomplete="email"
+            value="{{ form.email }}"
+            required
+            {% if form.errors %}
+              autofocus
+              aria-invalid="true"
+            {% endif %}
+          >
+          <button type="submit" class="button button-primary">
+            {{ 'sections.newsletter.submit' | t }}
+          </button>
+        </div>
+
+        {% if block.settings.consent_checkbox and block.settings.consent_text %}
+          <label
+            class="product-signup-block-checkbox-consent"
+            for="form-newsletter-consent-{{ id }}"
+          >
+            <input type="hidden" name="contact[subscription_consent]" value="false">
+            <input
+              type="checkbox"
+              id="form-newsletter-consent-{{ id }}"
+              name="contact[subscription_consent]"
+              required
+            >
+            <span class="rte">{{ block.settings.consent_text }}</span>
+          </label>
+        {% endif %}
+
+        {%- if form.errors -%}
+          <small class="newsletter-form-error field-error">
+            {{- form.errors.translated_fields.email | capitalize }}
+            {{ form.errors.messages.email -}}
+          </small>
+        {%- endif -%}
+        {%- if form.posted_successfully? -%}
+          <div class="form-status form-status-success" tabindex="-1" autofocus>
+            <h5 class="newsletter-form-success-title form-status-title">
+              {{ 'sections.newsletter.success' | t }}
+            </h5>
+          </div>
+        {%- endif -%}
+      {% endform %}
+    </div>
+  </div>
+</div>

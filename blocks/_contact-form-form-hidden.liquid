@@ -1,0 +1,45 @@
+{% liquid
+  assign form_id = section.settings.form_id | handleize | default: 'flexi-contact-form'
+  assign field_name = block.settings.title | handleize
+  assign field_id = form_id | append: '-' | append: field_name | append: '-' | append: block.id
+%}
+
+{% if block.settings.title != blank and block.settings.value != blank %}
+  <div class="flexi-block field field-hidden">
+    <input
+      type="hidden"
+      id="{{ field_id }}"
+      name="contact[{{ field_name }}]"
+      value="{{ block.settings.value | escape }}"
+    >
+  </div>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "t:theme_blocks._contact_form_form_hidden.name",
+    "tag": null,
+    "class": "flexi-block flexi-hidden",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "t:theme_blocks._contact_form_form_hidden.settings.title.label",
+        "info": "t:theme_blocks._contact_form_form_hidden.settings.title.info",
+        "default": "Hidden Field"
+      },
+      {
+        "type": "text",
+        "id": "value",
+        "label": "t:theme_blocks._contact_form_form_hidden.settings.value.label",
+        "info": "t:theme_blocks._contact_form_form_hidden.settings.value.info"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:theme_blocks._contact_form_form_hidden.name",
+        "category": "t:theme_blocks.categories.form"
+      }
+    ]
+  }
+{% endschema %}

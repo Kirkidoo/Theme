@@ -1,0 +1,29 @@
+<div class="container">
+  <div class="section-content">
+    {% unless section.settings.hide_heading %}
+      <h1 class="page-title">
+        {{ page.title | escape }}
+      </h1>
+    {% endunless %}
+
+    <div class="rte page-content">
+      {{ page.content }}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.main_page_fullwidth.name",
+    "tag": "section",
+    "class": "section section-main-page-fullwidth",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "hide_heading",
+        "default": false,
+        "label": "t:sections.main_page.settings.hide_heading.label"
+      }
+    ]
+  }
+{% endschema %}

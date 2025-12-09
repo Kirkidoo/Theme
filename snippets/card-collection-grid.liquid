@@ -1,0 +1,53 @@
+{% comment %}
+  Renders a collection card in media grid format.
+
+  Accepts:
+  - collection_item: {Object} Collection object.
+  - show_image: {Boolean} Show the collection_item's image. Default: false.
+  - class: {String} Additional classes for the card element.
+
+  Usage:
+  {% render 'card-collection-grid' collection_item: collection, show_image: true %}
+{% endcomment %}
+
+{% liquid
+  assign has_image = false
+  if collection_item.featured_image and show_image
+    assign has_image = true
+  endif
+  if collection_item == blank and show_image
+    assign has_image = true
+  endif
+%}
+
+<div class="card card-media-sm {% if has_image %}card-media-sm-with-image{% endif %} {{ class }}">
+  {% if collection_item.featured_image and show_image %}
+    <figure class="card-media">
+      <img
+        src="{{ collection_item.featured_image | image_url: width: 140 }}"
+        srcset="{{ collection_item.featured_image | image_url: width: 140 }} 1x, {{ collection_item.featured_image | image_url: width: 280 }} 2x"
+        alt="{{ collection_item.featured_image.alt | escape }}"
+        width="{{ collection_item.featured_image.width }}"
+        height="{{ collection_item.featured_image.height }}"
+      >
+    </figure>
+  {% endif %}
+
+  {% if collection_item == blank and show_image %}
+    <figure class="card-media">
+      {{ 'collection-1' | strip | placeholder_svg_tag: 'card-overlay-media' }}
+    </figure>
+  {% endif %}
+
+  <h3 class="card-heading typography-body ">
+    {% if collection_item %}
+      <a href="{{ collection_item.url }}">
+        {{ collection_item.title }}
+      </a>
+    {% else %}
+      {{ 'onboarding.collection_title' | t }}
+    {% endif %}
+  </h3>
+
+  {% render 'angle', direction: 'right' %}
+</div>

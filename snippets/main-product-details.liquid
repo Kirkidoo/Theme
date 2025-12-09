@@ -1,0 +1,154 @@
+{% comment %}
+  Renders the product's "Product details" block.
+
+  Accepts:
+  - product: {Object} The product.
+  - block: {Object} The block.
+  - position: {String} Position of the block on the product page. One of 'left' or 'right'.
+
+  Usage:
+  {% render 'main-product-details', product: product, block: block, position: 'right' %}
+{% endcomment %}
+
+{% capture output %}
+	{% if block.settings.show_type and product.type != blank %}
+		<li class="product-info-details-item product-info-details-type">
+			<span class="product-info-details-item-label">{{ 'products.product.type' | t }}</span>
+			<span class="product-info-details-item-value">{{ product.type }}</span>
+		</li>
+	{% endif %}
+	{% if block.settings.show_vendor and product.vendor != blank %}
+		<li class="product-info-details-item product-info-details-vendor">
+			<span class="product-info-details-item-label">{{ 'products.product.vendor' | t }}</span>
+			<span class="product-info-details-item-value">{{ product.vendor }}</span>
+		</li>
+	{% endif %}
+	{% if block.settings.show_sku and product.selected_or_first_available_variant.sku != blank %}
+		<li class="product-info-details-item product-info-details-sku product-info-details-variant-field">
+			<span class="product-info-details-item-label">{{ 'products.product.sku' | t }}</span>
+			<span class="product-info-details-item-value">{{ product.selected_or_first_available_variant.sku }}</span>
+		</li>
+	{% endif %}
+	{% if block.settings.show_barcode and product.selected_or_first_available_variant.barcode != blank %}
+		<li class="product-info-details-item product-info-details-barcode product-info-details-variant-field">
+			<span class="product-info-details-item-label">{{ block.settings.barcode_label }}</span>
+			<span class="product-info-details-item-value">{{ product.selected_or_first_available_variant.barcode }}</span>
+		</li>
+	{% endif %}
+
+	{% render 'product-metafields', product: product, metafields_list: block.settings.metafields %}
+{% endcapture %}
+{% assign output = output | strip %}
+
+{% liquid
+  assign is_expandable = false
+  if block.settings.title != blank or block.settings.icon != blank
+    assign is_expandable = true
+  endif
+
+  assign block_classes = 'product-block-content product-block-table variant-changed-update product-block-content-' | append: section.id
+%}
+
+{% if output == blank %}
+  {% assign block_classes = block_classes | append: ' hidden' %}
+  {% if position == 'left' %}
+    {% if is_expandable %}
+      <collapsible-expandable
+        class="{{ block_classes }}"
+        expanded="{{ block.settings.expanded }}"
+        {{ block.shopify_attributes }}
+      ></collapsible-expandable>
+    {% else %}
+      <div class="facet facet-standalone {{ block_classes }}" {{ block.shopify_attributes }}></div>
+    {% endif %}
+  {% else %}
+    <div
+      id="ProductInfoDetails-{{ section.id }}-{{ block.id }}-{{ forloop.index0 }}"
+      class="product-info-details {{ block_classes }}"
+      {{ block.shopify_attributes }}
+    ></div>
+  {% endif %}
+{% elsif output != blank or request.design_mode %}
+  {% if position == 'left' %}
+    {% if is_expandable %}
+      <collapsible-expandable
+        class="{{ block_classes }}"
+        expanded="{{ block.settings.expanded }}"
+        {{ block.shopify_attributes }}
+      >
+        <div class="facet">
+          <button
+            class="facet-toggle"
+            type="button"
+            aria-expanded="{{ block.settings.expanded }}"
+          >
+            <span>
+              {% if block.settings.icon != blank %}
+                {% render 'icons', icon: block.settings.icon %}
+              {% endif %}
+              {{ block.settings.title }}
+            </span>
+            {% render 'angle', direction: 'down' %}
+          </button>
+    {% else %}
+      <div class="facet facet-standalone {{ block_classes }}" {{ block.shopify_attributes }}>
+    {% endif %}
+
+    <div class="facet-content">
+      {% if block.settings.text_position == 'before' and block.settings.text != blank %}
+        <div class="product-info-details-text rte">
+          {{ block.settings.text }}
+        </div>
+      {% endif %}
+
+      <ul class="product-info-details-list">
+        {{ output }}
+      </ul>
+
+      {% if block.settings.text_position == 'after' and block.settings.text != blank %}
+        <div class="product-info-details-text rte">
+          {{ block.settings.text }}
+        </div>
+      {% endif %}
+    </div>
+
+    {% if is_expandable %}
+      </div>
+      </collapsible-expandable>
+    {% else %}
+      </div>
+    {% endif %}
+
+  {% elsif position == 'right' %}
+    <div
+      id="ProductInfoDetails-{{ section.id }}-{{ block.id }}-{{ forloop.index0 }}"
+      class="product-info-details {{ block_classes }}"
+      {{ block.shopify_attributes }}
+    >
+      {% if block.settings.title != blank %}
+        <p class="product-info-details-title h5">
+          {% if block.settings.icon != blank %}
+            {% render 'icons', icon: block.settings.icon %}
+          {% endif %}
+          {{ block.settings.title }}
+        </p>
+      {% endif %}
+
+      {% if block.settings.text_position == 'before' and block.settings.text != blank %}
+        <div class="product-info-details-text rte">
+          {{ block.settings.text }}
+        </div>
+      {% endif %}
+
+      <ul class="product-info-details-list">
+        {{ output }}
+      </ul>
+
+      {% if block.settings.text_position == 'after' and block.settings.text != blank %}
+        <div class="product-info-details-text rte">
+          {{ block.settings.text }}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endif %}

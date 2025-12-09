@@ -1,0 +1,100 @@
+{% comment %}
+  Renders a customizable image banner card.
+
+  Accepts:
+  - image: {Object} Optional. Image object.
+  - description: {String} Optional. The description.
+  - link: {String} Optional. The link.
+  - new_window: {Boolean} Optional. Whether to open the link in a new window.
+  - class: {String} Optional. CSS class.
+  - columns {Number} Optional. The number of columns the card is rendered in.
+  - id: {String} Optional. HTML id.
+
+  Usage:
+  {% render 'card-image-banner' description: description, image: image %}
+{% endcomment %}
+
+<div
+  {% if id != blank %}
+    id="{{ id }}"
+  {% endif %}
+  class="card-image-banner {{ class }}"
+>
+  {% if link %}
+    <a
+      href="{{ link }}"
+      {% if new_window %}
+        target="_blank"
+      {% endif %}
+    >
+  {% endif %}
+
+  {% if image != blank %}
+    {%- capture image_sizes -%}
+				{% if columns == 1 %}
+					(min-width: 1420px) 1420px, calc(100vw - 3rem)
+				{% else %}
+					(min-width: 1200px) calc((100vw - 6rem) / 2), (min-width: 990px) calc((100vw - 6rem) * 0.6), (min-width: 750px) calc(100vw - 4rem), calc(100vw - 3rem)
+				{% endif %}
+			{%- endcapture -%}
+
+    <picture>
+      {% if mobile_image %}
+        <source
+          srcset="
+            {% if mobile_image.width >= 375 %}{{ mobile_image | image_url: width: 165 }} 165w,{% endif %}
+            {% if mobile_image.width >= 440 %}{{ mobile_image | image_url: width: 440 }} 440w,{% endif %}
+            {% if mobile_image.width >= 650 %}{{ mobile_image | image_url: width: 650 }} 650w,{% endif %}
+            {% if mobile_image.width >= 850 %}{{ mobile_image | image_url: width: 850 }} 850w,{% endif %}
+            {% if mobile_image.width >= 1100 %}{{ mobile_image | image_url: width: 1100 }} 1100w,{% endif %}
+            {% if mobile_image.width >= 1200 %}{{ mobile_image | image_url: width: 1200 }} 1200w,{% endif %}
+            {% if mobile_image.width >= 1420 %}{{ mobile_image | image_url: width: 1420 }} 1420w,{% endif %}
+            {{ mobile_image | image_url }} {{ mobile_image.width }}w
+          "
+          sizes="{{ image_sizes }}"
+          {% if mobile_image != blank %}
+            media="(max-width: 749px)"
+          {% endif %}
+        >
+      {% endif %}
+
+      <source
+        srcset="
+          {% if image.width >= 375 %}{{ image | image_url: width: 165 }} 165w,{% endif %}
+          {% if image.width >= 440 %}{{ image | image_url: width: 440 }} 440w,{% endif %}
+          {% if image.width >= 650 %}{{ image | image_url: width: 650 }} 650w,{% endif %}
+          {% if image.width >= 850 %}{{ image | image_url: width: 850 }} 850w,{% endif %}
+          {% if image.width >= 1100 %}{{ image | image_url: width: 1100 }} 1100w,{% endif %}
+          {% if image.width >= 1200 %}{{ image | image_url: width: 1200 }} 1200w,{% endif %}
+          {% if image.width >= 1420 %}{{ image | image_url: width: 1420 }} 1420w,{% endif %}
+          {{ image | image_url }} {{ image.width }}w
+        "
+        sizes="{{ image_sizes }}"
+        {% if mobile_image != blank %}
+          media="(min-width: 750px)"
+        {% endif %}
+      >
+
+      {{
+        image
+        | image_url: width: 1420
+        | image_tag:
+          sizes: image_sizes,
+          widths: '165, 440, 650, 850, 1100, 1200, 1420',
+          fetchpriority: fetch_priority,
+          loading: lazyload
+      }}
+    </picture>
+
+  {% else %}
+    {{ 'collection-1' | strip | placeholder_svg_tag: 'placeholder-svg' }}
+  {% endif %}
+
+  {% unless description == blank %}
+    <span class="visually-hidden">{{ description }}</span>
+  {% endunless %}
+
+  {% if link %}
+    </a>
+  {% endif %}
+</div>

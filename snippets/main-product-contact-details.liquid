@@ -1,0 +1,81 @@
+{% comment %}
+  Renders the product's "Ask an expert" block.
+
+  Accepts:
+  - block: {Object} The block.
+  - settings: {Object} The block's settings.
+  - settings.heading: {String} The title. Optional.
+  - settings.image: {Image} The block's image. Optional.
+  - settings.video_chat_link: {Link} The video chat link. Optional.
+  - settings.chat_link: {Link} The chat link. Optional.
+  - settings.email: {String} The email. Optional.
+  - settings.phone_number: {String} The phone number. Optional.
+  - settings.background_color: {String} The background color.
+  - settings.color_scheme: {String} The color scheme.
+
+  Usage:
+  {% render 'main-product-contact-details', settings: block.settings %}
+{% endcomment %}
+
+<div
+  class="product-contact-details-block color-{{ settings.color_scheme }}"
+>
+  {% if settings.image != blank %}
+    <div class="product-contact-details-thumbnail">
+      {%- capture image_sizes -%}
+				{%- if settings.image.width >= 160 -%}{{ settings.image | image_url: width: 160 }} 1x,{%- endif -%}
+				{%- if settings.image.width >= 320 -%}{{ settings.image | image_url: width: 320 }} 2x{%- endif -%}
+			{%- endcapture -%}
+      {% assign image_height = 320 | divided_by: settings.image.aspect_ratio | ceil %}
+      {{
+        settings.image
+        | image_url: width: 320
+        | image_tag:
+          class: 'product-contact-details-image',
+          width: 320,
+          height: image_height,
+          srcset: image_sizes
+      }}
+    </div>
+  {% endif %}
+
+  <div class="product-contact-details-content">
+    {% if settings.heading != blank %}
+      <p class="product-contact-details-heading h5">
+        {{ settings.heading }}
+      </p>
+    {% endif %}
+
+    <div class="product-contact-details-meta rte">
+      {% if settings.video_chat_link != blank %}
+        <span class="product-contact-details-meta-item">
+          <a href="{{ settings.video_chat_link }}">
+            {{ 'products.product.contact_details.video_chat' | t }}
+          </a>
+        </span>
+      {% endif %}
+
+      {% if settings.chat_link != blank %}
+        <span class="product-contact-details-meta-item">
+          <a href="{{ settings.chat_link }}">
+            {{ 'products.product.contact_details.chat' | t }}
+          </a>
+        </span>
+      {% endif %}
+
+      {% if settings.email != blank %}
+        <span class="product-contact-details-meta-item">
+          <a href="mailto:{{ settings.email }}">
+            {{ 'products.product.contact_details.email' | t }}
+          </a>
+        </span>
+      {% endif %}
+
+      {% if settings.phone_number != blank %}
+        <span class="product-contact-details-meta-item product-contact-details-meta-item-phone-number">
+          <a href="tel:{{ settings.phone_number }}">{{ settings.phone_number }}</a>
+        </span>
+      {% endif %}
+    </div>
+  </div>
+</div>

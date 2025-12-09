@@ -1,0 +1,114 @@
+{% comment %}
+  Section: Product Fitment Display (Apex Theme Style)
+{% endcomment %}
+
+{{ 'product-fitment.css' | asset_url | stylesheet_tag }}
+
+{%- assign base_url = settings.gamma_api_base_url | default: "https://api.gammapowersports.com" -%}
+{%- assign api_token = settings.gamma_api_token -%}
+{%- assign fitment_endpoint = base_url | append: '/item/getFitmentMachines' -%}
+{%- assign part_number = product.selected_or_first_available_variant.sku | default: product.variants[0].sku -%}
+
+{%- liquid
+  assign section_id = section.id
+  assign section_title = section.settings.title
+  assign hide_if_empty = section.settings.hide_if_empty
+  assign filter_placeholder = section.settings.filter_placeholder | default: "Search Make, Model, or Year..."
+-%}
+
+<div
+  class="product-fitment-section"
+  id="product-fitment-{{ section_id }}"
+  data-section-id="{{ section_id }}"
+  data-api-endpoint="{{ fitment_endpoint }}"
+  data-api-token="{{ api_token | escape }}"
+  data-part-number="{{ part_number | escape }}"
+  data-hide-if-empty="{{ hide_if_empty }}"
+  {% if api_token == blank or part_number == blank %}data-init-error="true"{% endif %}
+>
+  <div class="page-width">
+    <div class="product-fitment-container">
+      {% if section_title != blank %}
+        <div class="product-fitment__header">
+          <h2 class="product-fitment__title">{{ section_title | escape }}</h2>
+        </div>
+      {% endif %}
+
+      <div class="product-fitment__content">
+        {% if api_token != blank and part_number != blank %}
+          
+          <div class="product-fitment__controls">
+            <div class="product-fitment__search-wrapper">
+              <input
+                type="text"
+                id="fitment-filter-{{ section_id }}"
+                class="product-fitment__filter-input"
+                placeholder="{{ filter_placeholder | escape }}"
+                aria-controls="product-fitment-results-list-{{ section_id }}"
+                disabled
+              >
+              <span class="product-fitment__search-icon">
+                <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="product-fitment__loading">
+            <div class="spinner"></div>
+            <span>Checking compatibility...</span>
+          </div>
+
+          <div class="product-fitment__error-message" style="display: none;" role="alert"></div>
+
+          <div class="product-fitment__table-header" style="display:none;">
+            <span>Make</span>
+            <span>Model</span>
+            <span>Year</span>
+          </div>
+
+          <div class="product-fitment__results"></div>
+
+        {% else %}
+          <p class="product-fitment__error">
+            API Configuration Missing. Please check Theme Settings.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ 'product-fitment.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "Product Fitment",
+  "tag": "section",
+  "class": "product-fitment-wrapper",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title",
+      "default": "Vehicle Fitment"
+    },
+    {
+      "type": "text",
+      "id": "filter_placeholder",
+      "label": "Filter Input Placeholder",
+      "default": "Search Make, Model, or Year..."
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_if_empty",
+      "label": "Hide section if no fitment data found",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Fitment"
+    }
+  ]
+}
+{% endschema %}

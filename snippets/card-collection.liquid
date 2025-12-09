@@ -1,0 +1,41 @@
+{% comment %}
+  Renders a collection card.
+
+  Accepts:
+  - collection: {Object} Collection object
+  - title: {Boolean} Show the title. Default: true
+  - overlay: {Boolean} Show overlay. Default: true
+
+  Usage:
+  {% render 'card-collection' collection: collection, title: true, overlay: false %}
+{% endcomment %}
+
+<div class="grid-item">
+  <a
+    href="{{ collection.url }}"
+    class="
+      card-overlay card-overlay-sm card-height-half
+      {% unless overlay == false %}card-overlay-on{% else %}card-overlay-off{% endunless %}
+    "
+  >
+    {% if collection.featured_image %}
+      {{
+        collection.featured_image
+        | image_url: width: 1420
+        | image_tag:
+          class: 'card-overlay-media',
+          loading: 'lazy',
+          widths: '250, 480, 650, 700, 950, 1420',
+          sizes: '(min-width: 1200px) 700px, (min-width: 990px) calc((100vw - 2rem - 3rem) / 2), calc((100vw - 3rem - 1rem) / 2)'
+      }}
+    {% endif %}
+
+    {% unless title == false %}
+      <div class="card-overlay-info">
+        <h3 class="card-overlay-heading">
+          {{ collection.title }}
+        </h3>
+      </div>
+    {% endunless %}
+  </a>
+</div>

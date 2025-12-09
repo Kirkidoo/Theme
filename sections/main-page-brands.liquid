@@ -1,0 +1,148 @@
+{{ 'component-card.css' | asset_url | stylesheet_tag }}
+
+<div class="container">
+  <div class="section-content">
+    {% unless section.settings.hide_heading %}
+      <h1 class="page-title">
+        {{ page.title | escape }}
+      </h1>
+    {% endunless %}
+
+    {%- if page.content -%}
+      <div class="rte page-content">
+        {{ page.content }}
+      </div>
+    {%- endif -%}
+
+    {% if section.blocks %}
+      <div
+        class="
+          brands-blocks-wrapper grid grid-1-col grid-2-col grid-4-col-tablet
+          grid-{{ section.settings.columns }}-col-desktop
+        "
+      >
+        {% for block in section.blocks %}
+          {% liquid
+            assign ratio = 1
+            if block.settings.collection.featured_image and section.settings.image_ratio == 'portrait'
+              assign ratio = 0.8
+            elsif block.settings.collection.featured_image and section.settings.image_ratio == 'landscape'
+              assign ratio = 1.77
+            elsif block.settings.collection.featured_image and section.settings.image_ratio == 'adapt'
+              assign ratio = block.settings.collection.featured_image.aspect_ratio
+            endif
+            if ratio == 0 or ratio == null
+              assign ratio = 1
+            endif
+          %}
+
+          <div class="grid-item" {{ block.shopify_attributes }}>
+            {%- case block.type -%}
+              {% when 'brand' %}
+                <div class="card-simple">
+                  <div class="card card-small card-simple-media color-background-1">
+                    <a href="{{ block.settings.collection.url }}" class="card-media">
+                      {% if block.settings.collection.featured_image %}
+                        {% if ratio != 0 %}
+                          <div
+                            class="aspect-ratio"
+                            style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+                          >
+                        {% endif %}
+                        {{
+                          block.settings.collection.featured_image
+                          | image_url: width: 950
+                          | image_tag:
+                            loading: 'lazy',
+                            widths: '250, 450, 650, 750, 950',
+                            sizes: '(min-width: 1200px) 420px, (min-width: 990px) calc((100vw - 4rem - 3rem) / 3), calc(100vw - 3rem - 1rem)'
+                        }}
+                        {% if ratio != 0 %}
+                          </div>
+                        {% endif %}
+                      {% else %}
+                        {% capture placeholder %}
+													{% cycle 'collection-1', 'collection-2', 'collection-3', 'collection-4' , 'collection-5' , 'collection-6' %}
+												{% endcapture %}
+                        {{ placeholder | strip | placeholder_svg_tag }}
+                      {% endif %}
+                    </a>
+                  </div>
+
+                  {%- if block.settings.collection.title -%}
+                    <h3 class="card-simple-title">
+                      <a href="{{ block.settings.collection.url }}">
+                        {{ block.settings.collection.title }}
+                      </a>
+                    </h3>
+                  {%- endif -%}
+                </div>
+            {% endcase %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.main_page_brands.name",
+    "tag": "section",
+    "class": "section section-main-page-brands",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "hide_heading",
+        "default": false,
+        "label": "t:sections.main_page.settings.hide_heading.label"
+      },
+      {
+        "type": "range",
+        "id": "columns",
+        "min": 3,
+        "max": 6,
+        "step": 1,
+        "default": 6,
+        "label": "t:sections.all.layout.columns.label"
+      },
+      {
+        "type": "select",
+        "id": "image_ratio",
+        "label": "t:sections.all.layout.image_ratio.label",
+        "default": "adapt",
+        "options": [
+          {
+            "value": "adapt",
+            "label": "t:sections.all.layout.image_ratio.options.label_1"
+          },
+          {
+            "value": "portrait",
+            "label": "t:sections.all.layout.image_ratio.options.label_2"
+          },
+          {
+            "value": "square",
+            "label": "t:sections.all.layout.image_ratio.options.label_3"
+          },
+          {
+            "value": "landscape",
+            "label": "t:sections.all.layout.image_ratio.options.label_4"
+          }
+        ]
+      }
+    ],
+    "blocks": [
+      {
+        "type": "brand",
+        "name": "t:sections.main_page_brands.blocks.brand.name",
+        "settings": [
+          {
+            "type": "collection",
+            "id": "collection",
+            "label": "t:sections.main_page_brands.blocks.brand.settings.collection.label"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

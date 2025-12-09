@@ -1,0 +1,164 @@
+{% comment %}
+  Renders the header search form
+
+  Accepts:
+  - is_dropdown_modal: {Boolean} Optional. Whether the search is displayed in a dropdown modal.
+  - label: {String}: Optional. The label of the icon button (when displayed in dropdown modal).
+
+  Usage:
+  {% render 'header-search' %}
+{% endcomment %}
+
+{% if is_dropdown_modal %}
+  <header-search-dropdown-modal
+    class="header-search-modal dropdown-modal"
+    data-event-prefix="header-search"
+  >
+    <button
+      type="button"
+      class="head-slot-global-search-link head-slot-nav-link dropdown-modal-toggle"
+      aria-haspopup="dialog"
+      aria-label="{{ 'sections.header_search.button_label' | t }}"
+      aria-expanded="false"
+    >
+      {% render 'icons', icon: 'search' %}
+      {% if label != blank %}
+        <span class="head-slot-nav-link-label">{{ label }}</span>
+      {% endif %}
+    </button>
+
+    <div
+      class="header-search-global color-background-1"
+      role="dialog"
+      aria-modal="true"
+      aria-label="{{ 'sections.header_search.modal_label' | t }}"
+    >
+{% else %}
+  <div class="head-slot-item header-search-global">
+{% endif %}
+
+{%- if settings.predictive_search_enabled -%}
+  <predictive-search
+    class="header-search-global-component"
+    data-loading-text="{{ 'accessibility.loading' | t }}"
+    data-limit="{{ settings.predictive_search_limit }}"
+    data-limit-scope="{{ settings.predictive_search_limit_scope }}"
+  >
+{%- endif -%}
+<form
+  action="{{ routes.search_url }}"
+  method="get"
+  role="search"
+  class="search header-search-global-form"
+>
+  <div class="header-search-global-form-wrap">
+    {%- if settings.search_filter_type != 'none' and settings.predictive_search_enabled -%}
+      <div class="select-custom header-global-search-select">
+        <select
+          id="search-filter"
+          name="search-filter"
+          data-type="{{ settings.search_filter_type }}"
+          class="header-global-search-categories"
+        >
+          {% if settings.search_filter_type == 'product_type' %}
+            {% assign search_filter_label = 'sections.header_search.all_types' | t %}
+            <option value="" selected="selected">{{ search_filter_label }}</option>
+            {%- for product_type in shop.types -%}
+              {%- if product_type != blank -%}
+                <option value="{{ product_type | escape }}">{{ product_type | escape }}</option>
+              {%- endif -%}
+            {%- endfor -%}
+
+          {% elsif settings.search_filter_type == 'vendor' %}
+            {% assign search_filter_label = 'sections.header_search.all_vendors' | t %}
+            <option value="" selected="selected">{{ search_filter_label }}</option>
+            {%- for vendor in shop.vendors -%}
+              <option value="{{ vendor | escape }}">{{ vendor | escape }}</option>
+            {%- endfor -%}
+
+          {% else %}
+            {% assign search_filter_label = 'sections.header_search.all_tags' | t %}
+            <option value="" selected="selected">{{ search_filter_label }}</option>
+            {%- capture tags_string -%}
+										{%- for collection in collections -%}
+											{%- for tag in collection.all_tags -%}
+												|{{ tag }}|
+											{%- endfor -%}
+										{%- endfor -%}
+									{%- endcapture -%}
+            {% assign tags_array = tags_string | split: '|' | uniq | sort %}
+            {%- for tag in tags_array -%}
+              {% assign tag = tag | strip %}
+              {% if tag != blank %}
+                <option value="{{ tag | escape }}">{{ tag | capitalize | escape }}</option>
+              {% endif %}
+            {%- endfor -%}
+          {% endif %}
+        </select>
+        <label for="search-filter">
+          {{ search_filter_label }}
+        </label>
+      </div>
+    {%- endif -%}
+
+    <input
+      type="search"
+      id="header-global-search-input"
+      name="q"
+      value=""
+      placeholder="{{ 'sections.header_search.label' | t }}"
+      class="header-global-search-input"
+      {% if settings.predictive_search_enabled %}
+        role="combobox"
+        aria-expanded="false"
+        aria-owns="predictive-search-results-list"
+        aria-controls="predictive-search-results-list"
+        aria-haspopup="listbox"
+        aria-autocomplete="list"
+        autocorrect="off"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+      {% endif %}
+    >
+    <label for="header-global-search-input" class="visually-hidden">
+      {{- 'sections.header_search.label' | t -}}
+    </label>
+    <input type="hidden" name="options[prefix]" value="last">
+    <button
+      type="submit"
+      class="button icon-left"
+      aria-label="{{ 'sections.header_search.button_label' | t }}"
+    >
+      {% render 'icons', icon: 'search' %}
+      <span>
+        {{ 'sections.header_search.button_label' | t }}
+      </span>
+    </button>
+  </div>
+
+  {%- if settings.predictive_search_enabled -%}
+    <div
+      class="predictive-search predictive-search-header color-background-1"
+      tabindex="-1"
+      data-predictive-search
+    >
+      <div class="predictive-search-loading-state">
+        <span class="spinner-sm"></span>
+      </div>
+    </div>
+
+    <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
+  {%- endif -%}
+</form>
+
+{%- if settings.predictive_search_enabled -%}
+  </predictive-search>
+{%- endif -%}
+
+{% if is_dropdown_modal %}
+  </div>
+  </header-search-dropdown-modal>
+{% else %}
+  </div>
+{% endif %}

@@ -1,0 +1,191 @@
+{% comment %}
+  Global dynamic styles
+
+  Usage:
+  {% render 'head-css' %}
+{% endcomment %}
+
+{% liquid
+  assign font_medium = settings.typography_body | font_modify: 'weight', '500'
+  assign font_semibold = settings.typography_body | font_modify: 'weight', '600'
+  assign font_weight_bolder = 'bolder'
+
+  assign buttons_border_radius = 2
+  if settings.buttons_shape == 'square'
+    assign buttons_border_radius = 0
+  elsif settings.buttons_shape == 'pill'
+    assign buttons_border_radius = 24
+  endif
+
+  assign buttons_font_family = settings.typography_body.family | append: ',' | append: settings.typography_body.fallback_families
+  if settings.buttons_font == 'headings'
+    assign buttons_font_family = settings.typography_headings.family | append: ',' | append: settings.typography_headings.fallback_families
+  endif
+
+  assign headings_transform = 'none'
+  if settings.typography_headings_uppercase == true
+    assign headings_transform = 'uppercase'
+  endif
+
+  assign buttons_transform = 'none'
+  if settings.buttons_uppercase == true
+    assign buttons_transform = 'uppercase'
+  endif
+
+  assign badges_transform = 'none'
+  if settings.badges_uppercase == true
+    assign badges_transform = 'uppercase'
+  endif
+
+  assign badge_border_radius = 3
+  if settings.badges_shape == 'square'
+    assign badge_border_radius = 0
+  elsif settings.badges_shape == 'pill'
+    assign badge_border_radius = 24
+  endif
+
+  assign headings_spacing = settings.typography_headings_spacing | divided_by: 100.0
+%}
+
+{% style %}
+   {{ settings.typography_body | font_face: font_display: 'swap' }}
+   {{ settings.typography_body | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
+   {{ settings.typography_body | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
+   {{ settings.typography_body | font_modify: 'weight', 'bold' | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
+   {{ settings.typography_headings | font_face: font_display: 'swap' }}
+   {{ settings.typography_headings | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
+   {{ settings.typography_headings | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
+   {{ settings.typography_headings | font_modify: 'weight', 'bold' | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
+
+   {%- if font_medium -%}
+   	{{ font_medium | font_face: font_display: 'swap' }}
+   	{%- assign font_weight_bolder = font_medium.weight -%}
+   {%- elsif font_semibold -%}
+   	{{ font_semibold | font_face: font_display: 'swap' }}
+   	{%- assign font_weight_bolder = font_semibold.weight -%}
+   {%- endif -%}
+
+   {%- liquid
+   	if settings.typography_body.system?
+   		assign font_weight_bolder = '500'
+   	endif
+
+   	assign font_weight_headings = settings.typography_headings.weight
+   	if settings.typography_headings.system?
+   		assign font_weight_headings = '500'
+   	endif
+   -%}
+
+   :root {
+   	--page-width: 146rem;
+   	--spacing-base-1: 2rem;
+
+   	--grid-desktop-horizontal-spacing: 20px;
+   	--grid-desktop-vertical-spacing: 20px;
+   	--grid-mobile-horizontal-spacing: 15px;
+   	--grid-mobile-vertical-spacing: 15px;
+
+   	--badge-radius: {{ badge_border_radius }}px;
+   	--border-radius-base: {{ settings.border_style }};
+   	--buttons-radius: {{ buttons_border_radius }}px;
+   	--inputs-radius: {{ settings.border_style }};
+   	--inputs-border-width: 1px;
+
+   	--color-base-white: #fff;
+   	--color-product-review-star: #ffc700;
+
+   	--color-sale: rgba({{ settings.color_badge_sale.red }} {{ settings.color_badge_sale.green }} {{ settings.color_badge_sale.blue }} / {{ settings.color_badge_sale.alpha }});
+   	--color-sale-background: {{ settings.color_badge_sale | color_lighten: 35 }};
+   	--color-error: rgba({{ settings.color_badge_outofstock.red }} {{ settings.color_badge_outofstock.green }} {{ settings.color_badge_outofstock.blue }} / {{ settings.color_badge_outofstock.alpha }});
+   	--color-error-background: {{ settings.color_badge_outofstock | color_lighten: 56 }};
+   	--color-success: rgba({{ settings.color_badge_instock.red }} {{ settings.color_badge_instock.green }} {{ settings.color_badge_instock.blue }} / {{ settings.color_badge_instock.alpha }});
+   	--color-success-background: {{ settings.color_badge_instock | color_lighten: 58 }};
+   	--color-warning: rgba({{ settings.color_badge_limitedstock.red }} {{ settings.color_badge_limitedstock.green }} {{ settings.color_badge_limitedstock.blue }} / {{ settings.color_badge_limitedstock.alpha }});
+   	--color-warning-background: {{ settings.color_badge_limitedstock | color_lighten: 46 }};
+   	--color-preorder: rgba({{ settings.color_badge_preorder.red }} {{ settings.color_badge_preorder.green }} {{ settings.color_badge_preorder.blue }} / {{ settings.color_badge_preorder.alpha }});
+   	--color-preorder-background: {{ settings.color_badge_preorder | color_lighten: 37 }};
+   	--color-backorder: rgba({{ settings.color_badge_backorder.red }} {{ settings.color_badge_backorder.green }} {{ settings.color_badge_backorder.blue }} / {{ settings.color_badge_backorder.alpha }});
+   	--color-backorder-background: {{ settings.color_badge_backorder | color_lighten: 58 }};
+   	--color-price: {{ settings.price_color.red }} {{ settings.price_color.green }} {{ settings.price_color.blue }} / {{ settings.price_color.alpha }};
+   	--color-price-discounted: {{ settings.price_discounted_color.red }} {{ settings.price_discounted_color.green }} {{ settings.price_discounted_color.blue }} / {{ settings.price_discounted_color.alpha }};
+   	--color-price-discounted-final: {{ settings.price_final_discounted_color.red }} {{ settings.price_final_discounted_color.green }} {{ settings.price_final_discounted_color.blue }} / {{ settings.price_final_discounted_color.alpha }};
+
+   	--font-body-family: {{ settings.typography_body.family }}, {{ settings.typography_body.fallback_families }};
+   	--font-body-style: {{ settings.typography_body.style }};
+   	--font-body-weight: {{ settings.typography_body.weight }};
+   	--font-bolder-weight: {{ font_weight_bolder }};
+
+   	--font-heading-family: {{ settings.typography_headings.family }}, {{ settings.typography_headings.fallback_families }};
+   	--font-heading-style: {{ settings.typography_headings.style }};
+   	--font-heading-weight: {{ font_weight_headings }};
+
+   	--font-body-scale: {{ settings.typography_body_size | divided_by: 100.0 }};
+   	--font-heading-scale: {{ settings.typography_headings_size | divided_by: 100.0 }};
+   	--font-heading-spacing: {{ headings_spacing }}em;
+   	--font-heading-transform: {{ headings_transform }};
+   	--font-product-price-scale: {{ settings.product_font_scale | divided_by: 100.0 }};
+   	--font-product-price-grid-scale: {{ settings.product_grid_font_scale | divided_by: 100.0 }};
+
+   	--font-buttons-family: {{ buttons_font_family }};
+   	--font-buttons-transform: {{ buttons_transform }};
+
+   --font-badges-transform: {{ badges_transform }};
+   {%- if settings.badges_uppercase == false -%}
+   --font-badges-size: calc(var(--font-body-scale) * 1.3rem);
+   {%- else -%}
+   --font-badges-size: calc(var(--font-body-scale) * 1.2rem);
+   {%- endif -%}
+   }
+
+  {% for scheme in settings.color_schemes %}
+  	{% assign scheme_classes = scheme_classes | append: ', .color-' | append: scheme.id %}
+
+  	{% if forloop.index == 1 -%}
+  		:root,
+  	{%- endif %}
+  	.color-{{ scheme.id }} {
+  		--color-background: {{ scheme.settings.background.red }} {{ scheme.settings.background.green }} {{ scheme.settings.background.blue }} / {{ scheme.settings.background.alpha }};
+  		--color-foreground: {{ scheme.settings.text.red }} {{ scheme.settings.text.green }} {{ scheme.settings.text.blue }} / {{ scheme.settings.text.alpha }};
+  		--color-foreground-alt: {{ scheme.settings.headings_text.red }} {{ scheme.settings.headings_text.green }} {{ scheme.settings.headings_text.blue }} / {{ scheme.settings.headings_text.alpha }};
+  		--color-border: {{ scheme.settings.border.red }} {{ scheme.settings.border.green }} {{ scheme.settings.border.blue }} / {{ scheme.settings.border.alpha }};
+  		--color-box-shadow: {{ scheme.settings.border.red }} {{ scheme.settings.border.green }} {{ scheme.settings.border.blue }} / 0.2;
+  		--color-accent-1: {{ scheme.settings.accent_1.red }} {{ scheme.settings.accent_1.green }} {{ scheme.settings.accent_1.blue }} / {{ scheme.settings.accent_1.alpha }};
+  		--color-accent-2: {{ scheme.settings.accent_2.red }} {{ scheme.settings.accent_2.green }} {{ scheme.settings.accent_2.blue }} / {{ scheme.settings.accent_2.alpha }};
+  		--color-button: {{ scheme.settings.primary_button_background.red }} {{ scheme.settings.primary_button_background.green }} {{ scheme.settings.primary_button_background.blue }} / {{ scheme.settings.primary_button_background.alpha }};
+  		--color-button-text: {{ scheme.settings.primary_button_text.red }} {{ scheme.settings.primary_button_text.green }} {{ scheme.settings.primary_button_text.blue }} / {{ scheme.settings.primary_button_text.alpha }};
+  		--color-secondary-button: {{ scheme.settings.secondary_button_background.red }} {{ scheme.settings.secondary_button_background.green }} {{ scheme.settings.secondary_button_background.blue }} / {{ scheme.settings.secondary_button_background.alpha }};
+  		--color-secondary-button-text: {{ scheme.settings.secondary_button_text.red }} {{ scheme.settings.secondary_button_text.green }} {{ scheme.settings.secondary_button_text.blue }} / {{ scheme.settings.secondary_button_text.alpha }};
+
+  	  --color-product-cards-background: {{ scheme.settings.colors_product_cards_background.red }} {{ scheme.settings.colors_product_cards_background.green }} {{ scheme.settings.colors_product_cards_background.blue }} / {{ scheme.settings.colors_product_cards_background.alpha }};
+  	  --color-product-cards-foreground: {{ scheme.settings.colors_product_cards_text.red }} {{ scheme.settings.colors_product_cards_text.green }} {{ scheme.settings.colors_product_cards_text.blue }} / {{ scheme.settings.colors_product_cards_text.alpha }};
+  	  --color-product-cards-foreground-alt: {{ scheme.settings.colors_product_cards_headings_text.red }} {{ scheme.settings.colors_product_cards_headings_text.green }} {{ scheme.settings.colors_product_cards_headings_text.blue }} / {{ scheme.settings.colors_product_cards_headings_text.alpha }};
+  	  --color-product-cards-border: {{ scheme.settings.colors_product_cards_border.red }} {{ scheme.settings.colors_product_cards_border.green }} {{ scheme.settings.colors_product_cards_border.blue }} / {{ scheme.settings.colors_product_cards_border.alpha }};
+  	  --color-product-cards-box-shadow: {{ scheme.settings.colors_product_cards_border.red }} {{ scheme.settings.colors_product_cards_border.green }} {{ scheme.settings.colors_product_cards_border.blue }} / 0.2;
+  	  --color-product-cards-price: {{ scheme.settings.colors_product_cards_price.red }} {{ scheme.settings.colors_product_cards_price.green }} {{ scheme.settings.colors_product_cards_price.blue }} / {{ scheme.settings.colors_product_cards_price.alpha }};
+  	  --color-product-cards-price-discount: {{ scheme.settings.colors_product_cards_price_discount.red }} {{ scheme.settings.colors_product_cards_price_discount.green }} {{ scheme.settings.colors_product_cards_price_discount.blue }} / {{ scheme.settings.colors_product_cards_price_discount.alpha }};
+  	  --color-product-cards-price-discount-final: {{ scheme.settings.colors_product_cards_price_final_discount.red }} {{ scheme.settings.colors_product_cards_price_final_discount.green }} {{ scheme.settings.colors_product_cards_price_final_discount.blue }} / {{ scheme.settings.colors_product_cards_price_final_discount.alpha }};
+
+  	  --color-inputs-background: {{ scheme.settings.colors_forms_background.red }} {{ scheme.settings.colors_forms_background.green }} {{ scheme.settings.colors_forms_background.blue }} / {{ scheme.settings.colors_forms_background.alpha }};
+  	  --color-inputs-foreground: {{ scheme.settings.colors_forms_text.red }} {{ scheme.settings.colors_forms_text.green }} {{ scheme.settings.colors_forms_text.blue }} / {{ scheme.settings.colors_forms_text.alpha }};
+  	  --color-inputs-border: {{ scheme.settings.colors_forms_border.red }} {{ scheme.settings.colors_forms_border.green }} {{ scheme.settings.colors_forms_border.blue }} / {{ scheme.settings.colors_forms_border.alpha }};
+  	  --color-inputs-box-shadow: {{ scheme.settings.colors_forms_border.red }} {{ scheme.settings.colors_forms_border.green }} {{ scheme.settings.colors_forms_border.blue }} / 0.2;
+
+  	  --color-aux-background: {{ scheme.settings.colors_aux_background.red }} {{ scheme.settings.colors_aux_background.green }} {{ scheme.settings.colors_aux_background.blue }} / {{ scheme.settings.colors_aux_background.alpha }};
+  	  --color-aux-foreground: {{ scheme.settings.colors_aux_text.red }} {{ scheme.settings.colors_aux_text.green }} {{ scheme.settings.colors_aux_text.blue }} / {{ scheme.settings.colors_aux_text.alpha }};
+  	  --color-aux-border: {{ scheme.settings.colors_aux_border.red }} {{ scheme.settings.colors_aux_border.green }} {{ scheme.settings.colors_aux_border.blue }} / {{ scheme.settings.colors_aux_border.alpha }};
+  	  --color-aux-box-shadow: {{ scheme.settings.colors_aux_border.red }} {{ scheme.settings.colors_aux_border.green }} {{ scheme.settings.colors_aux_border.blue }} / 0.2;
+  	}
+
+    .color-button-{{ scheme.id }} {
+      --color-button: {{ scheme.settings.primary_button_background.red }} {{ scheme.settings.primary_button_background.green }} {{ scheme.settings.primary_button_background.blue }} / {{ scheme.settings.primary_button_background.alpha }};
+      --color-button-text: {{ scheme.settings.primary_button_text.red }} {{ scheme.settings.primary_button_text.green }} {{ scheme.settings.primary_button_text.blue }} / {{ scheme.settings.primary_button_text.alpha }};
+      --color-secondary-button: {{ scheme.settings.secondary_button_background.red }} {{ scheme.settings.secondary_button_background.green }} {{ scheme.settings.secondary_button_background.blue }} / {{ scheme.settings.secondary_button_background.alpha }};
+      --color-secondary-button-text: {{ scheme.settings.secondary_button_text.red }} {{ scheme.settings.secondary_button_text.green }} {{ scheme.settings.secondary_button_text.blue }} / {{ scheme.settings.secondary_button_text.alpha }};
+    }
+  {% endfor %}
+
+  {{ scheme_classes | prepend: 'body' }} {
+  	color: rgba(var(--color-foreground));
+  	background-color: rgba(var(--color-background));
+  }
+{% endstyle %}

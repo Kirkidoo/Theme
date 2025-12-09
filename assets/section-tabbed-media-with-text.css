@@ -1,0 +1,48 @@
+/* Section - Tabbed media with text
+=================================== */
+
+.tabbed-media-with-text-tabs-navigation-container {
+  overflow-x: auto;
+  padding: 2px 0 10px 2px;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 990px) {
+  .tabbed-media-with-text-container .pill-nav {
+    justify-content: center;
+  }
+}
+
+.tabbed-media-with-text-container .media-with-text {
+  padding: 0;
+  box-shadow: none;
+  background: none;
+}
+
+.tabbed-media-with-text-container .media-with-text-grid {
+  grid-gap: 2rem;
+}
+
+.tabbed-media-with-text-container .media-with-text-text-item {
+  flex: auto;
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-border)),
+    0 2px 0 rgba(var(--color-box-shadow));
+  padding: 2.5rem;
+}
+
+@media (min-width: 750px) {
+  .tabbed-media-with-text-container .media-with-text-text-item {
+    width: calc(50% - 1rem);
+  }
+
+  .tabbed-media-with-text-container .media-with-text-media-item {
+    width: calc(50% - 1rem);
+  }
+}
+
+@media (min-width: 990px) {
+  .tabbed-media-with-text-container .media-with-text-text-item {
+    padding: 4.5rem;
+  }
+}
