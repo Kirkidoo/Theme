@@ -1,0 +1,59 @@
+{% comment %}
+  Vehicle Filter Snippet
+  Usage: {% render 'vehicle-filter' %}
+{% endcomment %}
+
+{% if settings.gamma_api_token != blank %}
+  {{ 'vehicle-filter.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'vehicle-filter.js' | asset_url }}" defer="defer"></script>
+
+  <div id="vehicle-filter-component" 
+       class="vehicle-filter-container page-width" 
+       data-token="{{ settings.gamma_api_token }}" 
+       data-api-url="{{ settings.gamma_api_base_url | default: 'https://api.gammapowersports.com' }}">
+    
+    <div class="vehicle-filter-title">Filter by Vehicle</div>
+    
+    <div class="vehicle-filter-grid">
+      <div class="vehicle-filter-group">
+        <label class="vehicle-filter-label" for="filter-type">Type</label>
+        <select id="filter-type" class="vehicle-filter-select" data-filter-type>
+          <option value="">Loading...</option>
+        </select>
+      </div>
+
+      <div class="vehicle-filter-group">
+        <label class="vehicle-filter-label" for="filter-year">Year</label>
+        <select id="filter-year" class="vehicle-filter-select" data-filter-year disabled>
+          <option value="">Select Type first</option>
+        </select>
+      </div>
+
+      <div class="vehicle-filter-group">
+        <label class="vehicle-filter-label" for="filter-make">Make</label>
+        <select id="filter-make" class="vehicle-filter-select" data-filter-make disabled>
+          <option value="">Select Year first</option>
+        </select>
+      </div>
+
+      <div class="vehicle-filter-group">
+        <label class="vehicle-filter-label" for="filter-model">Model</label>
+        <select id="filter-model" class="vehicle-filter-select" data-filter-model disabled>
+          <option value="">Select Make first</option>
+        </select>
+      </div>
+
+      <div class="vehicle-filter-group">
+        <button type="button" class="vehicle-filter-btn" data-filter-submit disabled>
+          Apply
+        </button>
+      </div>
+      
+       <div class="vehicle-filter-group" style="flex: 0;">
+        <button type="button" class="vehicle-filter-btn" style="background: transparent; color: #666; font-size: 0.8em; text-transform:none;" data-filter-reset>
+            Reset
+        </button>
+      </div>
+    </div>
+  </div>
+{% endif %}

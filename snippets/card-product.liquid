@@ -61,6 +61,7 @@
   <product-card
     class="card card-product{% if featured_media == nil %} card-no-media{% endif %}{% if settings.product_content_alignment == 'center' %} card-product-content-center{% endif %} {{ class }}"
     data-product-id="{{ card_product.id }}"
+    data-sku="{{ card_product.selected_or_first_available_variant.sku }}"
   >
     {% if settings.product_compare_enabled and show_compare %}
       {% render 'card-product-compare-checkbox', product: card_product %}
@@ -131,6 +132,7 @@
           %}
         </div>
       {% endif %}
+      <div class="pf-collection-badge hidden"></div>
     </figure>
 
     <div class="card-info">

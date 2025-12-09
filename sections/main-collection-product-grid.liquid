@@ -120,6 +120,8 @@
               >
             {%- endif -%}
 
+            {% render 'vehicle-filter' %}
+
             {% render 'collection-actions',
               results: collection,
               enable_product_count: section.settings.show_product_count,

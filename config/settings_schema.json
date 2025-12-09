@@ -1380,23 +1380,23 @@
         "default": true
       }
     ]
-  }, // *** Added Comma Here ***
+  },
   {
-    "name": "API Integrations", // Or choose/create a relevant category name
+    "name": "API Integrations",
     "settings": [
       {
         "type": "header",
         "content": "Gamma Powersports API"
       },
       {
-        "type": "text", // Use "password" if you want the input masked
-        "id": "gamma_api_token", // Unique ID for the setting
+        "type": "text",
+        "id": "gamma_api_token",
         "label": "Gamma API Bearer Token",
         "info": "Enter your Gamma Powersports API Bearer token. Required for fitment features."
       },
       {
         "type": "text",
-        "id": "gamma_api_base_url", // Keep the base URL global too
+        "id": "gamma_api_base_url",
         "label": "Gamma API Base URL",
         "default": "https://api.gammapowersports.com",
         "info": "Base URL for the Gamma Powersports API."
@@ -1407,7 +1407,6 @@
         "label": "Product Finder Sub-Category Exclusion List",
         "info": "To exclude sub-categories for a specific vehicle type, use the format: `Vehicle Type: Sub-Category 1, Sub-Category 2;`. Separate multiple type entries with a semicolon. For example: `ATV: Engine Oils, Brakes; Motorcycle: Air Filters`."
       }
-      // Add other related global settings if needed
     ]
   }
 ]

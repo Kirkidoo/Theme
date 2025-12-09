@@ -70,6 +70,23 @@
         </div>
       </div>
 
+      <!-- Saved Vehicle Display (Hidden by default) -->
+      <div id="pf-saved-vehicle-container-{{ section.id }}" class="pf-saved-vehicle-container hidden">
+        <div class="pf-saved-vehicle-info">
+          <span class="pf-saved-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="icon-garage" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v-4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M16 13a4 4 0 0 1-8 0"/><path d="M4 17h16"/><path d="M4 21h16"/><path d="M22 17l-1-4.4c-.6-2.4-1.6-3.6-2.4-3.6H5.4c-.8 0-1.8 1.2-2.4 3.6L2 17"/></svg>
+          </span>
+          <div class="pf-saved-details">
+            <h3 class="pf-saved-title">Your Vehicle</h3>
+            <p id="pf-saved-vehicle-name-{{ section.id }}" class="pf-saved-name"></p>
+          </div>
+        </div>
+        <div class="pf-saved-actions">
+           <button id="pf-change-vehicle-{{ section.id }}" class="pf-btn-change" type="button">{{ section.settings.change_btn_text }}</button>
+           <button id="pf-clear-vehicle-{{ section.id }}" class="pf-btn-clear" type="button">{{ section.settings.clear_btn_text }}</button>
+        </div>
+      </div>
+
       <!-- Sub-Category Filter -->
       <div id="pf-filter-wrapper-{{ section.id }}" class="pf-filter-wrapper hidden">
         <label for="pf-filter-{{ section.id }}">Filter by Sub-Category:</label>
@@ -181,6 +198,18 @@
       "id": "reset_btn_text",
       "label": "Reset Button Text",
       "default": "Reset Search"
+    },
+    {
+      "type": "text",
+      "id": "change_btn_text",
+      "label": "Change Vehicle Button Text",
+      "default": "Change Vehicle"
+    },
+    {
+      "type": "text",
+      "id": "clear_btn_text",
+      "label": "Clear Vehicle Button Text",
+      "default": "Clear Vehicle"
     },
     {
       "type": "header",

@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // --- FIX SCROLL POSITION ON REFRESH ---
     if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
@@ -6,20 +6,59 @@ document.addEventListener('DOMContentLoaded', function() {
     window.scrollTo(0, 0);
 
     const section = document.querySelector('.product-finder-section');
-    if (!section) return;
+    /* if (!section) return; // Removed to allow collection page logic */
+
+    // Config fallback for collection pages
+    const config = {
+        token: section ? section.dataset.apiToken : (window.pfConfig?.token || ''),
+        baseUrl: section ? section.dataset.apiBase : (window.pfConfig?.baseUrl || 'https://api.gammapowersports.com'),
+        sectionId: section ? section.dataset.sectionId : 'col-page',
+        concurrency: 5,
+        debug: true,
+        cacheDuration: 60 * 60 * 1000,
+        dropdownCacheDuration: 24 * 60 * 60 * 1000
+    };
+
+    const els = {};
+    if (section) {
+        els.container = section.querySelector('.pf-container');
+        els.header = section.querySelector('.pf-header-row');
+        els.toggleIcon = section.querySelector('.pf-toggle-icon');
+        els.body = section.querySelector('.pf-body');
+        els.type = document.getElementById(`pf-type-${config.sectionId}`);
+        els.year = document.getElementById(`pf-year-${config.sectionId}`);
+        els.make = document.getElementById(`pf-make-${config.sectionId}`);
+        els.model = document.getElementById(`pf-model-${config.sectionId}`);
+        els.submit = document.getElementById(`pf-submit-${config.sectionId}`);
+        els.reset = document.getElementById(`pf-reset-${config.sectionId}`);
+        els.error = document.getElementById(`pf-error-${config.sectionId}`);
+        els.results = document.getElementById(`pf-results-${config.sectionId}`);
+        els.status = document.getElementById(`pf-status-${config.sectionId}`);
+        els.filterWrapper = document.getElementById(`pf-filter-wrapper-${config.sectionId}`);
+        els.filter = document.getElementById(`pf-filter-${config.sectionId}`);
+        els.controlsWrapper = section.querySelector('.pf-controls-wrapper');
+        els.savedContainer = document.getElementById(`pf-saved-vehicle-container-${config.sectionId}`);
+        els.savedName = document.getElementById(`pf-saved-vehicle-name-${config.sectionId}`);
+        els.changeBtn = document.getElementById(`pf-change-vehicle-${config.sectionId}`);
+        els.clearBtn = document.getElementById(`pf-clear-vehicle-${config.sectionId}`);
+    }
+
+    // Global Elements
+    els.modal = document.getElementById('pf-fitment-modal');
+    els.modalBody = document.getElementById('pf-modal-body');
+    els.modalClose = document.querySelector('.pf-modal-close');
 
     if (window.pfInitialized) return;
     window.pfInitialized = true;
 
-    const config = {
-        token: section.dataset.apiToken,
-        baseUrl: section.dataset.apiBase,
-        sectionId: section.dataset.sectionId,
-        concurrency: 5, 
-        debug: true,
-        cacheDuration: 60 * 60 * 1000, 
-        dropdownCacheDuration: 24 * 60 * 60 * 1000 
-    };
+    // Logic for collection page initialization
+    if (!section) {
+        setTimeout(initCollectionFitment, 500);
+        // We do not return here if you want to allow rest of script to define functions, 
+        // but rest of script uses 'els' heavily. We need to be careful.
+        // Actually, most of the script is event listeners on 'els'. 
+        // We should wrap the specific Product Finder Logic.
+    }
 
     if (!config.token) {
         console.error('Product Finder: API Token is missing.');
@@ -41,29 +80,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
 
-    const els = {
-        container: section.querySelector('.pf-container'),
-        header: section.querySelector('.pf-header-row'),
-        toggleIcon: section.querySelector('.pf-toggle-icon'),
-        body: section.querySelector('.pf-body'),
-        type: document.getElementById(`pf-type-${config.sectionId}`),
-        year: document.getElementById(`pf-year-${config.sectionId}`),
-        make: document.getElementById(`pf-make-${config.sectionId}`),
-        model: document.getElementById(`pf-model-${config.sectionId}`),
-        submit: document.getElementById(`pf-submit-${config.sectionId}`),
-        reset: document.getElementById(`pf-reset-${config.sectionId}`),
-        error: document.getElementById(`pf-error-${config.sectionId}`),
-        results: document.getElementById(`pf-results-${config.sectionId}`),
-        status: document.getElementById(`pf-status-${config.sectionId}`),
-        filterWrapper: document.getElementById(`pf-filter-wrapper-${config.sectionId}`),
-        filter: document.getElementById(`pf-filter-${config.sectionId}`),
-        modal: document.getElementById('pf-fitment-modal'),
-        modalBody: document.getElementById('pf-modal-body'),
-        modalClose: document.querySelector('.pf-modal-close')
-    };
+    /* els moved to top */
 
     let state = { type: '', year: '', make: '', model: '' };
-    let modelMap = {}; 
+    let modelMap = {};
     const skuCache = new Map();
     const STORAGE_KEY = 'pf_my_garage';
     const RESULTS_CACHE_KEY = 'pf_garage_results';
@@ -82,39 +102,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function closeModal() {
         const m = document.getElementById('pf-fitment-modal');
-        if(m) {
+        if (m) {
             m.classList.remove('open');
             toggleScrollLock(false); // Unlock scroll
         }
     }
 
-    if(els.modalClose) els.modalClose.addEventListener('click', closeModal);
-    if(els.modal) els.modal.addEventListener('click', (e) => {
-        if(e.target === els.modal) closeModal();
+    if (els.modalClose) els.modalClose.addEventListener('click', closeModal);
+    if (els.modal) els.modal.addEventListener('click', (e) => {
+        if (e.target === els.modal) closeModal();
     });
 
     async function openFitmentModal(sku, title) {
         const m = document.getElementById('pf-fitment-modal');
         const mBody = document.getElementById('pf-modal-body');
         const mTitle = m.querySelector('.pf-modal-title');
-        
+
         const existingFooter = m.querySelector('.pf-modal-footer');
-        if(existingFooter) existingFooter.remove();
+        if (existingFooter) existingFooter.remove();
 
         mBody.innerHTML = '<div class="pf-modal-loading">Loading fitment data...</div>';
         mTitle.textContent = title || 'Vehicle Fitment';
-        
+
         m.classList.add('open');
         toggleScrollLock(true); // Lock scroll
 
         try {
             const data = await fetchData('/item/getFitmentMachines', { itemNumber: sku }, true);
-            
-            if(data && data.fitments && data.fitments.length > 0) {
+
+            if (data && data.fitments && data.fitments.length > 0) {
                 data.fitments.sort((a, b) => {
-                    if(a.fitmentMake !== b.fitmentMake) return a.fitmentMake.localeCompare(b.fitmentMake);
-                    if(a.fitmentModel !== b.fitmentModel) return a.fitmentModel.localeCompare(b.fitmentModel);
-                    return b.fitmentYears.localeCompare(a.fitmentYears, undefined, {numeric: true});
+                    if (a.fitmentMake !== b.fitmentMake) return a.fitmentMake.localeCompare(b.fitmentMake);
+                    if (a.fitmentModel !== b.fitmentModel) return a.fitmentModel.localeCompare(b.fitmentModel);
+                    return b.fitmentYears.localeCompare(a.fitmentYears, undefined, { numeric: true });
                 });
 
                 let html = '<table class="pf-fitment-table"><thead><tr><th>Make</th><th>Model</th><th>Year(s)</th></tr></thead><tbody>';
@@ -126,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 mBody.innerHTML = '<div class="pf-modal-loading">No specific machine fitment data returned.</div>';
             }
-        } catch(e) {
+        } catch (e) {
             mBody.innerHTML = '<div class="pf-error">Error loading fitment data.</div>';
         }
     }
@@ -139,12 +159,12 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const cartRes = await fetch(window.Shopify.routes.root + 'cart.js');
             const cartData = await cartRes.json();
-            
+
             const badgeSelectors = '.cart-count-bubble, .cart-count, [data-cart-count], .header__cart-count, .header-cart__count';
             document.querySelectorAll(badgeSelectors).forEach(el => {
                 el.textContent = cartData.item_count;
                 el.classList.remove('hidden');
-                el.style.display = 'block'; 
+                el.style.display = 'block';
             });
         } catch (e) { console.error('PF: Error updating badges', e); }
 
@@ -156,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const doc = parser.parseFromString(pageText, 'text/html');
 
             const selectorMap = [
-                { target: '#header-mini-cart-content', source: '#header-mini-cart-content' }, 
+                { target: '#header-mini-cart-content', source: '#header-mini-cart-content' },
                 { target: '#HeaderMiniCart form', source: '#HeaderMiniCart form' }
             ];
 
@@ -165,10 +185,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newEl = doc.querySelector(map.source);
 
                 if (currentEl && newEl) {
-                    if(map.target === '#HeaderMiniCart') {
-                         currentEl.innerHTML = newEl.innerHTML;
+                    if (map.target === '#HeaderMiniCart') {
+                        currentEl.innerHTML = newEl.innerHTML;
                     } else {
-                         currentEl.replaceWith(newEl);
+                        currentEl.replaceWith(newEl);
                     }
                     console.log(`PF: Silently updated cart using ${map.target}`);
                     break;
@@ -182,15 +202,15 @@ document.addEventListener('DOMContentLoaded', function() {
     async function openSpecsModal(sku, title, variantId, available, inventoryQty, inventoryPolicy, inventoryManagement) {
         const m = document.getElementById('pf-fitment-modal');
         const mBody = document.getElementById('pf-modal-body');
-        
+
         const existingFooter = m.querySelector('.pf-modal-footer');
-        if(existingFooter) existingFooter.remove();
+        if (existingFooter) existingFooter.remove();
 
         const mTitle = m.querySelector('.pf-modal-title');
-        
+
         mBody.innerHTML = '<div class="pf-modal-loading">Fetching technical specifications...</div>';
         mTitle.textContent = title ? `Specs: ${title}` : 'Product Specifications';
-        
+
         m.classList.add('open');
         toggleScrollLock(true); // Lock scroll
 
@@ -199,34 +219,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetchData('/item/getDetail', { itemNumber: sku }, true),
                 fetchData('/inventory', { partNumber: sku }, false)
             ]);
-            
-            if(detailsData && detailsData.details) {
+
+            if (detailsData && detailsData.details) {
                 const specs = detailsData.details.techSpecs;
                 const desc = detailsData.details.extendedDescription;
                 const img = detailsData.details.imgRef;
-                
+
                 let html = '<div class="pf-specs-content">';
-                
-                if(img) {
+
+                if (img) {
                     const imgSrc = img.startsWith('/') ? `https://www.gammasales.com/images${img}` : img;
-                     html += `<div style="text-align:center; margin-bottom:20px;"><img src="${imgSrc}" style="max-height:200px; width:auto;"></div>`;
+                    html += `<div style="text-align:center; margin-bottom:20px;"><img src="${imgSrc}" style="max-height:200px; width:auto;"></div>`;
                 }
 
                 if (specs) { html += `<h4>Technical Specifications</h4><div>${specs}</div>`; }
                 if (desc) { html += `<h4 style="margin-top:15px;">Description</h4><div>${desc}</div>`; }
                 if (!specs && !desc) { html += '<p>No specific technical data available for this item.</p>'; }
-                
+
                 html += '</div>';
                 mBody.innerHTML = html;
 
                 if (variantId && variantId !== "undefined" && variantId !== "null") {
                     const footer = document.createElement('div');
                     footer.className = 'pf-modal-footer';
-                    
+
                     const isAvailable = available === 'true';
                     let maxQty = 999;
                     let stockText = "";
-                    
+
                     let liveQty = 0;
                     if (inventoryData && inventoryData.inventoryLevel) {
                         liveQty = parseInt(inventoryData.inventoryLevel.quantity) || 0;
@@ -238,16 +258,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (liveQty > 0) {
                             stockText = `${liveQty} in Stock`;
                         } else {
-                            stockText = "In Stock"; 
+                            stockText = "In Stock";
                         }
                     }
 
                     if (inventoryManagement === 'shopify' && inventoryPolicy === 'deny') {
-                        maxQty = liveQty > 0 ? liveQty : 1; 
+                        maxQty = liveQty > 0 ? liveQty : 1;
                     }
 
                     let innerHTML = '';
-                    
+
                     if (isAvailable) {
                         innerHTML = `
                         <div class="pf-qty-wrapper">
@@ -261,19 +281,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         innerHTML = `<button type="button" class="pf-btn-modal-atc" disabled>Out of Stock</button>`;
                     }
-                    
+
                     footer.innerHTML = innerHTML;
                     m.querySelector('.pf-modal-content').appendChild(footer);
 
                     const atcBtn = footer.querySelector('.pf-btn-modal-atc');
 
-                    if(atcBtn && isAvailable) {
+                    if (atcBtn && isAvailable) {
                         const qtyInput = footer.querySelector('#pf-modal-qty');
-                        if(qtyInput) {
-                            qtyInput.addEventListener('change', function() {
+                        if (qtyInput) {
+                            qtyInput.addEventListener('change', function () {
                                 let val = parseInt(this.value);
-                                if(val < 1) this.value = 1;
-                                if(val > maxQty) this.value = maxQty;
+                                if (val < 1) this.value = 1;
+                                if (val > maxQty) this.value = maxQty;
                             });
                         }
 
@@ -287,18 +307,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
                             atcBtn.disabled = true;
                             atcBtn.textContent = 'Adding...';
-                            
+
                             try {
                                 const response = await fetch(window.Shopify.routes.root + 'cart/add.js', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ items: [{ id: parseInt(variantId), quantity: qtyToAdd }] })
                                 });
-                                
-                                if(response.ok) {
+
+                                if (response.ok) {
                                     atcBtn.classList.add('success');
                                     atcBtn.textContent = 'Added!';
-                                    
+
                                     await refreshCartDrawer();
 
                                     setTimeout(() => {
@@ -310,13 +330,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 } else {
                                     throw new Error('Failed to add');
                                 }
-                            } catch(err) {
+                            } catch (err) {
                                 atcBtn.disabled = false;
                                 atcBtn.textContent = 'Add to Cart';
                                 const msg = document.createElement('span');
                                 msg.className = 'pf-modal-error-msg';
                                 msg.textContent = 'Error adding item.';
-                                if(!footer.querySelector('.pf-modal-error-msg')) footer.insertBefore(msg, footer.firstChild);
+                                if (!footer.querySelector('.pf-modal-error-msg')) footer.insertBefore(msg, footer.firstChild);
                             }
                         });
                     }
@@ -325,19 +345,19 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 mBody.innerHTML = '<div class="pf-modal-loading">No details found for this item.</div>';
             }
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             mBody.innerHTML = '<div class="pf-error">Error loading specifications.</div>';
         }
     }
-    
+
     // --- GLOBAL CLICK LISTENER ---
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const specsBtn = e.target.closest('.pf-specs-btn');
-        if(specsBtn) {
+        if (specsBtn) {
             e.preventDefault();
             e.stopPropagation();
-            
+
             const sku = specsBtn.dataset.sku;
             const title = specsBtn.dataset.title;
             const variantId = specsBtn.dataset.variantId;
@@ -345,13 +365,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const invQty = specsBtn.dataset.inventoryQty;
             const invPolicy = specsBtn.dataset.inventoryPolicy;
             const invMgmt = specsBtn.dataset.inventoryManagement;
-            
+
             openSpecsModal(sku, title, variantId, available, invQty, invPolicy, invMgmt);
             return;
         }
 
         const fitBtn = e.target.closest('.pf-fitment-btn');
-        if(fitBtn) {
+        if (fitBtn) {
             e.preventDefault();
             e.stopPropagation();
             const sku = fitBtn.dataset.sku;
@@ -361,13 +381,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const contactBtn = e.target.closest('.pf-btn-contact');
-        if(contactBtn) {
+        if (contactBtn) {
             e.stopPropagation();
-            return; 
+            return;
         }
 
         const card = e.target.closest('.pf-result-card');
-        if(card && !fitBtn && !contactBtn && !specsBtn) {
+        if (card && !fitBtn && !contactBtn && !specsBtn) {
             const url = card.dataset.href;
             if (url) {
                 window.location.href = url;
@@ -376,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     let isExpanded = false;
-    if(els.header) {
+    if (els.header) {
         els.header.addEventListener('click', () => toggleSection(!isExpanded));
     }
 
@@ -390,14 +410,40 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => { els.body.style.maxHeight = 'none'; }, 300);
         } else {
             els.body.style.maxHeight = els.body.scrollHeight + "px";
-            void els.body.offsetHeight; 
+            void els.body.offsetHeight;
             els.body.style.maxHeight = '0px';
-            setTimeout(() => { if(!isExpanded) els.body.style.display = 'none'; }, 300);
+            setTimeout(() => { if (!isExpanded) els.body.style.display = 'none'; }, 300);
             section.classList.remove('pf-open');
             section.classList.add('pf-closed');
         }
     }
     toggleSection(false);
+
+    // --- GARAGE VIEW TOGGLE ---
+    function toggleGarageView(showSaved) {
+        if (showSaved) {
+            els.controlsWrapper.classList.add('hidden');
+            els.savedContainer.classList.remove('hidden');
+        } else {
+            els.controlsWrapper.classList.remove('hidden');
+            els.savedContainer.classList.add('hidden');
+        }
+    }
+
+    if (els.changeBtn) {
+        els.changeBtn.addEventListener('click', function () {
+            toggleGarageView(false);
+            toggleSection(true); // Ensure open so they can see controls
+        });
+    }
+
+    if (els.clearBtn) {
+        els.clearBtn.addEventListener('click', function () {
+            els.reset.click();
+            toggleGarageView(false);
+            toggleSection(true);
+        });
+    }
 
     // --- MASTER MODEL NORMALIZATION ---
     function normalizeModelName(model) {
@@ -415,8 +461,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (codeMatch) {
             let rawPrefix = codeMatch[1];
             let codeCC = codeMatch[3];
-            if (foundFamily) return codeCC ? `${foundFamily} ${codeCC}` : foundFamily; 
-            return `${rawPrefix}${codeCC}`; 
+            if (foundFamily) return codeCC ? `${foundFamily} ${codeCC}` : foundFamily;
+            return `${rawPrefix}${codeCC}`;
         }
         if (foundFamily && cc) { return `${foundFamily} ${cc}`; }
         let clean = s.replace(/[^a-zA-Z0-9\-\s]/g, "").replace(/\s+/g, " ").trim();
@@ -424,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function processAndPopulateModels(rawModelsList) {
-        modelMap = {}; 
+        modelMap = {};
         const distinctCleanModels = new Set();
         rawModelsList.forEach(rawModel => {
             const cleanName = normalizeModelName(rawModel) || rawModel;
@@ -436,7 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
         els.model.innerHTML = '<option value="">Select Model</option>';
         sortedModels.forEach(cleanName => {
             const option = document.createElement('option');
-            option.value = cleanName; 
+            option.value = cleanName;
             const count = modelMap[cleanName].length;
             if (count > 1) { option.textContent = `${cleanName} +`; } else { option.textContent = cleanName; }
             els.model.appendChild(option);
@@ -475,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const url = new URL(`${config.baseUrl}${endpoint}`);
         Object.keys(params).forEach(key => {
-            if(params[key]) url.searchParams.append(key, params[key]);
+            if (params[key]) url.searchParams.append(key, params[key]);
         });
         try {
             const response = await fetch(url, {
@@ -489,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function fetchArrivalDate(sku) {
-        if(!sku) return null;
+        if (!sku) return null;
         try {
             const data = await fetchData('/inventory/getEstimatedArrivalsForItem', { partNumber: sku }, false);
             if (data && data.arrivalDates && Array.isArray(data.arrivalDates) && data.arrivalDates.length > 0) {
@@ -503,7 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     qty: nextArrival.qty
                 };
             }
-        } catch (e) {}
+        } catch (e) { }
         return null;
     }
 
@@ -514,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data && data.details) {
                 return data;
             }
-        } catch (e) {}
+        } catch (e) { }
         return null;
     }
 
@@ -562,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     skuCache.set(cleanSku, result);
                     return result;
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
         skuCache.set(cleanSku, null);
         return null;
@@ -571,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showError(msg) {
         els.error.textContent = msg;
         els.error.classList.remove('hidden');
-        toggleSection(true); 
+        toggleSection(true);
     }
     function clearError() { els.error.textContent = ''; els.error.classList.add('hidden'); }
     function showStatus(msg) { els.status.textContent = msg; els.status.classList.remove('hidden'); }
@@ -605,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 model: els.model.value
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(vehicleData));
-        } catch (e) {}
+        } catch (e) { }
     }
 
     function saveGarageResults(products) {
@@ -613,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const validProducts = products.filter(item => item !== null && item !== undefined);
             const cacheData = { timestamp: Date.now(), products: validProducts };
             localStorage.setItem(RESULTS_CACHE_KEY, JSON.stringify(cacheData));
-        } catch (e) {}
+        } catch (e) { }
     }
 
     async function loadFromGarage() {
@@ -631,10 +677,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (makesData && makesData.makes) { populateSelect(els.make, makesData.makes, 'Select Make'); els.make.value = vehicle.make; state.make = vehicle.make; }
             setSelectLoading(els.model);
             const modelsData = await fetchData('/fitment/getModelOptions', { type: state.type, year: state.year, make: state.make }, true);
-            if (modelsData && modelsData.models) { 
+            if (modelsData && modelsData.models) {
                 processAndPopulateModels(modelsData.models);
-                els.model.value = vehicle.model; 
-                state.model = vehicle.model; 
+                els.model.value = vehicle.model;
+                state.model = vehicle.model;
             }
             els.submit.disabled = false;
             const cachedResults = localStorage.getItem(RESULTS_CACHE_KEY);
@@ -645,9 +691,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     const sortedCached = sortProducts(cache.products);
                     setupFilter(sortedCached);
                     renderCachedCards(sortedCached);
+                    // Update Saved View
+                    if (els.savedName) els.savedName.textContent = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+                    toggleGarageView(true);
                     return true;
                 }
             }
+            // If no cache but has vehicle, still show saved view (will auto-fetch on "find" if we wanted, but here we just pre-fill)
+            // Actually, if we loaded controls, we might want to just show them or auto-submit?
+            // The logic above populates dropdowns. Let's show the saved view to indicate "we know your car".
+            if (els.savedName) els.savedName.textContent = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+            toggleGarageView(true);
+
+            // Auto-submit if no results cache? Maybe not, to avoid spam.
+            // But if we show "Saved Vehicle" we usually expect results.
+            // Let's stick to: if no results cache, user sees "Saved Vehicle" and "Change/Clear". 
+            // We probably need a "Search Again" or trigger search? 
+            // Implementation: The "Saved Vehicle" view doesn't have a "Search" button, 
+            // so we MUST ensure results are visible or trigger a search.
+            // If we are here, we populated dropdowns. 
+            // If we DON'T have cached results, we should probably trigger the search automatically 
+            // OR show the controls so they can click "Find".
+            // Let's decided: If no cache, auto-click submit.
+            if (!cachedResults) {
+                // Wait a tick for UI
+                setTimeout(() => els.submit.click(), 50);
+            }
+
             return true;
         } catch (e) {
             console.warn('Failed to load garage data', e);
@@ -666,33 +736,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    els.type.addEventListener('change', async function() {
+    els.type.addEventListener('change', async function () {
         state.type = this.value; resetDownstream('type');
-        if(!state.type) return;
+        if (!state.type) return;
         setSelectLoading(els.year);
         const data = await fetchData('/fitment/getYearOptions', { type: state.type }, true);
-        if(data && data.years) populateSelect(els.year, data.years, 'Select Year');
+        if (data && data.years) populateSelect(els.year, data.years, 'Select Year');
     });
 
-    els.year.addEventListener('change', async function() {
+    els.year.addEventListener('change', async function () {
         state.year = this.value; resetDownstream('year');
-        if(!state.year) return;
+        if (!state.year) return;
         setSelectLoading(els.make);
         const data = await fetchData('/fitment/getMakeOptions', { type: state.type, year: state.year }, true);
-        if(data && data.makes) populateSelect(els.make, data.makes, 'Select Make');
+        if (data && data.makes) populateSelect(els.make, data.makes, 'Select Make');
     });
 
-    els.make.addEventListener('change', async function() {
+    els.make.addEventListener('change', async function () {
         state.make = this.value; resetDownstream('make');
-        if(!state.make) return;
+        if (!state.make) return;
         setSelectLoading(els.model);
         const data = await fetchData('/fitment/getModelOptions', { type: state.type, year: state.year, make: state.make }, true);
-        if(data && data.models) {
+        if (data && data.models) {
             processAndPopulateModels(data.models);
         }
     });
 
-    els.model.addEventListener('change', function() {
+    els.model.addEventListener('change', function () {
         state.model = this.value;
         els.submit.disabled = !state.model;
     });
@@ -706,18 +776,18 @@ document.addEventListener('DOMContentLoaded', function() {
         els.results.classList.add('hidden');
         els.filterWrapper.classList.add('hidden');
         localStorage.removeItem(RESULTS_CACHE_KEY);
-        modelMap = {}; 
+        modelMap = {};
     }
 
-    els.reset.addEventListener('click', function() {
+    els.reset.addEventListener('click', function () {
         els.type.value = "";
         state = { type: '', year: '', make: '', model: '' };
         resetDownstream('type');
-        localStorage.removeItem(STORAGE_KEY); 
+        localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(RESULTS_CACHE_KEY);
     });
 
-    els.submit.addEventListener('click', async function() {
+    els.submit.addEventListener('click', async function () {
         saveGarageSelection();
         els.results.innerHTML = '';
         els.results.classList.add('hidden');
@@ -731,15 +801,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const variationsToSearch = modelMap[selectedCleanModel] || [selectedCleanModel];
 
         let allProducts = [];
-        const batchSize = 4; 
+        const batchSize = 4;
 
         for (let i = 0; i < variationsToSearch.length; i += batchSize) {
             const batch = variationsToSearch.slice(i, i + batchSize);
-            const promises = batch.map(realModel => 
-                fetchData('/fitment/getFitmentProducts', { 
-                    make: state.make, 
-                    year: state.year, 
-                    model: realModel 
+            const promises = batch.map(realModel =>
+                fetchData('/fitment/getFitmentProducts', {
+                    make: state.make,
+                    year: state.year,
+                    model: realModel
                 }, true)
             );
             const results = await Promise.all(promises);
@@ -749,7 +819,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-        
+
         if (allProducts.length === 0) {
             showError('No products found.');
             els.submit.disabled = false; els.reset.disabled = false;
@@ -760,17 +830,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const uniqueItems = []; const seen = new Set();
         allProducts.forEach(i => {
             const s = i.itemNumber ? i.itemNumber.toString().trim() : '';
-            if(s && !seen.has(s)) { seen.add(s); uniqueItems.push(i); }
+            if (s && !seen.has(s)) { seen.add(s); uniqueItems.push(i); }
         });
-
         const sortedItems = sortProducts(uniqueItems);
         setupFilter(sortedItems);
         renderSkeletons(sortedItems);
         const finalResults = await processQueue(sortedItems);
         saveGarageResults(finalResults);
 
+        // Switch to Saved View
+        if (els.savedName) els.savedName.textContent = `${state.year} ${state.make} ${state.model}`;
+        toggleGarageView(true);
+
         els.submit.disabled = false; els.reset.disabled = false;
-        if(!isExpanded) toggleSection(true);
+        if (!isExpanded) toggleSection(true);
     });
 
     function setupFilter(items) {
@@ -781,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function() {
         els.filterWrapper.classList.remove('hidden');
     }
 
-    els.filter.addEventListener('change', function() {
+    els.filter.addEventListener('change', function () {
         const val = this.value;
         const cards = els.results.querySelectorAll('.pf-result-card');
         cards.forEach(c => { c.classList.toggle('hidden', val !== 'all' && c.dataset.cat !== val); });
@@ -803,7 +876,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const card = document.createElement('div');
             card.id = `pf-card-idx-${idx}`; card.className = 'pf-result-card pf-loading';
-            card.dataset.cat = item.subCategory; 
+            card.dataset.cat = item.subCategory;
             card.innerHTML = `<div class="pf-card-image-wrapper"><div class="pf-img-placeholder"></div></div>
                 <div class="pf-card-info"><div class="pf-card-title">${item.description}</div>
                 <div class="pf-card-sku">Part #: ${item.itemNumber}</div>
@@ -826,10 +899,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 lastCat = currentCat;
             }
             const card = document.createElement('div');
-            card.id = `pf-card-idx-${idx}`; 
-            
+            card.id = `pf-card-idx-${idx}`;
+
             const fitmentBtn = `<button class="pf-fitment-btn" type="button" data-sku="${item.sku}" data-title="${item.title.replace(/"/g, '&quot;')}">Fitment</button>`;
-            
+
             // --- Prepare dynamic attributes for Specs button (Using existing cache) ---
             const specsBtn = `<button class="pf-specs-btn" type="button" 
                 data-sku="${item.sku}" 
@@ -840,7 +913,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data-inventory-policy="${item.inventoryPolicy || ''}"
                 data-inventory-management="${item.inventoryManagement || ''}">
                 Specs</button>`;
-            
+
             const actionRow = `<div class="pf-action-row">${specsBtn}${fitmentBtn}</div>`;
 
             if (item.found) {
@@ -849,19 +922,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 card.dataset.cat = item.subCategory;
                 const cls = item.available ? 'pf-in-stock' : 'pf-out-stock';
                 const txt = item.available ? 'In Stock' : 'Out of Stock';
-                const price = `<span class="pf-price">$${(item.price/100).toFixed(2)}</span>`;
-                
+                const price = `<span class="pf-price">$${(item.price / 100).toFixed(2)}</span>`;
+
                 let etaHtml = '';
                 if (!item.available) {
-                   let label = 'Arrival date:';
-                   let value = 'No date';
-                   if (item.arrivalData) {
-                       value = item.arrivalData.date;
-                       label = item.arrivalData.type === 'Confirmed' ? 'Arrival date confirmed :' : 'Arrival date Estimated :';
-                   }
-                   etaHtml = `<div class="pf-eta-info"><span class="pf-eta-label">${label}</span><span class="pf-eta-date">${value}</span></div>`;
+                    let label = 'Arrival date:';
+                    let value = 'No date';
+                    if (item.arrivalData) {
+                        value = item.arrivalData.date;
+                        label = item.arrivalData.type === 'Confirmed' ? 'Arrival date confirmed :' : 'Arrival date Estimated :';
+                    }
+                    etaHtml = `<div class="pf-eta-info"><span class="pf-eta-label">${label}</span><span class="pf-eta-date">${value}</span></div>`;
                 }
-                
+
                 card.innerHTML = `
                     <div class="pf-card-image-wrapper"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>
                     <div class="pf-card-info">
@@ -877,27 +950,27 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 card.className = 'pf-result-card pf-no-match';
                 card.dataset.cat = item.subCategory;
-                
+
                 let imgContent = `<div class="pf-img-placeholder no-img"><span>Catalog Item</span></div>`;
-                if(item.gammaImage) {
+                if (item.gammaImage) {
                     imgContent = `<img src="${item.gammaImage}" alt="${item.title}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                                   <div class="pf-img-placeholder no-img" style="display:none;"><span>Catalog Item</span></div>`;
                 }
-                
+
                 let priceHtml = '';
                 if (item.msrp) {
                     priceHtml = `<div class="pf-price-container" style="margin-bottom:8px; font-weight:bold; color:#333;"><span class="pf-price-label">MSRP:</span> <span class="pf-price">$${item.msrp.toFixed(2)}</span></div>`;
                 }
-                
+
                 const mailSubject = encodeURIComponent(`Inquiry: ${item.title} (Part #${item.sku})`);
                 const contactBtn = `<a href="mailto:info@gammapowersports.com?subject=${mailSubject}" class="pf-btn-contact">Contact to Reserve</a>`;
-                
+
                 let etaHtml = '';
                 let label = 'Arrival date:';
                 let value = 'No date';
                 if (item.arrivalData) {
-                     value = item.arrivalData.date;
-                     label = item.arrivalData.type === 'Confirmed' ? 'Arrival date confirmed :' : 'Arrival date Estimated :';
+                    value = item.arrivalData.date;
+                    label = item.arrivalData.type === 'Confirmed' ? 'Arrival date confirmed :' : 'Arrival date Estimated :';
                 }
                 etaHtml = `<div class="pf-eta-info"><span class="pf-eta-label">${label}</span><span class="pf-eta-date">${value}</span></div>`;
 
@@ -925,23 +998,23 @@ document.addEventListener('DOMContentLoaded', function() {
         updateStatus();
         const resultsToCache = new Array(items.length);
         const worker = async () => {
-            while(qIdx < items.length) {
+            while (qIdx < items.length) {
                 const i = qIdx++; const item = items[i];
                 const card = document.getElementById(`pf-card-idx-${i}`);
-                if(card) card.querySelector('.pf-loading-text').textContent = 'Checking...';
-                
+                if (card) card.querySelector('.pf-loading-text').textContent = 'Checking...';
+
                 const res = await searchShopifyProduct(item.itemNumber);
                 let arrivalData = null;
                 let gammaDetails = null;
 
                 if (res && res.variant) {
                     if (!res.variant.available) {
-                        if(card) card.querySelector('.pf-loading-text').textContent = 'Checking dates...';
+                        if (card) card.querySelector('.pf-loading-text').textContent = 'Checking dates...';
                         arrivalData = await fetchArrivalDate(item.itemNumber);
                     }
-                } 
+                }
                 else {
-                    if(card) card.querySelector('.pf-loading-text').textContent = 'Fetching catalog details...';
+                    if (card) card.querySelector('.pf-loading-text').textContent = 'Fetching catalog details...';
                     gammaDetails = await fetchGammaProductDetails(item.itemNumber);
                     arrivalData = await fetchArrivalDate(item.itemNumber);
                 }
@@ -949,11 +1022,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const cachedItem = updateCard(i, item, res, arrivalData, gammaDetails);
                 resultsToCache[i] = cachedItem;
                 completed++;
-                if(completed % 5 === 0) updateStatus();
+                if (completed % 5 === 0) updateStatus();
             }
         };
         const workers = [];
-        for(let i=0; i<config.concurrency; i++) workers.push(worker());
+        for (let i = 0; i < config.concurrency; i++) workers.push(worker());
         await Promise.all(workers);
         showStatus(`Done. ${completed} processed.`);
         setTimeout(hideStatus, 4000);
@@ -962,54 +1035,62 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateCard(idx, gammaItem, data, arrivalData, gammaDetails) {
         const card = document.getElementById(`pf-card-idx-${idx}`);
-        if(!card) return null;
+        if (!card) return null;
         card.classList.remove('pf-loading');
         const imgWrap = card.querySelector('.pf-card-image-wrapper');
         const titleEl = card.querySelector('.pf-card-title');
         const metaEl = card.querySelector('.pf-card-meta');
-        
-        const cacheObj = { 
-            sku: gammaItem.itemNumber, 
-            subCategory: gammaItem.subCategory, 
-            found: false, 
+
+        const cacheObj = {
+            sku: gammaItem.itemNumber,
+            subCategory: gammaItem.subCategory,
+            found: false,
             title: gammaItem.description,
             gammaImage: null,
             msrp: null
         };
 
         // --- SCENARIO 1: FOUND IN SHOPIFY ---
-        if(data && data.product && data.variant) {
+        if (data && data.product && data.variant) {
             cacheObj.found = true;
             cacheObj.title = data.product.title;
             cacheObj.url = `/products/${data.product.handle}?variant=${data.variant.id}`;
             cacheObj.image = data.variant.featured_image?.src || data.product.featured_image || 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-image_large.png';
             cacheObj.price = data.variant.price;
             cacheObj.available = data.variant.available;
-            cacheObj.variantId = data.variant.id; 
+            cacheObj.variantId = data.variant.id;
             cacheObj.inventoryQty = data.variant.inventory_quantity; // New: Store Qty
             cacheObj.inventoryPolicy = data.variant.inventory_policy; // New: Store Policy
             cacheObj.inventoryManagement = data.variant.inventory_management; // New: Store Mgmt
+            cacheObj.compareAtPrice = data.variant.compare_at_price; // New: Compare At Price
             cacheObj.arrivalData = arrivalData;
-            
+
             card.classList.add('pf-match');
             card.dataset.href = cacheObj.url;
-            
+
             imgWrap.innerHTML = `<img src="${cacheObj.image}" alt="${cacheObj.title}" loading="lazy">`;
             titleEl.textContent = cacheObj.title;
-            
+
             const cls = cacheObj.available ? 'pf-in-stock' : 'pf-out-stock';
             const txt = cacheObj.available ? 'In Stock' : 'Out of Stock';
-            const priceHtml = `<span class="pf-price">$${(cacheObj.price/100).toFixed(2)}</span>`;
-            
+            const priceHtml = `<span class="pf-price">$${(cacheObj.price / 100).toFixed(2)}</span>`;
+
+            // --- NEW: SPECIAL BADGE ---
+            let specialBadge = '';
+            if (cacheObj.compareAtPrice && cacheObj.compareAtPrice > cacheObj.price) {
+                // You can reuse 'badge-sale' text or hardcode 'On Special'
+                specialBadge = '<span class="pf-badge pf-badge-special">On Special</span>';
+            }
+
             let etaHtml = '';
             if (!cacheObj.available) {
-               let label = 'Arrival date:';
-               let value = 'No date';
-               if (arrivalData) {
-                   value = arrivalData.date;
-                   label = arrivalData.type === 'Confirmed' ? 'Arrival date confirmed :' : 'Arrival date Estimated :';
-               }
-               etaHtml = `<div class="pf-eta-info"><span class="pf-eta-label">${label}</span><span class="pf-eta-date">${value}</span></div>`;
+                let label = 'Arrival date:';
+                let value = 'No date';
+                if (arrivalData) {
+                    value = arrivalData.date;
+                    label = arrivalData.type === 'Confirmed' ? 'Arrival date confirmed :' : 'Arrival date Estimated :';
+                }
+                etaHtml = `<div class="pf-eta-info"><span class="pf-eta-label">${label}</span><span class="pf-eta-date">${value}</span></div>`;
             }
 
             const shopifyFitmentBtn = `<button class="pf-fitment-btn" type="button" data-sku="${cacheObj.sku}" data-title="${cacheObj.title.replace(/"/g, '&quot;')}">Fitment</button>`;
@@ -1023,37 +1104,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 data-inventory-management="${cacheObj.inventoryManagement}">Specs</button>`;
             const shopifyActionRow = `<div class="pf-action-row">${shopifySpecsBtn}${shopifyFitmentBtn}</div>`;
 
-            metaEl.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; width:100%;">${priceHtml}<span class="pf-badge ${cls}">${txt}</span></div>${etaHtml}${shopifyActionRow}`;
-        } 
+            metaEl.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap;">
+                 <div style="display:flex; align-items:center; gap:8px;">${priceHtml}${specialBadge}</div>
+                 <span class="pf-badge ${cls}">${txt}</span>
+            </div>${etaHtml}${shopifyActionRow}`;
+        }
         // --- SCENARIO 2: NOT FOUND (SPECIAL ORDER) ---
         else {
             cacheObj.found = false;
             if (gammaDetails && gammaDetails.details && gammaDetails.details.imgRef) {
                 cacheObj.gammaImage = gammaDetails.details.imgRef;
             }
-            
+
             // Extract MSRP
             if (gammaDetails && gammaDetails.pricing && gammaDetails.pricing.msrp) {
                 cacheObj.msrp = gammaDetails.pricing.msrp;
             }
 
             card.classList.add('pf-no-match');
-            
+
             let imgContent = `<div class="pf-img-placeholder no-img"><span>Catalog Item</span></div>`;
             if (cacheObj.gammaImage) {
-                 // Append Base URL if relative path
-                 if(cacheObj.gammaImage.startsWith('/')) {
-                     cacheObj.gammaImage = 'https://www.gammasales.com/images' + cacheObj.gammaImage;
-                 }
+                // Append Base URL if relative path
+                if (cacheObj.gammaImage.startsWith('/')) {
+                    cacheObj.gammaImage = 'https://www.gammasales.com/images' + cacheObj.gammaImage;
+                }
 
-                 imgContent = `<img src="${cacheObj.gammaImage}" alt="${cacheObj.title}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                imgContent = `<img src="${cacheObj.gammaImage}" alt="${cacheObj.title}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                                <div class="pf-img-placeholder no-img" style="display:none;"><span>Catalog Item</span></div>`;
             }
             imgWrap.innerHTML = imgContent;
-            
+
             // Corrected Title Reference (using cacheObj instead of item)
             titleEl.textContent = cacheObj.title || 'Unknown Part';
-            titleEl.style.color = '#333'; 
+            titleEl.style.color = '#333';
 
             let priceHtml = '';
             if (cacheObj.msrp) {
@@ -1063,13 +1147,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Corrected Email Link Reference (using cacheObj)
             const mailSubject = encodeURIComponent(`Inquiry: ${cacheObj.title} (Part #${cacheObj.sku})`);
             const contactBtn = `<a href="mailto:info@gammapowersports.com?subject=${mailSubject}" class="pf-btn-contact">Contact to Reserve</a>`;
-            
+
             let etaHtml = '';
             let label = 'Arrival date:';
             let value = 'No date';
             if (arrivalData) {
-                 value = arrivalData.date;
-                 label = arrivalData.type === 'Confirmed' ? 'Arrival date confirmed :' : 'Arrival date Estimated :';
+                value = arrivalData.date;
+                label = arrivalData.type === 'Confirmed' ? 'Arrival date confirmed :' : 'Arrival date Estimated :';
             }
             etaHtml = `<div class="pf-eta-info"><span class="pf-eta-label">${label}</span><span class="pf-eta-date">${value}</span></div>`;
 
@@ -1087,6 +1171,90 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>`;
         }
         return cacheObj;
+    }
+
+    // --- COLLECTION PAGE FITMENT LOGIC ---
+    async function initCollectionFitment() {
+        const storedSelection = localStorage.getItem(STORAGE_KEY);
+        if (!storedSelection) return;
+
+        let vehicle = null;
+        try { vehicle = JSON.parse(storedSelection); } catch (e) { }
+        if (!vehicle || !vehicle.year || !vehicle.make || !vehicle.model) return;
+
+        // Find badges that are hidden
+        const badges = document.querySelectorAll('.pf-collection-badge.hidden');
+        if (badges.length === 0) return;
+
+        const badgesToProcess = [];
+        badges.forEach(b => {
+            // Try to find SKU from product card parent or self
+            // .card-product has data-sku
+            const card = b.closest('.card-product');
+            const sku = card ? card.dataset.sku : b.dataset.sku;
+
+            if (sku) {
+                badgesToProcess.push({ el: b, sku: sku });
+            }
+        });
+
+        const batchSize = 5;
+        for (let i = 0; i < badgesToProcess.length; i += batchSize) {
+            const batch = badgesToProcess.slice(i, i + batchSize);
+            await Promise.all(batch.map(item => checkItemFitment(item.el, item.sku, vehicle)));
+        }
+    }
+
+    async function checkItemFitment(badgeEl, sku, vehicle) {
+        try {
+            // We use the existing fetchData helper
+            // We need a specific endpoint to check fitment.
+            // Using getFitmentMachines returns ALL machines. 
+            // We filter client side.
+            const data = await fetchData('/item/getFitmentMachines', { itemNumber: sku }, true);
+
+            if (data && data.fitments && Array.isArray(data.fitments)) {
+                // Client-side filtering
+                const match = data.fitments.find(f => {
+                    const makeMatch = f.fitmentMake.toUpperCase() === vehicle.make.toUpperCase();
+                    if (!makeMatch) return false;
+
+                    const fModel = normalizeModelName(f.fitmentModel).toUpperCase();
+                    const vModel = normalizeModelName(vehicle.model).toUpperCase();
+
+                    const modelMatch = fModel === vModel || fModel.includes(vModel) || vModel.includes(fModel);
+                    if (!modelMatch) return false;
+
+                    const vYear = parseInt(vehicle.year);
+                    return checkYearMatch(vYear, f.fitmentYears);
+                });
+
+                if (match) {
+                    badgeEl.innerHTML = `
+                        <span class="pf-badge-icon">✓</span>
+                        <span class="pf-badge-text">Fits ${vehicle.year} ${vehicle.model}</span>
+                    `;
+                    badgeEl.classList.remove('hidden');
+                }
+            }
+        } catch (e) { }
+    }
+
+    function checkYearMatch(year, rangeStr) {
+        if (!rangeStr) return false;
+        const parts = rangeStr.split(',').map(s => s.trim());
+        for (const p of parts) {
+            if (p.includes('-')) {
+                const [start, end] = p.split('-').map(Number);
+                if (year >= start && year <= end) return true;
+            } else if (p.endsWith('+')) {
+                const start = parseInt(p.replace('+', ''));
+                if (year >= start) return true;
+            } else {
+                if (parseInt(p) === year) return true;
+            }
+        }
+        return false;
     }
 
     init();

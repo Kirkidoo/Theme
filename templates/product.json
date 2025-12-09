@@ -1,1 +1,185 @@
-{"sections":{"main":{"type":"main-product","blocks":{"title":{"type":"title","settings":{"show_vendor":true,"show_stock":true,"show_sku":true,"show_barcode":false,"barcode_label":"Barcode","show_rating":true,"hide_empty_star_rating":true,"show_custom_badges":false,"show_bottom_divider":true}},"custom_liquid_kxQjJw":{"type":"custom_liquid","settings":{"title":"","icon":"","custom_liquid":"{% comment %}\n  Custom Liquid Block: Product Arrival Dates (Compact & Boxed, Show 1 Date)\n\n  Paste this entire code block into a \"Custom Liquid\" block\n  within your product information section in the theme editor.\n\n  Requirements:\n  1. The associated JavaScript ('product-arrival-dates.js' or similar) MUST be loaded separately by your theme.\n  2. The Gamma API Token MUST be set correctly in Theme Settings -> API Integrations (settings.gamma_api_token).\n  3. Product variants MUST have SKUs assigned.\n\n  Note: The availability of Liquid variables like 'current_variant' inside the <script>\n  tag depends on the context where this Custom Liquid block is placed.\n  The JavaScript has fallbacks, but ensure 'settings.gamma_api_token' is accessible.\n{% endcomment %}\n\n{% comment %} --- HTML Structure --- {% endcomment %}\n<div class=\"product-arrival-section-wrapper\">\n  {% comment %} Check if API token is set - prevent rendering if not {% endcomment %}\n  {%- if settings.gamma_api_token != blank -%}\n    {% comment %} Added 'boxed' class for styling {% endcomment %}\n    <div id=\"product-arrival-dates\"\n         class=\"product-arrival-dates-container product-arrival-dates--compact boxed\" {% comment %} Defaulting to compact layout class {% endcomment %}\n         style=\"display: none;\" {% comment %} Initially hidden, JS will show it {% endcomment %}>\n\n      {% comment %} Loading State Indicator {% endcomment %}\n      <div id=\"arrival-dates-loading\" class=\"arrival-dates-state arrival-dates-loading\" style=\"display: none; justify-content: center; align-items: center; min-height: 40px; color: #555;\">\n        <div class=\"lds-dual-ring\"><\/div>\n        <span style=\"margin-left: 10px;\">Loading dates...<\/span>\n      <\/div>\n\n      {% comment %} Error State Message {% endcomment %}\n      <div id=\"arrival-dates-error\" class=\"arrival-dates-state arrival-dates-error\" style=\"display: none; color: #d9534f; padding: 10px;\">\n        Error loading arrival dates.\n      <\/div>\n\n      {% comment %} No Data State Message {% endcomment %}\n      <div id=\"arrival-dates-no-data\" class=\"arrival-dates-state arrival-dates-no-data\" style=\"display: none; color: #777; padding: 10px;\">\n        No estimated arrival dates available.\n      <\/div>\n\n      {% comment %} Content Area - Populated by JavaScript {% endcomment %}\n      <div id=\"arrival-dates-content\" class=\"arrival-dates-content\" style=\"display: none;\">\n        {% comment %} JavaScript will render content here {% endcomment %}\n      <\/div>\n    <\/div>\n  {%- else -%}\n     <div class=\"product-arrival-dates-disabled\" style=\"padding: 10px; color: #777; font-style: italic; font-size: 0.9em;\">\n       {% comment %} Message shown if API token is missing in theme settings {% endcomment %}\n       Arrival dates require API Token configuration.\n     <\/div>\n  {%- endif -%}\n<\/div>\n\n{% comment %} --- JavaScript Configuration --- {% endcomment %}\n{% comment %} This script block needs Liquid variables to be processed correctly {% endcomment %}\n{%- if settings.gamma_api_token != blank -%}\n  {% comment %} Assign required variables - ensure 'product' and 'current_variant' are available in this context {% endcomment %}\n  {%- liquid\n    assign current_product = product | default: product\n    assign current_variant = current_product.selected_or_first_available_variant\n    assign api_token = settings.gamma_api_token\n    assign api_base_url = settings.gamma_api_base_url | default: \"https:\/\/api.gammapowersports.com\"\n\n    # Default settings (since block has no schema) - Adjust as needed\n    assign force_check = false\n    assign use_compact_layout = true\n    # --- MODIFIED: Max visible set to 1 ---\n    assign max_visible_compact = 1\n    assign title_standard = \"Estimated Arrival Dates\"\n    assign note_standard = \"<strong>Note:<\/strong> Confirmed dates are based on shipping information, while estimated dates are based on purchase orders and subject to change.\"\n    assign title_compact = \"Expected Arrival:\"\n    assign note_compact = \"Confirmed = In Transit, Estimated = On Order. Dates subject to change.\"\n    assign label_cargo = \"Confirmed\"\n    assign label_po = \"Estimated\"\n    assign label_show_more = \"Show {count} more date{s}\"\n    assign label_show_less = \"Hide extra dates\"\n  -%}\n\n  <script type=\"text\/javascript\">\n    \/\/ Ensure config setup runs only once per page load if multiple blocks exist\n    if (typeof window.arrivalDatesConfig === 'undefined') {\n      window.arrivalDatesConfig = {\n        \/\/ API Details\n        authToken: {{ api_token | json }},\n        apiUrl: {{ api_base_url | json }},\n\n        \/\/ Product Details (Initial State) - Relies on 'current_variant' being available here\n        productSku: {{ current_variant.sku | json }},\n        productInStock: {{ current_variant.available | json }},\n\n        \/\/ Behavior Settings (Hardcoded defaults for Custom Liquid block)\n        forceCheck: {{ force_check | json }},\n        useCompactLayout: {{ use_compact_layout | json }},\n        \/\/ --- MODIFIED: Max visible set to 1 ---\n        maxVisibleCompact: {{ max_visible_compact | json }},\n\n        \/\/ Labels & Text (Hardcoded defaults)\n        titleStandard: {{ title_standard | json }},\n        noteStandard: {{ note_standard | json }},\n        titleCompact: {{ title_compact | json }},\n        noteCompact: {{ note_compact | json }},\n        labelCargo: {{ label_cargo | json }},\n        labelPO: {{ label_po | json }},\n        labelShowMore: {{ label_show_more | json }},\n        labelShowLess: {{ label_show_less | json }},\n\n        \/\/ Diagnostics (Keep false unless debugging)\n        enableApiDiagnostics: false,\n        skipSanitization: false\n      };\n\n      \/\/ Optional: Trigger initialization if needed by your JS file\n      \/\/ document.dispatchEvent(new CustomEvent('productArrivalDates:configLoaded'));\n    } else {\n      \/\/ Config already exists, maybe update SKU if possible?\n      console.log('Product Arrival Dates: window.arrivalDatesConfig already exists.');\n    }\n  <\/script>\n{%- endif -%}\n\n\n{% comment %} --- Basic CSS --- {% endcomment %}\n{% comment %} You might want to move this to your theme's main CSS file {% endcomment %}\n<style>\n  \/* --- Style for the Box --- *\/\n  .product-arrival-section-wrapper .product-arrival-dates-container.boxed {\n    border: 1px solid #e0e0e0; \/* Light grey border *\/\n    padding: 15px;             \/* Padding inside the box *\/\n    border-radius: 5px;        \/* Slightly rounded corners *\/\n    margin-top: 15px;          \/* Space above the box *\/\n    margin-bottom: 15px;       \/* Space below the box *\/\n    background-color: #f9f9f9; \/* Optional: slight background color *\/\n  }\n  \/* Adjust error message style within the box *\/\n   .product-arrival-section-wrapper .product-arrival-dates-container.boxed .arrival-dates-error {\n      border: none;\n      background-color: #fdecea; \/* Light red background for error *\/\n      color: #932c2c;\n   }\n\n  \/* Loader *\/\n  .product-arrival-section-wrapper .lds-dual-ring {\n    display: inline-block;\n    width: 20px;\n    height: 20px;\n  }\n  .product-arrival-section-wrapper .lds-dual-ring:after {\n    content: \" \";\n    display: block;\n    width: 16px;\n    height: 16px;\n    margin: 2px;\n    border-radius: 50%;\n    border: 3px solid #555;\n    border-color: #555 transparent #555 transparent;\n    animation: lds-dual-ring 1.2s linear infinite;\n  }\n  @keyframes lds-dual-ring {\n    0% { transform: rotate(0deg); }\n    100% { transform: rotate(360deg); }\n  }\n\n  \/* Compact Layout Styles *\/\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__list { list-style: none; padding: 0; margin: 5px 0; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 0.9em; flex-wrap: wrap; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__date { font-weight: bold; margin-right: 5px;}\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__qty { color: #666; margin-right: 5px;}\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__status { flex-shrink: 0; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__status .confirmed { color: green; font-weight: bold; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__status .estimated { color: orange; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__toggle { background: none; border: none; color: var(--color-accent-1, #004FC7); text-decoration: underline; cursor: pointer; padding: 5px 0; font-size: 0.9em; display: block; margin-top: 5px; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__note { font-size: 0.85em; color: #666; margin-top: 8px; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__title { font-weight: bold; margin-bottom: 5px; font-size: 1em; }\n\n  \/* Hide standard layout styles if needed *\/\n  .product-arrival-section-wrapper .product-arrival-dates--standard { display: none; }\n\n<\/style>","position":"right","expanded":false,"show_bottom_divider":false}},"subtitle":{"type":"text","settings":{"text":"{{ product.metafields.descriptors.subtitle.value }}","icon":"","text_2":"","icon_2":"","text_3":"","icon_3":"","text_4":"","icon_4":"","color_scheme":"none","show_bottom_divider":false}},"price":{"type":"price","settings":{"show_bottom_divider":false}},"variants":{"type":"variants","settings":{"picker_type":"button","picker_equal_width":true,"hide_single_variant":false,"out_of_stock_variants":"hide","show_bottom_divider":true}},"buy_buttons":{"type":"buy_buttons","settings":{"show_quantity":true,"show_add_to_cart":true,"show_buy_now":false,"show_gift_card_recipient":false,"show_bottom_divider":false}},"info_box_KFNrBW":{"type":"info_box","settings":{"enable_payment_icons":true,"heading":"","text":"","icon":"","color_foreground":"#004fc7","color_background":"#f0f6ff","show_bottom_divider":false}},"availability":{"type":"availability","settings":{"show_bottom_divider":false}},"description":{"type":"description","settings":{"title":"Description","icon":"info","expanded":true}}},"block_order":["title","custom_liquid_kxQjJw","subtitle","price","variants","buy_buttons","info_box_KFNrBW","availability","description"],"settings":{"hide_variants":false,"arrow_navigation":false,"thumbnail_navigation":false,"image_zoom_type":"lightbox","image_ratio":"adapt","image_disclaimer":"","collapse_other_expandables":false}},"product_fitment_XGirW6":{"type":"product-fitment","settings":{"title":"Vehicle Fitment","filter_placeholder":"Filter by Make, Model, or Year...","hide_if_empty":false}},"17440370560c4cd2e8":{"type":"apps","blocks":{"judge_me_reviews_review_widget_Xn9jwT":{"type":"shopify:\/\/apps\/judge-me-reviews\/blocks\/review_widget\/61ccd3b1-a9f2-4160-9fe9-4fec8413e5d8","settings":{"review_data":"sample_data","max_width":1200,"show_shop_reviews":false,"empty_state":"empty_widget"}}},"block_order":["judge_me_reviews_review_widget_Xn9jwT"],"settings":{"full_width":false}},"recommendations":{"type":"product-recommendations","settings":{"show":true,"title":"Related products","heading_size":"md","headings_alignment":"left","count":"5","mobile_columns":"1","show_vendor":true,"show_sku":false,"show_stock":true,"show_rating":false,"color_scheme":"background-1","spacing_top":60,"spacing_bottom":60,"heading_tag":"h2"}},"divider_hTHcep":{"type":"divider","settings":{"height":2,"width":1000,"color_background":"#232323","spacing_top":0,"spacing_bottom":0}}},"order":["main","product_fitment_XGirW6","17440370560c4cd2e8","recommendations","divider_hTHcep"]}
+{
+    "sections": {
+        "main": {
+            "type": "main-product",
+            "blocks": {
+                "title": {
+                    "type": "title",
+                    "settings": {
+                        "show_vendor": true,
+                        "show_stock": true,
+                        "show_sku": true,
+                        "show_barcode": false,
+                        "barcode_label": "Barcode",
+                        "show_rating": true,
+                        "hide_empty_star_rating": true,
+                        "show_custom_badges": false,
+                        "show_bottom_divider": true
+                    }
+                },
+                "custom_liquid_kxQjJw": {
+                    "type": "custom_liquid",
+                    "settings": {
+                        "title": "",
+                        "icon": "",
+                        "custom_liquid": "{% comment %}\n  Custom Liquid Block: Product Arrival Dates (Compact & Boxed, Show 1 Date)\n\n  Paste this entire code block into a \"Custom Liquid\" block\n  within your product information section in the theme editor.\n\n  Requirements:\n  1. The associated JavaScript ('product-arrival-dates.js' or similar) MUST be loaded separately by your theme.\n  2. The Gamma API Token MUST be set correctly in Theme Settings -> API Integrations (settings.gamma_api_token).\n  3. Product variants MUST have SKUs assigned.\n\n  Note: The availability of Liquid variables like 'current_variant' inside the <script>\n  tag depends on the context where this Custom Liquid block is placed.\n  The JavaScript has fallbacks, but ensure 'settings.gamma_api_token' is accessible.\n{% endcomment %}\n\n{% comment %} --- HTML Structure --- {% endcomment %}\n<div class=\"product-arrival-section-wrapper\">\n  {% comment %} Check if API token is set - prevent rendering if not {% endcomment %}\n  {%- if settings.gamma_api_token != blank -%}\n    {% comment %} Added 'boxed' class for styling {% endcomment %}\n    <div id=\"product-arrival-dates\"\n         class=\"product-arrival-dates-container product-arrival-dates--compact boxed\" {% comment %} Defaulting to compact layout class {% endcomment %}\n         style=\"display: none;\" {% comment %} Initially hidden, JS will show it {% endcomment %}>\n\n      {% comment %} Loading State Indicator {% endcomment %}\n      <div id=\"arrival-dates-loading\" class=\"arrival-dates-state arrival-dates-loading\" style=\"display: none; justify-content: center; align-items: center; min-height: 40px; color: #555;\">\n        <div class=\"lds-dual-ring\"><\/div>\n        <span style=\"margin-left: 10px;\">Loading dates...<\/span>\n      <\/div>\n\n      {% comment %} Error State Message {% endcomment %}\n      <div id=\"arrival-dates-error\" class=\"arrival-dates-state arrival-dates-error\" style=\"display: none; color: #d9534f; padding: 10px;\">\n        Error loading arrival dates.\n      <\/div>\n\n      {% comment %} No Data State Message {% endcomment %}\n      <div id=\"arrival-dates-no-data\" class=\"arrival-dates-state arrival-dates-no-data\" style=\"display: none; color: #777; padding: 10px;\">\n        No estimated arrival dates available.\n      <\/div>\n\n      {% comment %} Content Area - Populated by JavaScript {% endcomment %}\n      <div id=\"arrival-dates-content\" class=\"arrival-dates-content\" style=\"display: none;\">\n        {% comment %} JavaScript will render content here {% endcomment %}\n      <\/div>\n    <\/div>\n  {%- else -%}\n     <div class=\"product-arrival-dates-disabled\" style=\"padding: 10px; color: #777; font-style: italic; font-size: 0.9em;\">\n       {% comment %} Message shown if API token is missing in theme settings {% endcomment %}\n       Arrival dates require API Token configuration.\n     <\/div>\n  {%- endif -%}\n<\/div>\n\n{% comment %} --- JavaScript Configuration --- {% endcomment %}\n{% comment %} This script block needs Liquid variables to be processed correctly {% endcomment %}\n{%- if settings.gamma_api_token != blank -%}\n  {% comment %} Assign required variables - ensure 'product' and 'current_variant' are available in this context {% endcomment %}\n  {%- liquid\n    assign current_product = product | default: product\n    assign current_variant = current_product.selected_or_first_available_variant\n    assign api_token = settings.gamma_api_token\n    assign api_base_url = settings.gamma_api_base_url | default: \"https:\/\/api.gammapowersports.com\"\n\n    # Default settings (since block has no schema) - Adjust as needed\n    assign force_check = false\n    assign use_compact_layout = true\n    # --- MODIFIED: Max visible set to 1 ---\n    assign max_visible_compact = 1\n    assign title_standard = \"Estimated Arrival Dates\"\n    assign note_standard = \"<strong>Note:<\/strong> Confirmed dates are based on shipping information, while estimated dates are based on purchase orders and subject to change.\"\n    assign title_compact = \"Expected Arrival:\"\n    assign note_compact = \"Confirmed = In Transit, Estimated = On Order. Dates subject to change.\"\n    assign label_cargo = \"Confirmed\"\n    assign label_po = \"Estimated\"\n    assign label_show_more = \"Show {count} more date{s}\"\n    assign label_show_less = \"Hide extra dates\"\n  -%}\n\n  <script type=\"text\/javascript\">\n    \/\/ Ensure config setup runs only once per page load if multiple blocks exist\n    if (typeof window.arrivalDatesConfig === 'undefined') {\n      window.arrivalDatesConfig = {\n        \/\/ API Details\n        authToken: {{ api_token | json }},\n        apiUrl: {{ api_base_url | json }},\n\n        \/\/ Product Details (Initial State) - Relies on 'current_variant' being available here\n        productSku: {{ current_variant.sku | json }},\n        productInStock: {{ current_variant.available | json }},\n\n        \/\/ Behavior Settings (Hardcoded defaults for Custom Liquid block)\n        forceCheck: {{ force_check | json }},\n        useCompactLayout: {{ use_compact_layout | json }},\n        \/\/ --- MODIFIED: Max visible set to 1 ---\n        maxVisibleCompact: {{ max_visible_compact | json }},\n\n        \/\/ Labels & Text (Hardcoded defaults)\n        titleStandard: {{ title_standard | json }},\n        noteStandard: {{ note_standard | json }},\n        titleCompact: {{ title_compact | json }},\n        noteCompact: {{ note_compact | json }},\n        labelCargo: {{ label_cargo | json }},\n        labelPO: {{ label_po | json }},\n        labelShowMore: {{ label_show_more | json }},\n        labelShowLess: {{ label_show_less | json }},\n\n        \/\/ Diagnostics (Keep false unless debugging)\n        enableApiDiagnostics: false,\n        skipSanitization: false\n      };\n\n      \/\/ Optional: Trigger initialization if needed by your JS file\n      \/\/ document.dispatchEvent(new CustomEvent('productArrivalDates:configLoaded'));\n    } else {\n      \/\/ Config already exists, maybe update SKU if possible?\n      console.log('Product Arrival Dates: window.arrivalDatesConfig already exists.');\n    }\n  <\/script>\n{%- endif -%}\n\n\n{% comment %} --- Basic CSS --- {% endcomment %}\n{% comment %} You might want to move this to your theme's main CSS file {% endcomment %}\n<style>\n  \/* --- Style for the Box --- *\/\n  .product-arrival-section-wrapper .product-arrival-dates-container.boxed {\n    border: 1px solid #e0e0e0; \/* Light grey border *\/\n    padding: 15px;             \/* Padding inside the box *\/\n    border-radius: 5px;        \/* Slightly rounded corners *\/\n    margin-top: 15px;          \/* Space above the box *\/\n    margin-bottom: 15px;       \/* Space below the box *\/\n    background-color: #f9f9f9; \/* Optional: slight background color *\/\n  }\n  \/* Adjust error message style within the box *\/\n   .product-arrival-section-wrapper .product-arrival-dates-container.boxed .arrival-dates-error {\n      border: none;\n      background-color: #fdecea; \/* Light red background for error *\/\n      color: #932c2c;\n   }\n\n  \/* Loader *\/\n  .product-arrival-section-wrapper .lds-dual-ring {\n    display: inline-block;\n    width: 20px;\n    height: 20px;\n  }\n  .product-arrival-section-wrapper .lds-dual-ring:after {\n    content: \" \";\n    display: block;\n    width: 16px;\n    height: 16px;\n    margin: 2px;\n    border-radius: 50%;\n    border: 3px solid #555;\n    border-color: #555 transparent #555 transparent;\n    animation: lds-dual-ring 1.2s linear infinite;\n  }\n  @keyframes lds-dual-ring {\n    0% { transform: rotate(0deg); }\n    100% { transform: rotate(360deg); }\n  }\n\n  \/* Compact Layout Styles *\/\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__list { list-style: none; padding: 0; margin: 5px 0; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 0.9em; flex-wrap: wrap; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__date { font-weight: bold; margin-right: 5px;}\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__qty { color: #666; margin-right: 5px;}\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__status { flex-shrink: 0; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__status .confirmed { color: green; font-weight: bold; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__status .estimated { color: orange; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__toggle { background: none; border: none; color: var(--color-accent-1, #004FC7); text-decoration: underline; cursor: pointer; padding: 5px 0; font-size: 0.9em; display: block; margin-top: 5px; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__note { font-size: 0.85em; color: #666; margin-top: 8px; }\n  .product-arrival-section-wrapper .product-arrival-dates--compact .arrival-dates-subtle__title { font-weight: bold; margin-bottom: 5px; font-size: 1em; }\n\n  \/* Hide standard layout styles if needed *\/\n  .product-arrival-section-wrapper .product-arrival-dates--standard { display: none; }\n\n<\/style>",
+                        "position": "right",
+                        "expanded": false,
+                        "show_bottom_divider": false
+                    }
+                },
+                "subtitle": {
+                    "type": "text",
+                    "settings": {
+                        "text": "{{ product.metafields.descriptors.subtitle.value }}",
+                        "icon": "",
+                        "text_2": "",
+                        "icon_2": "",
+                        "text_3": "",
+                        "icon_3": "",
+                        "text_4": "",
+                        "icon_4": "",
+                        "color_scheme": "none",
+                        "show_bottom_divider": false
+                    }
+                },
+                "price": {
+                    "type": "price",
+                    "settings": {
+                        "show_bottom_divider": false
+                    }
+                },
+                "variants": {
+                    "type": "variants",
+                    "settings": {
+                        "picker_type": "button",
+                        "picker_equal_width": true,
+                        "hide_single_variant": false,
+                        "out_of_stock_variants": "hide",
+                        "show_bottom_divider": true
+                    }
+                },
+                "buy_buttons": {
+                    "type": "buy_buttons",
+                    "settings": {
+                        "show_quantity": true,
+                        "show_add_to_cart": true,
+                        "show_buy_now": false,
+                        "show_gift_card_recipient": false,
+                        "show_bottom_divider": false
+                    }
+                },
+                "info_box_KFNrBW": {
+                    "type": "info_box",
+                    "settings": {
+                        "enable_payment_icons": true,
+                        "heading": "",
+                        "text": "",
+                        "icon": "",
+                        "color_foreground": "#004fc7",
+                        "color_background": "#f0f6ff",
+                        "show_bottom_divider": false
+                    }
+                },
+                "availability": {
+                    "type": "availability",
+                    "settings": {
+                        "show_bottom_divider": false
+                    }
+                },
+                "description": {
+                    "type": "description",
+                    "settings": {
+                        "title": "Description",
+                        "icon": "info",
+                        "expanded": true
+                    }
+                }
+            },
+            "block_order": [
+                "title",
+                "custom_liquid_kxQjJw",
+                "subtitle",
+                "price",
+                "variants",
+                "buy_buttons",
+                "info_box_KFNrBW",
+                "availability",
+                "description"
+            ],
+            "settings": {
+                "hide_variants": false,
+                "arrow_navigation": false,
+                "thumbnail_navigation": false,
+                "image_zoom_type": "lightbox",
+                "image_ratio": "adapt",
+                "image_disclaimer": "",
+                "collapse_other_expandables": false
+            }
+        },
+        "product_fitment_XGirW6": {
+            "type": "product-fitment",
+            "settings": {
+                "title": "Vehicle Fitment",
+                "filter_placeholder": "Filter by Make, Model, or Year...",
+                "hide_if_empty": true
+            }
+        },
+        "17440370560c4cd2e8": {
+            "type": "apps",
+            "blocks": {
+                "judge_me_reviews_review_widget_Xn9jwT": {
+                    "type": "shopify:\/\/apps\/judge-me-reviews\/blocks\/review_widget\/61ccd3b1-a9f2-4160-9fe9-4fec8413e5d8",
+                    "settings": {
+                        "review_data": "sample_data",
+                        "max_width": 1200,
+                        "show_shop_reviews": false,
+                        "empty_state": "empty_widget"
+                    }
+                }
+            },
+            "block_order": [
+                "judge_me_reviews_review_widget_Xn9jwT"
+            ],
+            "settings": {
+                "full_width": false
+            }
+        },
+        "recommendations": {
+            "type": "product-recommendations",
+            "settings": {
+                "show": true,
+                "title": "Related products",
+                "heading_size": "md",
+                "headings_alignment": "left",
+                "count": "5",
+                "mobile_columns": "1",
+                "show_vendor": true,
+                "show_sku": false,
+                "show_stock": true,
+                "show_rating": false,
+                "color_scheme": "background-1",
+                "spacing_top": 60,
+                "spacing_bottom": 60,
+                "heading_tag": "h2"
+            }
+        },
+        "divider_hTHcep": {
+            "type": "divider",
+            "settings": {
+                "height": 2,
+                "width": 1000,
+                "color_background": "#232323",
+                "spacing_top": 0,
+                "spacing_bottom": 0
+            }
+        }
+    },
+    "order": [
+        "main",
+        "product_fitment_XGirW6",
+        "17440370560c4cd2e8",
+        "recommendations",
+        "divider_hTHcep"
+    ]
+}
