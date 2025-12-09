@@ -952,6 +952,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const txt = item.available ? 'In Stock' : 'Out of Stock';
                 const price = `<span class="pf-price">$${(item.price / 100).toFixed(2)}</span>`;
 
+                // --- NEW: SPECIAL BADGE ---
+                let specialBadge = '';
+                if (item.compareAtPrice && item.compareAtPrice > item.price) {
+                    specialBadge = '<span class="pf-badge pf-badge-special">On Special</span>';
+                }
+
                 let etaHtml = '';
                 if (!item.available) {
                     let label = 'Arrival date:';
@@ -969,8 +975,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="pf-card-title">${item.title}</div>
                         <div class="pf-card-sku">Part #: ${item.sku}</div>
                         <div class="pf-card-cats">${item.subCategory || ''}</div>
+                        <div class="pf-card-cats">${item.subCategory || ''}</div>
                         <div class="pf-card-meta">
-                             <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">${price}<span class="pf-badge ${cls}">${txt}</span></div>
+                             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap;">
+                                  <div style="display:flex; align-items:center; gap:8px;">${price}${specialBadge}</div>
+                                  <span class="pf-badge ${cls}">${txt}</span>
+                             </div>
                              ${etaHtml}
                              ${actionRow}
                         </div>
