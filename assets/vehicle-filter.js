@@ -10,12 +10,15 @@ class VehicleFilter {
         this.modelSelect = this.container.querySelector('[data-filter-model]');
         this.submitBtn = this.container.querySelector('[data-filter-submit]');
         this.resetBtn = this.container.querySelector('[data-filter-reset]');
+        this.STORAGE_KEY = 'pf_my_garage';
 
         this.init();
     }
 
     init() {
-        this.fetchTypes();
+        this.fetchTypes().then(() => {
+            this.loadFromStorage();
+        });
         this.addEventListeners();
     }
 
@@ -159,6 +162,69 @@ class VehicleFilter {
 
         this.submitBtn.textContent = 'Apply Filter';
         this.setLoading(false);
+        this.saveToStorage();
+    }
+
+    saveToStorage() {
+        try {
+            const vehicleData = {
+                type: this.typeSelect.value,
+                year: this.yearSelect.value,
+                make: this.makeSelect.value,
+                model: this.modelSelect.value
+            };
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(vehicleData));
+        } catch (e) { console.error('Error saving vehicle', e); }
+    }
+
+    async loadFromStorage() {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (!stored) return;
+
+        try {
+            const v = JSON.parse(stored);
+            if (!v.type || !v.year || !v.make || !v.model) return;
+
+            // 1. Set Type
+            if (!this.setSelectValue(this.typeSelect, v.type)) return;
+
+            // 2. Fetch & Set Year
+            this.setLoading(true);
+            const yearsData = await this.fetchFromApi('fitment/getYearOptions', { type: v.type });
+            this.populateSelect(this.yearSelect, yearsData ? yearsData.years.sort((a, b) => b - a) : [], 'Select Year');
+            if (!this.setSelectValue(this.yearSelect, v.year)) { this.setLoading(false); return; }
+
+            // 3. Fetch & Set Make
+            const makesData = await this.fetchFromApi('fitment/getMakeOptions', { type: v.type, year: v.year });
+            this.populateSelect(this.makeSelect, makesData ? makesData.makes : [], 'Select Make');
+            if (!this.setSelectValue(this.makeSelect, v.make)) { this.setLoading(false); return; }
+
+            // 4. Fetch & Set Model
+            const modelsData = await this.fetchFromApi('fitment/getModelOptions', { type: v.type, year: v.year, make: v.make });
+            this.populateSelect(this.modelSelect, modelsData ? modelsData.models : [], 'Select Model');
+            if (!this.setSelectValue(this.modelSelect, v.model)) { this.setLoading(false); return; }
+
+            this.setLoading(false);
+            this.updateState();
+
+            // Auto Submit to filter grid
+            this.onSubmit();
+
+        } catch (e) {
+            console.error('Error loading vehicle from storage', e);
+            this.setLoading(false);
+        }
+    }
+
+    setSelectValue(select, value) {
+        // Simple check if value exists in options
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === value) {
+                select.value = value;
+                return true;
+            }
+        }
+        return false;
     }
 
     filterGrid(matchingSkus) {
@@ -186,6 +252,7 @@ class VehicleFilter {
 
         const productCards = document.querySelectorAll('.product-grid .grid__item');
         productCards.forEach(card => card.style.display = '');
+        localStorage.removeItem(this.STORAGE_KEY);
     }
 }
 
